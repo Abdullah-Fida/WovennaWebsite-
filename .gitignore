@@ -1,0 +1,31 @@
+# Node modules
+node_modules/
+frontend/node_modules/
+Backend/node_modules/
+
+# Env files
+*.env
+*.env.local
+Backend/.env
+frontend/.env
+
+# Build / cache
+dist/
+build/
+.vite/
+.cache/
+
+# IDE/editor
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log
+yarn-error.log
+
+# Uploads
+public/uploads/
+
+# Misc
+*.local
