@@ -1,4 +1,6 @@
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_BASE
+  ? String(import.meta.env.VITE_API_BASE).replace(/\/$/, '')
+  : '/api';
 
 async function apiFetch(endpoint, options = {}) {
   const config = {

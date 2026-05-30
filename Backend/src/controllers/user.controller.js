@@ -89,10 +89,13 @@ const loginUser = asyncHandler(async (req, res) => {
   const sessionToken = createSession(user._id);
 
   // Send token as HttpOnly cookie
+  const isProd = process.env.NODE_ENV === "production";
   res.cookie("sessionToken", sessionToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: 'strict',
+    secure: isProd,
+    // For cross-site frontend+backend (deployed on different domains),
+    // cookies must be `SameSite=None` and `Secure`.
+    sameSite: isProd ? 'none' : 'lax',
     maxAge: 24 * 60 * 60 * 1000, // 1 day
   });
 
