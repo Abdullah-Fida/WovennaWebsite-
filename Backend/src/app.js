@@ -11,8 +11,9 @@ app.use(express.json()); // Parse JSON
 // Allow frontend dev servers (both common Vite ports) to make credentialed requests
 const allowedOrigins = [
   'http://localhost:5173',
-  'http://localhost:5174'
-];
+  'http://localhost:5174',
+  process.env.FRONTEND_URL // <-- Add this to your Vercel Backend environment variables
+].filter(Boolean); // Filter out undefined if FRONTEND_URL is not set
 app.use(cors({
   origin: function (origin, callback) {
     // allow requests with no origin like mobile apps or curl
