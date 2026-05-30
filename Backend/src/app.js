@@ -29,6 +29,16 @@ app.use(cors({
 app.use(cookieParser()); // ✅ parse cookies
 app.use(morgan("dev"));
 
+// Health Check Route
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'success', message: 'Backend is running correctly!' });
+});
+
+// Root Route (so you don't see "Cannot GET /" if you visit localhost:5000 directly)
+app.get('/', (req, res) => {
+  res.status(200).send('Welcome to the Woveena API! The backend is running correctly.');
+});
+
 // Routes
 const userRoutes = require("./routes/user.routes.js");
 app.use("/api/users", userRoutes);
