@@ -101,7 +101,7 @@ export default function OrderDetail() {
           <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: '300', marginBottom: '24px' }}>Items</h3>
           {order.items.map((item) => (
             <div key={item._id || item.productId} className="order-item">
-              <img src={item.image || '/premium/model-tote-premium.jpg'} alt={item.name} className="order-item-img" />
+              <img src={item.image || '/premium/model-tote-premium-new.png'} alt={item.name} className="order-item-img" />
               <div>
                 <div className="order-item-name">{item.name}</div>
                 <div className="order-item-qty">Qty: {item.quantity}</div>

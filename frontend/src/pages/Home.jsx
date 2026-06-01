@@ -71,11 +71,11 @@ export default function Home() {
 
         <div className="lookbook-grid reveal">
           <figure className="lookbook-item lookbook-item--a">
-            <img src="/premium/model-tote-premium.jpg" alt="Model holding a tote bag" />
+            <img src="/premium/model-tote-premium-new.png" alt="Model holding a tote bag" />
             <figcaption className="lookbook-caption">Signature Tote</figcaption>
           </figure>
           <figure className="lookbook-item lookbook-item--b">
-            <img src="/premium/model-crossbody-premium.jpg" alt="Model wearing a crossbody bag" />
+            <img src="/premium/model-crossbody-premium-new.png" alt="Model wearing a crossbody bag" />
             <figcaption className="lookbook-caption">Crossbody</figcaption>
           </figure>
         </div>

@@ -43,7 +43,7 @@ export default function ProductDetail() {
         productId: product._id,
         name: product.name,
         price: product.price,
-        image: product.images[0] || '/premium/model-tote-premium.jpg',
+        image: product.images[0] || '/premium/model-tote-premium-new.png',
         quantity: qty
       });
       setToastMsg('Added to bag');
@@ -84,7 +84,7 @@ export default function ProductDetail() {
       <Toast message={toastMsg} onClose={() => setToastMsg('')} />
       
       <div className="product-detail-images">
-        <img src={product.images[0] || '/premium/model-crossbody-premium.jpg'} alt={product.name} />
+        <img src={product.images[0] || '/premium/model-crossbody-premium-new.png'} alt={product.name} />
       </div>
 
       <div className="product-detail-panel">
