@@ -15,10 +15,8 @@ const createAdmin = async () => {
     let adminUser = await User.findOne({ email: adminEmail });
     
     if (adminUser) {
-      console.log(`Admin already exists!`);
-      console.log(`Email: ${adminEmail}`);
-      console.log(`Role: ${adminUser.role}`);
-      process.exit();
+      console.log(`Deleting existing admin to reset password...`);
+      await User.deleteOne({ email: adminEmail });
     }
 
     // Create admin

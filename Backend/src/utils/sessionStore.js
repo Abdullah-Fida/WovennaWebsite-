@@ -1,32 +1,26 @@
 // utils/sessionStore.js
-const sessions = new Map();
+const jwt = require('jsonwebtoken');
 
 const createSession = (userId) => {
-  const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
-  sessions.set(token, {
-    userId,
-    createdAt: Date.now()
+  return jwt.sign({ userId }, process.env.JWT_SECRET || 'your_jwt_secret', {
+    expiresIn: '1d',
   });
-  return token;
 };
 
 const getSession = (token) => {
-  return sessions.get(token);
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
+    return {
+      userId: decoded.userId,
+    };
+  } catch (error) {
+    return null;
+  }
 };
 
 const deleteSession = (token) => {
-  sessions.delete(token);
+  // JWTs are stateless, so we let the client clear the cookie.
 };
-
-// Optional: Clean up expired sessions periodically
-setInterval(() => {
-  const now = Date.now();
-  for (const [token, session] of sessions.entries()) {
-    if (now - session.createdAt > 24 * 60 * 60 * 1000) { // 24 hours
-      sessions.delete(token);
-    }
-  }
-}, 60 * 60 * 1000); // Run every hour
 
 module.exports = {
   createSession,
