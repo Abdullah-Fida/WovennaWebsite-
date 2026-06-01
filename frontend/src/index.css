@@ -1182,6 +1182,16 @@ footer {
 .admin-nav a:hover { color: var(--navy); }
 .admin-nav a.active { color: var(--gold); border-bottom-color: var(--gold); }
 
+/* ============================================================
+   CONTACT PAGE
+   ============================================================ */
+.contact-grid {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: clamp(24px, 4vw, 28px);
+  align-items: start;
+}
+
 /* Stats Cards */
 .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 48px; }
 .stat-card {
@@ -1289,11 +1299,12 @@ footer {
   .product-detail-page { grid-template-columns: 1fr; }
   .product-detail-images { height: min(60vw, 500px); position: relative; top: 0; }
 
-  /* Cart & checkout → stack */
+  /* Cart, checkout, contact → stack */
   .cart-page-grid { grid-template-columns: 1fr; gap: 36px; }
   .cart-summary { position: static; }
   .checkout-inner { grid-template-columns: 1fr; gap: 36px; }
   .checkout-summary { position: static; }
+  .contact-grid { grid-template-columns: 1fr; gap: 36px; }
 
   /* Admin */
   .stats-grid { grid-template-columns: repeat(2, 1fr); }

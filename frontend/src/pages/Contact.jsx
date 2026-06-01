@@ -22,7 +22,7 @@ export default function Contact() {
           subtitle="Need help with a product, sizing, or an order? This page explains the fastest ways to reach us, plus what information to include for quick support."
         />
 
-        <div style={{ display: 'grid', gridTemplateColumns: '0.9fr 1.1fr', gap: 28, alignItems: 'start' }}>
+        <div className="contact-grid">
           <div className="card card--soft card-pad">
             <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 300, marginBottom: 10 }}>
               Fast support
