@@ -1,9 +1,9 @@
 const dotenv = require("dotenv");
+// Load environment variables FIRST — before any module that reads process.env
+dotenv.config();
+
 const connectDB = require("./db/db.js");
 const app = require("./app.js");
-
-// Load environment variables
-dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 

@@ -8,21 +8,27 @@ const app = express();
 
 // Middlewares
 app.use(express.json()); // Parse JSON
-// Allow frontend dev servers (both common Vite ports) to make credentialed requests
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:5174',
-  process.env.FRONTEND_URL // <-- Add this to your Vercel Backend environment variables
-].filter(Boolean); // Filter out undefined if FRONTEND_URL is not set
+
+// CORS — reads FRONTEND_URL at request time so env vars are always available
 app.use(cors({
   origin: function (origin, callback) {
-    // allow requests with no origin like mobile apps or curl
+    // Allow requests with no origin (mobile apps, curl, server-to-server)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+
+    // In development, allow all localhost origins automatically
+    if (process.env.NODE_ENV !== 'production') {
+      if (origin.startsWith('http://localhost:')) {
+        return callback(null, true);
+      }
     }
+
+    // In production, only allow the configured frontend URL
+    const frontendUrl = process.env.FRONTEND_URL;
+    if (frontendUrl && origin === frontendUrl.replace(/\/$/, '')) {
+      return callback(null, true);
+    }
+
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true // allow cookies to be sent
 }));
