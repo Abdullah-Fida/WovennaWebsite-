@@ -6,9 +6,9 @@ export default function Footer() {
       <div className="footer-grid">
         <div className="footer-brand">
           <div className="footer-logo-text">Wovenaa</div>
-          <p>Woven bags carrying 4,000 years of craft. Built for permanence, not just seasons.</p>
+          <p>Woven bags carrying 100, years of craft. Built for permanence, not just seasons.</p>
         </div>
-        
+
         <div className="footer-col">
           <h5>Shop</h5>
           <ul>
@@ -17,14 +17,14 @@ export default function Footer() {
             <li><Link to="/shop?category=Crossbody">Crossbody</Link></li>
           </ul>
         </div>
-        
+
         <div className="footer-col">
           <h5>Discover</h5>
           <ul>
             <li><Link to="/about">Our Story</Link></li>
           </ul>
         </div>
-        
+
         <div className="footer-col">
           <h5>Client Care</h5>
           <ul>
@@ -33,7 +33,7 @@ export default function Footer() {
           </ul>
         </div>
       </div>
-      
+
       <div className="footer-bottom">
         <p>© 2026 Wovenaa. All rights reserved.</p>
         <p>Crafted in <span>Pakistan</span></p>
