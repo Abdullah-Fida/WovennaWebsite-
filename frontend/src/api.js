@@ -3,11 +3,18 @@ const API_BASE = import.meta.env.VITE_API_BASE
   : '/api';
 
 async function apiFetch(endpoint, options = {}) {
+  const token = localStorage.getItem('authToken');
   const config = {
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
     ...options,
   };
+
+  // Attach token as Authorization header (needed for cross-origin deployments
+  // where cookies are blocked by the browser)
+  if (token) {
+    config.headers = { ...config.headers, Authorization: `Bearer ${token}` };
+  }
 
   if (options.body && !(options.body instanceof FormData)) {
     config.body = JSON.stringify(options.body);

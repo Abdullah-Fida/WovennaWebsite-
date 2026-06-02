@@ -19,6 +19,7 @@ export function AuthProvider({ children }) {
       }
     } catch {
       setUser(null);
+      localStorage.removeItem('authToken');
     } finally {
       setLoading(false);
     }
@@ -26,6 +27,10 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     const data = await loginAPI({ email, password });
+    // Store the token for cross-origin auth (cookies don't work across different domains)
+    if (data.token) {
+      localStorage.setItem('authToken', data.token);
+    }
     setUser({ _id: data._id, name: data.name, email: data.email, role: data.role });
     return data;
   };
@@ -36,7 +41,8 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
-    await logoutAPI();
+    try { await logoutAPI(); } catch { /* ignore if backend unreachable */ }
+    localStorage.removeItem('authToken');
     setUser(null);
   };
 

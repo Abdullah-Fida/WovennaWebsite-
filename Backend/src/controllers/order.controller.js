@@ -8,7 +8,6 @@ const generateOrderId = () => {
 };
 
 // CREATE ORDER
-// controllers/order.controller.js - Update createOrder function
 const createOrder = asyncHandler(async (req, res) => {
   if (!req.user) {
     return res.status(401).json({ message: "User not authenticated" });
@@ -25,7 +24,7 @@ const createOrder = asyncHandler(async (req, res) => {
   const normalizedShippingAddress = {
     street: shippingAddress.street || shippingAddress.address || "",
     city: shippingAddress.city || "",
-    country: shippingAddress.country || "India",
+    country: shippingAddress.country || "Pakistan",
     zipCode: shippingAddress.zipCode || shippingAddress.postalCode || "",
     phone: shippingAddress.phone || "",
   };
@@ -81,6 +80,8 @@ const createOrder = asyncHandler(async (req, res) => {
 
   res.status(201).json({ success: true, order });
 });
+
+// GET ORDER BY ID
 const getOrderById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const userId = req.user._id;
@@ -103,7 +104,8 @@ const getOrderById = asyncHandler(async (req, res) => {
   });
 });
 
-const getUserOrders = async (req, res) => {
+// GET USER ORDERS
+const getUserOrders = asyncHandler(async (req, res) => {
   const orders = await Order.find({ user: req.user._id })
     .sort({ createdAt: -1 });
 
@@ -112,11 +114,10 @@ const getUserOrders = async (req, res) => {
     totalOrders: orders.length,
     orders
   });
-};
+});
 
 module.exports = {
   createOrder,
   getOrderById,
   getUserOrders
-
 };

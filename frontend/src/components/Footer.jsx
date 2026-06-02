@@ -6,7 +6,6 @@ export default function Footer() {
       <div className="footer-grid">
         <div className="footer-brand">
           <div className="footer-logo-text">Wovenaa</div>
-          <div className="footer-tagline">Since 2000 BC</div>
           <p>Woven bags carrying 4,000 years of craft. Built for permanence, not just seasons.</p>
         </div>
         

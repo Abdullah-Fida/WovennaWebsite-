@@ -16,32 +16,27 @@ const protect = asyncHandler(async (req, res, next) => {
     throw new Error('Not authorized, no token');
   }
 
-  try {
-    // Verify session from session store
-    const session = getSession(token);
-    if (!session) {
-      res.status(401);
-      throw new Error('Not authorized, invalid session');
-    }
-
-    // Get user from database
-    const user = await User.findById(session.userId).select('-password');
-    if (!user) {
-      res.status(401);
-      throw new Error('User not found');
-    }
-
-    if (!user.isActive) {
-      res.status(401);
-      throw new Error('Account deactivated');
-    }
-
-    req.user = user;
-    next();
-  } catch (error) {
+  // Verify session from session store
+  const session = getSession(token);
+  if (!session) {
     res.status(401);
-    throw new Error('Not authorized, token failed');
+    throw new Error('Not authorized, invalid session');
   }
+
+  // Get user from database
+  const user = await User.findById(session.userId).select('-password');
+  if (!user) {
+    res.status(401);
+    throw new Error('User not found');
+  }
+
+  if (!user.isActive) {
+    res.status(401);
+    throw new Error('Account deactivated');
+  }
+
+  req.user = user;
+  next();
 });
 
 module.exports = { protect };

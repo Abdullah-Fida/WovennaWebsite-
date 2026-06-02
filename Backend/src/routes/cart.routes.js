@@ -15,8 +15,10 @@ router.use(protect);
 
 router.post('/add', addToCart);
 router.get('/', getCart);
+// Static routes MUST come before parameterized routes
+// so Express doesn't match "clear" as a :productId
+router.delete('/clear', clearCart);
 router.put('/:productId', updateCartItem);
 router.delete('/:productId', deleteCartItem);
-router.delete('/clear', clearCart);
 
 module.exports = router;
