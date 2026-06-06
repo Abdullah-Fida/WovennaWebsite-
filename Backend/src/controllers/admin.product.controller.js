@@ -22,7 +22,7 @@ function uploadBufferToCloudinary(buffer, folder = 'products') {
 
 // Create product (supports multiple images)
 const createProduct = asyncHandler(async (req, res) => {
-  const { name, description, price, category, stock } = req.body;
+  const { name, description, price, originalPrice, category, stock } = req.body;
   if (!name || !price) {
     res.status(400);
     throw new Error('Name and price are required');
@@ -40,6 +40,7 @@ const createProduct = asyncHandler(async (req, res) => {
     name,
     description,
     price,
+    originalPrice,
     category,
     stock: stock || 0,
     images
@@ -63,10 +64,11 @@ const updateProduct = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
   if (!product) { res.status(404); throw new Error('Product not found'); }
 
-  const { name, description, price, category, stock } = req.body;
+  const { name, description, price, originalPrice, category, stock } = req.body;
   if (name !== undefined) product.name = name;
   if (description !== undefined) product.description = description;
   if (price !== undefined) product.price = price;
+  if (originalPrice !== undefined) product.originalPrice = originalPrice;
   if (category !== undefined) product.category = category;
   if (stock !== undefined) product.stock = stock;
 

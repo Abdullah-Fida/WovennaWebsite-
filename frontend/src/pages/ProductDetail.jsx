@@ -17,6 +17,7 @@ export default function ProductDetail() {
   const [qty, setQty] = useState(1);
   const [toastMsg, setToastMsg] = useState('');
   const [adding, setAdding] = useState(false);
+  const [activeImage, setActiveImage] = useState(0);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -84,7 +85,22 @@ export default function ProductDetail() {
       <Toast message={toastMsg} onClose={() => setToastMsg('')} />
       
       <div className="product-detail-images">
-        <img src={product.images[0] || '/premium/model-crossbody-premium-new.png'} alt={product.name} />
+        <div className="main-image">
+          <img src={product.images?.[activeImage] || '/premium/model-crossbody-premium-new.png'} alt={product.name} />
+        </div>
+        {product.images && product.images.length > 1 && (
+          <div className="thumbnail-gallery">
+            {product.images.map((img, idx) => (
+              <img 
+                key={idx} 
+                src={img} 
+                alt={`${product.name} view ${idx + 1}`} 
+                className={`thumbnail ${activeImage === idx ? 'active' : ''}`}
+                onClick={() => setActiveImage(idx)}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="product-detail-panel">
@@ -98,7 +114,12 @@ export default function ProductDetail() {
 
         <div className="product-detail-tag">{product.category}</div>
         <h1 className="product-detail-name">{product.name}</h1>
-        <div className="product-detail-price">Rs. {product.price.toLocaleString()}</div>
+        <div className="product-detail-price">
+          {product.originalPrice && product.originalPrice > product.price && (
+            <span className="price-original">Rs. {product.originalPrice.toLocaleString()}</span>
+          )}
+          <span className="price-current">Rs. {product.price.toLocaleString()}</span>
+        </div>
         
         <p className="product-detail-desc">{product.description || 'A timeless woven piece built with unparalleled craftsmanship.'}</p>
         
@@ -120,7 +141,7 @@ export default function ProductDetail() {
         >
           {adding ? (
             <span className="btn-loading"><span className="btn-spinner"></span> Adding...</span>
-          ) : product.stock === 0 ? 'Out of Stock' : 'Add to Bag'}
+          ) : product.stock === 0 ? 'Sold Out' : 'Add to Bag'}
         </button>
 
         <div className="product-specs">

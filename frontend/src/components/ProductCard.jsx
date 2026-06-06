@@ -11,7 +11,7 @@ export default function ProductCard({ product }) {
   return (
     <Link to={`/product/${product._id}`} className="product-card grid-card">
       {product.stock <= 5 && product.stock > 0 && <div className="product-badge product-badge--limited">Low Stock</div>}
-      {product.stock === 0 && <div className="product-badge product-badge--new">Out of Stock</div>}
+      {product.stock === 0 && <div className="product-badge product-badge--new">Sold Out</div>}
       
       <div className="product-image-wrap">
         <img src={imageUrl} alt={product.name} className="primary" />
@@ -24,7 +24,14 @@ export default function ProductCard({ product }) {
       <div className="product-info">
         <div className="product-tag">{product.category}</div>
         <h3 className="product-name">{product.name}</h3>
-        <div className="product-price">Rs. {product.price.toLocaleString()}</div>
+        <div className="product-price">
+          {product.originalPrice && product.originalPrice > product.price && (
+            <span className="price-original-card" style={{ textDecoration: 'line-through', color: 'rgba(10,17,40,0.4)', marginRight: '8px', fontSize: '11px' }}>
+              Rs. {product.originalPrice.toLocaleString()}
+            </span>
+          )}
+          <span className="price-current-card">Rs. {product.price.toLocaleString()}</span>
+        </div>
       </div>
     </Link>
   );

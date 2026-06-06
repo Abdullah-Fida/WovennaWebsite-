@@ -13,7 +13,7 @@ export default function AdminProducts() {
   
   const [editId, setEditId] = useState(null);
   const [formData, setFormData] = useState({
-    name: '', description: '', price: '', category: 'General', stock: ''
+    name: '', description: '', price: '', originalPrice: '', category: 'General', stock: ''
   });
   const [imageFiles, setImageFiles] = useState([]);
 
@@ -39,12 +39,13 @@ export default function AdminProducts() {
         name: product.name,
         description: product.description,
         price: product.price,
+        originalPrice: product.originalPrice || '',
         category: product.category,
         stock: product.stock
       });
     } else {
       setEditId(null);
-      setFormData({ name: '', description: '', price: '', category: 'General', stock: '' });
+      setFormData({ name: '', description: '', price: '', originalPrice: '', category: 'General', stock: '' });
     }
     setImageFiles([]);
     setShowModal(true);
@@ -58,6 +59,9 @@ export default function AdminProducts() {
     data.append('name', formData.name);
     data.append('description', formData.description);
     data.append('price', formData.price);
+    if (formData.originalPrice) {
+      data.append('originalPrice', formData.originalPrice);
+    }
     data.append('category', formData.category);
     data.append('stock', formData.stock);
     
@@ -138,10 +142,24 @@ export default function AdminProducts() {
           <tbody>
             {products.map(p => (
               <tr key={p._id}>
-                <td><img src={p.images?.[0] || '/premium/flatlay-marble.jpg'} alt={p.name} /></td>
+                <td>
+                  <img src={p.images?.[0] || '/premium/flatlay-marble.jpg'} alt={p.name} />
+                  {p.images && p.images.length > 1 && (
+                    <div style={{ fontSize: '10px', color: 'var(--gray)', marginTop: '4px', textAlign: 'center' }}>
+                      {p.images.length} images
+                    </div>
+                  )}
+                </td>
                 <td>{p.name}</td>
                 <td>{p.category}</td>
-                <td>Rs. {p.price.toLocaleString()}</td>
+                <td>
+                  Rs. {p.price.toLocaleString()}
+                  {p.originalPrice && p.originalPrice > p.price && (
+                    <div style={{ textDecoration: 'line-through', color: 'var(--gray)', fontSize: '11px' }}>
+                      Rs. {p.originalPrice.toLocaleString()}
+                    </div>
+                  )}
+                </td>
                 <td>{p.stock}</td>
                 <td>
                   <div style={{ display: 'flex', gap: '8px' }}>
@@ -172,20 +190,26 @@ export default function AdminProducts() {
               </div>
               <div className="checkout-form-row">
                 <div className="checkout-form-group">
-                  <label>Price (Rs.)</label>
+                  <label>Sale Price (Rs.)</label>
                   <input type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} required />
                 </div>
+                <div className="checkout-form-group">
+                  <label>Original Price (Rs.) <small style={{ fontWeight: 'normal', color: 'var(--gray)' }}>(Optional, shows crossed out)</small></label>
+                  <input type="number" value={formData.originalPrice} onChange={e => setFormData({...formData, originalPrice: e.target.value})} />
+                </div>
+              </div>
+              <div className="checkout-form-row">
                 <div className="checkout-form-group">
                   <label>Stock</label>
                   <input type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} required />
                 </div>
-              </div>
-              <div className="checkout-form-group">
-                <label>Category</label>
-                <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
-                  <option value="Tote">Tote</option>
-                  <option value="Crossbody">Crossbody</option>
-                </select>
+                <div className="checkout-form-group">
+                  <label>Category</label>
+                  <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+                    <option value="Tote">Tote</option>
+                    <option value="Crossbody">Crossbody</option>
+                  </select>
+                </div>
               </div>
               <div className="checkout-form-group">
                 <label>Images</label>
