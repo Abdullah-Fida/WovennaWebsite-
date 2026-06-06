@@ -9,7 +9,7 @@ const app = express();
 // Middlewares
 app.use(express.json()); // Parse JSON
 
-// CORS — reads FRONTEND_URL at request time so env vars are always available
+// CORS — reads allowed origins at request time so env vars are always available
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (mobile apps, curl, server-to-server)
@@ -22,9 +22,15 @@ app.use(cors({
       }
     }
 
-    // In production, only allow the configured frontend URL
-    const frontendUrl = process.env.FRONTEND_URL;
-    if (frontendUrl && origin === frontendUrl.replace(/\/$/, '')) {
+    // Build list of allowed origins from environment variables
+    const allowedOrigins = [
+      process.env.FRONTEND_URL,
+      process.env.FRONTEND_URL_2,
+    ]
+      .filter(Boolean)
+      .map(url => url.replace(/\/$/, '')); // strip trailing slashes
+
+    if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
 
