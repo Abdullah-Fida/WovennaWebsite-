@@ -8,15 +8,15 @@ export default function About() {
         <PageHeader
           breadcrumbs={[
             { label: 'Home', to: '/' },
-            { label: 'Our Story' },
+            { label: 'About Us' },
           ]}
-          eyebrow="Discover Wovenaa"
+          eyebrow="Discover Wovena"
           title={
             <>
-              Our <em>Story</em>
+              About <em>Us</em>
             </>
           }
-          subtitle="Wovenaa is inspired by ancient weaving traditions and built for modern life. This page explains what we make, why we make it, and how to care for it—so your bag stays beautiful for years."
+          subtitle="Wovena is inspired by ancient weaving traditions and built for modern life. This page explains what we make, why we make it, and how to care for it so your bag stays beautiful for years."
         />
 
         <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 28, alignItems: 'start' }}>
@@ -29,7 +29,7 @@ export default function About() {
             </p>
             <div className="gold-line" />
             <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 300, marginBottom: 10 }}>
-              What makes Wovenaa different
+              What makes Wovena different
             </h3>
             <ul className="help-list">
               <li>Minimal design, strong details (stitching, edge finishing, structured shape).</li>
@@ -67,7 +67,7 @@ export default function About() {
               {
                 title: 'Are your bags handmade?',
                 content:
-                  'Many parts of the process involve careful craftsmanship—especially the woven body and finishing. Exact methods can vary by design, but our focus remains consistent: neat finishing, strong structure, and lasting shape.',
+                  'Many parts of the process involve careful craftsmanship especially the woven body and finishing. Exact methods can vary by design, but our focus remains consistent: neat finishing, strong structure, and lasting shape.',
               },
               {
                 title: 'How do I keep the bag looking new?',

@@ -52,7 +52,7 @@ export default function Home() {
           <div className="heritage-text-side reveal">
             <span className="section-label">Our Legacy</span>
             <h2 className="section-title">Rooted in <em>History</em></h2>
-            <p className="section-body">Every Wovenaa bag carries the weight of a 4,000-year-old craft. We haven’t reinvented weaving; we’ve simply honored it, bringing the resilience of ancient techniques into modern luxury.</p>
+            <p className="section-body">Every Wovena bag carries the weight of a 4,000-year-old craft. We haven’t reinvented weaving; we’ve simply honored it, bringing the resilience of ancient techniques into modern luxury.</p>
             <div className="heritage-quote">"True luxury is not about excess. It is about permanence."</div>
             <Link to="/shop" className="btn-gold">View Collection</Link>
           </div>
@@ -71,11 +71,11 @@ export default function Home() {
 
         <div className="lookbook-grid reveal">
           <figure className="lookbook-item lookbook-item--a">
-            <img src="/premium/model-tote-premium-new.png" alt="Model holding a tote bag" />
+            <img src="/Images/model-f-1.png" alt="Model holding a tote bag" />
             <figcaption className="lookbook-caption">Signature Tote</figcaption>
           </figure>
           <figure className="lookbook-item lookbook-item--b">
-            <img src="/premium/model-crossbody-premium-new.png" alt="Model wearing a crossbody bag" />
+            <img src="/Images/model-f-2.png" alt="Model wearing a crossbody bag" />
             <figcaption className="lookbook-caption">Crossbody</figcaption>
           </figure>
         </div>
@@ -91,12 +91,10 @@ export default function Home() {
           <Link to="/shop" className="btn-ghost" style={{ color: 'var(--navy)', borderColor: 'var(--navy)' }}>View All</Link>
         </div>
         
-        <div className="collection-scroll-wrapper reveal">
-          <div className="collection-track">
-            {products.map(product => (
-              <ProductCard key={product._id} product={product} />
-            ))}
-          </div>
+        <div className="collection-grid reveal">
+          {products.map(product => (
+            <ProductCard key={product._id} product={product} />
+          ))}
         </div>
       </section>
 
@@ -106,7 +104,7 @@ export default function Home() {
         <h2 className="section-title reveal">Uncompromising <em>Quality</em></h2>
         <div className="materials-layout reveal">
           <div className="hotspot-container">
-            <img src="/premium/texture-closeup.jpg" alt="Handbag materials close-up" />
+            <img src="/Images/close-up.png" alt="Handbag materials close-up" />
           </div>
           <div className="materials-info">
             <div className="material-item">

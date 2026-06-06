@@ -52,13 +52,13 @@ export default function Navbar() {
       <nav className={`main-nav ${scrolled ? 'scrolled' : ''} ${onHero ? 'on-hero' : ''}`}>
         <Link to="/" className="nav-logo">
           <div className="logo-icon">W</div>
-          <div className="logo-text">Wovenaa</div>
+          <div className="logo-text">Wovena</div>
         </Link>
         
         <ul className="nav-links">
           <li><Link to="/">Home</Link></li>
           <li><Link to="/shop">Shop</Link></li>
-          <li><Link to="/about">Our Story</Link></li>
+          <li><Link to="/about">About Us</Link></li>
           <li><Link to="/contact">Contact</Link></li>
           {user?.role === 'admin' && <li><Link to="/admin">Dashboard</Link></li>}
         </ul>
@@ -109,7 +109,7 @@ export default function Navbar() {
         <button className="mobile-menu-close" onClick={() => setMenuOpen(false)}>×</button>
         <Link to="/" className="mobile-menu-link">Home</Link>
         <Link to="/shop" className="mobile-menu-link">Shop Collection</Link>
-        <Link to="/about" className="mobile-menu-link">Our Story</Link>
+        <Link to="/about" className="mobile-menu-link">About Us</Link>
         <Link to="/shipping-returns" className="mobile-menu-link">Shipping</Link>
         <Link to="/contact" className="mobile-menu-link">Contact</Link>
         

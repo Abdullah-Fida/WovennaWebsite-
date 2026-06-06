@@ -31,7 +31,7 @@ export default function Register() {
     <div className="auth-page">
       <div className="auth-card">
         <h2>Create <em>Account</em></h2>
-        <p className="auth-subtitle">Join the Wovenaa family</p>
+        <p className="auth-subtitle">Join the Wovena family</p>
 
         <div className="help-text" style={{ textAlign: 'center', marginBottom: 20 }}>
           Creating an account lets you checkout faster and track all your orders in one place.

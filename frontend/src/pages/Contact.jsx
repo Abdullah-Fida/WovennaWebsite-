@@ -31,8 +31,8 @@ export default function Contact() {
               For the quickest reply, message us on WhatsApp with your order ID (if you have one) and a short description of the issue.
             </p>
             <ul className="help-list">
-              <li>WhatsApp: +92 3XX XXXXXXX</li>
-              <li>Email: support@wovenaa.com</li>
+              <li>WhatsApp: <a href="https://wa.me/923218459116" target="_blank" rel="noopener noreferrer">+92 321 8459116</a></li>
+              <li>Email: wovenaa.2026@gmail.com</li>
               <li>Hours: Mon–Sat, 10:00–18:00</li>
             </ul>
 

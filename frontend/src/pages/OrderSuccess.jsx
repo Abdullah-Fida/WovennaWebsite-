@@ -13,7 +13,7 @@ export default function OrderSuccess() {
         <h1 className="success-title">Order <em>Confirmed</em></h1>
         <div className="success-order-id">Order #{id.slice(-6).toUpperCase()}</div>
         <p className="success-body">
-          Thank you for choosing Wovenaa. Your order has been received and is now being processed. 
+          Thank you for choosing Wovena. Your order has been received and is now being processed. 
           We will contact you shortly to confirm the delivery details.
         </p>
         <div className="card card--soft card-pad" style={{ margin: '0 auto 34px', maxWidth: 560 }}>

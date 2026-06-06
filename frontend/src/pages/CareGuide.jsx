@@ -16,7 +16,7 @@ export default function CareGuide() {
               Care <em>Guide</em>
             </>
           }
-          subtitle="A few simple habits will keep your Wovenaa bag looking fresh. Follow these steps for cleaning, storage, and long-term care."
+          subtitle="A few simple habits will keep your Wovena bag looking fresh. Follow these steps for cleaning, storage, and long-term care."
         />
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28 }}>

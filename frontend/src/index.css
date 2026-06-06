@@ -1,5 +1,5 @@
 /* ============================================================
-   GLOBAL VARIABLES — identical to original Wovenaa design
+   GLOBAL VARIABLES — identical to original Wovena design
    ============================================================ */
 :root {
   --bg:         #FDFCF8;
@@ -600,14 +600,17 @@ section { padding: clamp(64px, 10vw, 140px) clamp(20px, 5vw, 72px); }
   display: flex; align-items: flex-end; justify-content: space-between;
   padding-right: clamp(20px, 5vw, 72px); margin-bottom: clamp(36px, 5vw, 64px);
 }
-.collection-scroll-wrapper {
-  overflow-x: auto; overflow-y: hidden; cursor: grab; padding-bottom: 20px;
-  scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch;
+.collection-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(20px, 3vw, 40px);
+  max-width: var(--container);
+  margin: 0 auto;
 }
-.collection-scroll-wrapper::-webkit-scrollbar { display: none; }
-.collection-scroll-wrapper:active { cursor: grabbing; }
-.collection-track {
-  display: flex; gap: clamp(16px, 2.5vw, 32px); width: max-content; padding-right: clamp(20px, 5vw, 72px);
+@media (max-width: 768px) {
+  .collection-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Product Card */
