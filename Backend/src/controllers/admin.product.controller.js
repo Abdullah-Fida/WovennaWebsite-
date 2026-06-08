@@ -20,13 +20,29 @@ function uploadBufferToCloudinary(buffer, folder = 'products') {
   });
 }
 
+// Helper: safely parse JSON string fields from FormData
+function safeParseJSON(value, fallback = []) {
+  if (!value) return fallback;
+  if (Array.isArray(value)) return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
+
 // Create product (supports multiple images)
 const createProduct = asyncHandler(async (req, res) => {
-  const { name, description, price, originalPrice, category, stock } = req.body;
+  const { name, description, price, originalPrice, category, stock, material, weight, isFeatured, isActive } = req.body;
   if (!name || !price) {
     res.status(400);
     throw new Error('Name and price are required');
   }
+
+  // Parse JSON array fields from FormData
+  const colors = safeParseJSON(req.body.colors, []);
+  const sizes = safeParseJSON(req.body.sizes, []);
+  const tags = safeParseJSON(req.body.tags, []);
 
   // if files were uploaded, upload to Cloudinary
   let images = [];
@@ -43,7 +59,14 @@ const createProduct = asyncHandler(async (req, res) => {
     originalPrice,
     category,
     stock: stock || 0,
-    images
+    images,
+    colors,
+    sizes,
+    material: material || '',
+    weight: weight || '',
+    tags,
+    isFeatured: isFeatured === 'true' || isFeatured === true,
+    isActive: isActive === 'false' ? false : true
   });
 
   res.status(201).json(product);
@@ -64,13 +87,24 @@ const updateProduct = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
   if (!product) { res.status(404); throw new Error('Product not found'); }
 
-  const { name, description, price, originalPrice, category, stock } = req.body;
+  const { name, description, price, originalPrice, category, stock, material, weight, isFeatured, isActive } = req.body;
   if (name !== undefined) product.name = name;
   if (description !== undefined) product.description = description;
   if (price !== undefined) product.price = price;
   if (originalPrice !== undefined) product.originalPrice = originalPrice;
   if (category !== undefined) product.category = category;
   if (stock !== undefined) product.stock = stock;
+
+  // New fields
+  if (material !== undefined) product.material = material;
+  if (weight !== undefined) product.weight = weight;
+  if (isFeatured !== undefined) product.isFeatured = isFeatured === 'true' || isFeatured === true;
+  if (isActive !== undefined) product.isActive = isActive === 'true' || isActive === true;
+
+  // Parse JSON array fields
+  if (req.body.colors !== undefined) product.colors = safeParseJSON(req.body.colors, []);
+  if (req.body.sizes !== undefined) product.sizes = safeParseJSON(req.body.sizes, []);
+  if (req.body.tags !== undefined) product.tags = safeParseJSON(req.body.tags, []);
 
   // append new images if any - upload to Cloudinary
   if (req.files && req.files.length) {

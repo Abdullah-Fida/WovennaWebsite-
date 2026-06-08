@@ -22,7 +22,12 @@ export default function ProductCard({ product }) {
       </div>
       
       <div className="product-info">
-        <div className="product-tag">{product.category}</div>
+        <div className="product-tag-row" style={{ display: 'flex', gap: '6px', marginBottom: '10px', flexWrap: 'wrap' }}>
+          <div className="product-tag" style={{ marginBottom: 0 }}>{product.category}</div>
+          {product.tags && product.tags.map((tag, idx) => (
+            <div key={idx} className="product-tag" style={{ marginBottom: 0, color: 'var(--navy)', borderColor: 'var(--navy)' }}>{tag}</div>
+          ))}
+        </div>
         <h3 className="product-name">{product.name}</h3>
         <div className="product-price">
           {product.originalPrice && product.originalPrice > product.price && (

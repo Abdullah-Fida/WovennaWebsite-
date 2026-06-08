@@ -88,3 +88,4 @@ export const getAdminOrders = async () => {
   return data.orders || data;
 };
 export const updateOrderStatus = (id, status) => apiFetch(`/admin/orders/${id}/status`, { method: 'PUT', body: { status } });
+export const toggleUserStatus = (id) => apiFetch(`/admin/users/${id}/toggle-status`, { method: 'PUT' });

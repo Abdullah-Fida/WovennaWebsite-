@@ -44,6 +44,7 @@ export default function AdminDashboard() {
         <Link to="/admin" className="active">Overview</Link>
         <Link to="/admin/orders">Orders</Link>
         <Link to="/admin/products">Products</Link>
+        <Link to="/admin/users">Users</Link>
       </div>
 
       <div className="stats-grid">

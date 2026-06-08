@@ -1445,3 +1445,73 @@ footer {
   .checkout-form-group textarea { font-size: 16px; } /* prevent iOS zoom */
   .auth-form input { font-size: 16px; } /* prevent iOS zoom */
 }
+
+/* ============================================================
+   ENHANCED ADMIN STYLES (Colors, Sizes, Tags, Toggles)
+   ============================================================ */
+.admin-colors-editor { display: flex; flex-direction: column; gap: 10px; }
+.admin-color-row { display: flex; gap: 10px; align-items: center; }
+.admin-color-input { 
+  width: 40px; height: 40px; border: none; padding: 0; cursor: pointer;
+  background: none; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+}
+.admin-color-input::-webkit-color-swatch-wrapper { padding: 0; }
+.admin-color-input::-webkit-color-swatch { border: 1px solid rgba(197,160,89,0.3); border-radius: 50%; }
+.admin-color-name-input { flex: 1; }
+.admin-color-remove { 
+  width: 32px; height: 32px; background: rgba(239,68,68,0.1); border: none;
+  color: #ef4444; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.admin-color-remove:hover { background: rgba(239,68,68,0.2); }
+.admin-add-color-btn {
+  background: none; border: 1px dashed rgba(197,160,89,0.4); padding: 10px;
+  color: var(--gray); font-size: 11px; text-transform: uppercase; letter-spacing: 2px;
+  cursor: pointer; transition: all 0.2s;
+}
+.admin-add-color-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+.admin-chips-group { display: flex; flex-wrap: wrap; gap: 10px; }
+.admin-chip {
+  background: transparent; border: 1px solid rgba(197,160,89,0.3);
+  padding: 8px 16px; font-family: var(--font-body); font-size: 11px;
+  color: var(--gray); cursor: pointer; transition: all 0.2s;
+}
+.admin-chip:hover { border-color: var(--gold); }
+.admin-chip.selected { background: var(--navy); color: var(--white); border-color: var(--navy); }
+
+.admin-toggles-row { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; padding: 20px; background: var(--cream); border: 1px solid rgba(197,160,89,0.2); }
+.admin-toggle-label { display: flex; align-items: center; gap: 12px; cursor: pointer; font-size: 13px; color: var(--navy); }
+.admin-toggle-switch {
+  width: 44px; height: 24px; background: rgba(10,17,40,0.1); border-radius: 12px;
+  position: relative; transition: all 0.3s;
+}
+.admin-toggle-switch.on { background: var(--gold); }
+.admin-toggle-knob {
+  width: 18px; height: 18px; background: var(--white); border-radius: 50%;
+  position: absolute; top: 3px; left: 3px; transition: all 0.3s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.admin-toggle-switch.on .admin-toggle-knob { left: 23px; }
+
+/* Admin Table enhancements */
+.admin-featured-badge { font-size: 9px; color: var(--gold); margin-left: 8px; vertical-align: super; }
+.admin-color-swatches { display: flex; gap: 4px; flex-wrap: wrap; }
+.admin-color-dot { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); }
+.admin-tag-list { display: flex; gap: 4px; flex-wrap: wrap; }
+.admin-tag-chip { font-size: 9px; padding: 2px 6px; border: 1px solid rgba(197,160,89,0.3); color: var(--gray); }
+
+/* Users Table enhancements */
+.admin-role-badge { font-size: 9px; padding: 4px 8px; letter-spacing: 1px; text-transform: uppercase; border: 1px solid; }
+.admin-role-badge.admin { color: var(--gold); border-color: var(--gold); background: rgba(197,160,89,0.08); }
+.admin-role-badge.customer { color: var(--navy); border-color: rgba(10,17,40,0.2); }
+.admin-status-indicator { font-size: 10px; padding: 4px 10px; border-radius: 12px; }
+.admin-status-indicator.active { background: rgba(34,197,94,0.1); color: #16a34a; }
+.admin-status-indicator.inactive { background: rgba(239,68,68,0.1); color: #dc2626; }
+
+/* Product Detail display enhancements */
+.product-swatches { display: flex; gap: 16px; flex-wrap: wrap; }
+.product-swatch-item { display: flex; align-items: center; gap: 8px; }
+.product-swatch-circle { width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); }
+.product-swatch-name { font-size: 12px; color: var(--gray); }
+.product-size-chips { display: flex; gap: 10px; flex-wrap: wrap; }
+.product-size-chip { padding: 8px 16px; border: 1px solid rgba(197,160,89,0.3); font-size: 11px; color: var(--navy); }

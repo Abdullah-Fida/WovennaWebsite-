@@ -112,7 +112,12 @@ export default function ProductDetail() {
           ]}
         />
 
-        <div className="product-detail-tag">{product.category}</div>
+        <div className="product-detail-tag-row" style={{ display: 'flex', gap: '8px', marginBottom: '14px', flexWrap: 'wrap' }}>
+          <div className="product-detail-tag">{product.category}</div>
+          {product.tags && product.tags.map((tag, idx) => (
+            <div key={idx} className="product-detail-tag" style={{ color: 'var(--navy)', borderColor: 'var(--navy)' }}>{tag}</div>
+          ))}
+        </div>
         <h1 className="product-detail-name">{product.name}</h1>
         <div className="product-detail-price">
           {product.originalPrice && product.originalPrice > product.price && (
@@ -134,6 +139,31 @@ export default function ProductDetail() {
           <button className="qty-btn" onClick={() => setQty(q => q + 1)}>+</button>
         </div>
 
+        {product.colors && product.colors.length > 0 && (
+          <div style={{ marginBottom: '26px' }}>
+            <div className="qty-label" style={{ marginBottom: '10px' }}>Colors</div>
+            <div className="product-swatches">
+              {product.colors.map((c, i) => (
+                <div key={i} className="product-swatch-item">
+                  <span className="product-swatch-circle" style={{ background: c.hex }} title={c.name}></span>
+                  <span className="product-swatch-name">{c.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {product.sizes && product.sizes.length > 0 && (
+          <div style={{ marginBottom: '26px' }}>
+            <div className="qty-label" style={{ marginBottom: '10px' }}>Available Sizes</div>
+            <div className="product-size-chips">
+              {product.sizes.map((s, i) => (
+                <span key={i} className="product-size-chip">{s}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
         <button 
           className="add-to-bag-btn" 
           onClick={handleAddToCart}
@@ -151,8 +181,14 @@ export default function ProductDetail() {
           </div>
           <div className="spec-row">
             <span className="spec-label">Material</span>
-            <span className="spec-value">Premium Woven Blend</span>
+            <span className="spec-value">{product.material || 'Premium Woven Blend'}</span>
           </div>
+          {product.weight && (
+            <div className="spec-row">
+              <span className="spec-label">Weight</span>
+              <span className="spec-value">{product.weight}</span>
+            </div>
+          )}
         </div>
 
         <div className="card card--soft card-pad" style={{ marginTop: 28 }}>

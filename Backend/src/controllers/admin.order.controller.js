@@ -49,4 +49,12 @@ const getAllUsers = asyncHandler(async (req, res) => {
   res.json({ success: true, users });
 });
 
-module.exports = { getAllOrders, updateOrderStatus, getDashboardStats, getAllUsers };
+const toggleUserStatus = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
+  if (!user) { res.status(404); throw new Error('User not found'); }
+  user.isActive = !user.isActive;
+  await user.save();
+  res.json({ success: true, user: { _id: user._id, isActive: user.isActive } });
+});
+
+module.exports = { getAllOrders, updateOrderStatus, getDashboardStats, getAllUsers, toggleUserStatus };

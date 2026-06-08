@@ -6,7 +6,7 @@ const path = require('path');
 const { protect } = require('../middleware/auth.middleware');
 const { isAdmin } = require('../middleware/admin.middleware');
 const { createProduct, getProducts, getProduct, updateProduct, deleteProduct } = require('../controllers/admin.product.controller');
-const { getAllOrders, updateOrderStatus, getDashboardStats, getAllUsers } = require('../controllers/admin.order.controller');
+const { getAllOrders, updateOrderStatus, getDashboardStats, getAllUsers, toggleUserStatus } = require('../controllers/admin.order.controller');
 
 // multer setup - use memory storage so we can upload files to Cloudinary
 const storage = multer.memoryStorage();
@@ -17,6 +17,7 @@ router.get('/stats', protect, isAdmin, getDashboardStats);
 
 // users
 router.get('/users', protect, isAdmin, getAllUsers);
+router.put('/users/:id/toggle-status', protect, isAdmin, toggleUserStatus);
 
 // product routes
 router.get('/products', protect, isAdmin, getProducts);
