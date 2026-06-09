@@ -82,7 +82,7 @@ export default function AdminProducts() {
 
   const handleColorChange = (index, field, value) => {
     const updated = [...colors];
-    updated[index][field] = value;
+    updated[index] = { ...updated[index], [field]: value };
     setColors(updated);
   };
 
@@ -117,7 +117,7 @@ export default function AdminProducts() {
     data.append('isActive', formData.isActive);
 
     // JSON-encode array fields
-    data.append('colors', JSON.stringify(colors.filter(c => c.name && c.hex)));
+    data.append('colors', JSON.stringify(colors)); // Do not filter silently, let 'required' catch it
     data.append('sizes', JSON.stringify(selectedSizes));
     data.append('tags', JSON.stringify(selectedTags));
     
@@ -334,6 +334,7 @@ export default function AdminProducts() {
                         value={color.name}
                         onChange={e => handleColorChange(index, 'name', e.target.value)}
                         className="admin-color-name-input"
+                        required
                       />
                       <button type="button" className="admin-color-remove" onClick={() => handleRemoveColor(index)}>×</button>
                     </div>

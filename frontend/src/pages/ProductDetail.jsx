@@ -18,12 +18,16 @@ export default function ProductDetail() {
   const [toastMsg, setToastMsg] = useState('');
   const [adding, setAdding] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [selectedSize, setSelectedSize] = useState(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         const data = await getProduct(id);
         setProduct(data);
+        if (data.colors && data.colors.length > 0) setSelectedColor(data.colors[0]);
+        if (data.sizes && data.sizes.length > 0) setSelectedSize(data.sizes[0]);
       } catch (err) {
         console.error(err);
       } finally {
@@ -45,7 +49,9 @@ export default function ProductDetail() {
         name: product.name,
         price: product.price,
         image: product.images[0] || '/premium/model-tote-premium-new.png',
-        quantity: qty
+        quantity: qty,
+        color: selectedColor ? selectedColor.name : undefined,
+        size: selectedSize ? selectedSize : undefined
       });
       setToastMsg('Added to bag');
       // Trigger cart badge update by modifying location state slightly (or context)
@@ -141,12 +147,26 @@ export default function ProductDetail() {
 
         {product.colors && product.colors.length > 0 && (
           <div style={{ marginBottom: '26px' }}>
-            <div className="qty-label" style={{ marginBottom: '10px' }}>Colors</div>
+            <div className="qty-label" style={{ marginBottom: '10px' }}>
+              Color: <span style={{ color: 'var(--navy)', fontWeight: 400, textTransform: 'none', letterSpacing: 'normal', fontSize: '14px', marginLeft: '6px' }}>{selectedColor?.name}</span>
+            </div>
             <div className="product-swatches">
               {product.colors.map((c, i) => (
-                <div key={i} className="product-swatch-item">
-                  <span className="product-swatch-circle" style={{ background: c.hex }} title={c.name}></span>
-                  <span className="product-swatch-name">{c.name}</span>
+                <div 
+                  key={i} 
+                  className={`product-swatch-item ${selectedColor?.name === c.name ? 'selected' : ''}`}
+                  onClick={() => setSelectedColor(c)}
+                  style={{ cursor: 'pointer', transition: 'opacity 0.2s ease', opacity: selectedColor?.name === c.name ? 1 : 0.6 }}
+                >
+                  <span 
+                    className="product-swatch-circle" 
+                    style={{ 
+                      background: c.hex, 
+                      boxShadow: selectedColor?.name === c.name ? '0 0 0 2px var(--bg), 0 0 0 3.5px var(--gold)' : 'none',
+                      border: selectedColor?.name === c.name ? 'none' : '1px solid rgba(0,0,0,0.1)'
+                    }} 
+                    title={c.name}
+                  ></span>
                 </div>
               ))}
             </div>
@@ -155,10 +175,24 @@ export default function ProductDetail() {
 
         {product.sizes && product.sizes.length > 0 && (
           <div style={{ marginBottom: '26px' }}>
-            <div className="qty-label" style={{ marginBottom: '10px' }}>Available Sizes</div>
+            <div className="qty-label" style={{ marginBottom: '10px' }}>
+              Size: <span style={{ color: 'var(--navy)', fontWeight: 400, textTransform: 'none', letterSpacing: 'normal', fontSize: '14px', marginLeft: '6px' }}>{selectedSize}</span>
+            </div>
             <div className="product-size-chips">
               {product.sizes.map((s, i) => (
-                <span key={i} className="product-size-chip">{s}</span>
+                <span 
+                  key={i} 
+                  className={`product-size-chip ${selectedSize === s ? 'selected' : ''}`}
+                  onClick={() => setSelectedSize(s)}
+                  style={{ 
+                    cursor: 'pointer', 
+                    background: selectedSize === s ? 'var(--navy)' : 'transparent',
+                    color: selectedSize === s ? 'var(--white)' : 'var(--navy)',
+                    borderColor: selectedSize === s ? 'var(--navy)' : 'rgba(197,160,89,0.3)'
+                  }}
+                >
+                  {s}
+                </span>
               ))}
             </div>
           </div>
