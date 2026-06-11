@@ -1,9 +1,32 @@
 import { useState } from 'react';
 import PageHeader from '../components/ui/PageHeader';
 import InfoTip from '../components/ui/InfoTip';
+import { submitContactQuery } from '../api';
 
 export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', message: '' });
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setSuccess('');
+    setError('');
+    
+    try {
+      const res = await submitContactQuery(form);
+      if (res.success) {
+        setSuccess(res.message);
+        setForm({ name: '', email: '', message: '' });
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to send message');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="page">
@@ -51,11 +74,11 @@ export default function Contact() {
             <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 300, marginBottom: 10 }}>
               Send a message
             </h3>
-            <p className="help-text" style={{ marginBottom: 18 }}>
-              This form is a UI placeholder (no backend endpoint connected yet). If you want, I can connect it to a real email/CRM endpoint.
-            </p>
 
-            <form onSubmit={(e) => e.preventDefault()} className="admin-form">
+            {success && <div className="auth-error" style={{ marginBottom: '24px', backgroundColor: 'var(--color-gold-light)', color: 'var(--color-navy)', border: 'none' }}>{success}</div>}
+            {error && <div className="auth-error" style={{ marginBottom: '24px' }}>{error}</div>}
+
+            <form onSubmit={handleSubmit} className="admin-form">
               <div className="checkout-form-group">
                 <label>Your Name</label>
                 <input
@@ -87,8 +110,8 @@ export default function Contact() {
                 </div>
               </div>
 
-              <button type="button" className="auth-submit-btn" onClick={() => alert('Contact form is UI-only right now.')}>
-                Send Message
+              <button type="submit" className="auth-submit-btn" disabled={loading}>
+                {loading ? 'Sending...' : 'Send Message'}
               </button>
             </form>
           </div>

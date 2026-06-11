@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Order = require("../models/order.model");
 const Cart = require("../models/cart.model");
+const { sendOrderConfirmationEmail } = require("../utils/email.service");
 
 // Generate unique order ID
 const generateOrderId = () => {
@@ -77,6 +78,9 @@ const createOrder = asyncHandler(async (req, res) => {
   });
 
   await Cart.deleteMany({ user: userId });
+
+  // Send confirmation email asynchronously (don't await so it doesn't block response)
+  sendOrderConfirmationEmail(req.user.email, order).catch(err => console.error("Email failed:", err));
 
   res.status(201).json({ success: true, order });
 });

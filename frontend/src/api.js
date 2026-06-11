@@ -89,3 +89,6 @@ export const getAdminOrders = async () => {
 };
 export const updateOrderStatus = (id, status) => apiFetch(`/admin/orders/${id}/status`, { method: 'PUT', body: { status } });
 export const toggleUserStatus = (id) => apiFetch(`/admin/users/${id}/toggle-status`, { method: 'PUT' });
+
+// Contact
+export const submitContactQuery = (body) => apiFetch('/contact', { method: 'POST', body });

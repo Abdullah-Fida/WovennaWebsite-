@@ -64,6 +64,11 @@ app.use("/api/order", orderRoutes);
 // public product routes
 const productRoutes = require('./routes/product.routes');
 app.use('/api/products', productRoutes);
+
+// contact routes
+const contactRoutes = require('./routes/contact.routes');
+app.use('/api/contact', contactRoutes);
+
 // serve uploads
 const path = require('path');
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
