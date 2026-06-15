@@ -17,6 +17,10 @@ const productSchema = new mongoose.Schema({
   sizes: [{ type: String }],
   material: { type: String, default: '' },
   weight: { type: String, default: '' },
+  dimensions: { type: String, default: '' },
+  widthCm: { type: String, default: '' },
+  heightCm: { type: String, default: '' },
+  careInstructions: { type: String, default: 'Wipe with dry cloth. Keep away from water.' },
   tags: [{ type: String }],
   isFeatured: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true }

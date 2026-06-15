@@ -11,6 +11,7 @@ const CATEGORIES = ['Tote', 'Crossbody', 'Clutch', 'Backpack', 'Wallet', 'Genera
 const emptyForm = {
   name: '', description: '', price: '', originalPrice: '',
   category: 'General', stock: '', material: '', weight: '',
+  dimensions: '', widthCm: '', heightCm: '', careInstructions: 'Wipe with dry cloth. Keep away from water.',
   isFeatured: false, isActive: true
 };
 
@@ -55,6 +56,10 @@ export default function AdminProducts() {
         stock: product.stock,
         material: product.material || '',
         weight: product.weight || '',
+        dimensions: product.dimensions || '',
+        widthCm: product.widthCm || '',
+        heightCm: product.heightCm || '',
+        careInstructions: product.careInstructions || 'Wipe with dry cloth. Keep away from water.',
         isFeatured: product.isFeatured || false,
         isActive: product.isActive !== false
       });
@@ -113,6 +118,10 @@ export default function AdminProducts() {
     data.append('stock', formData.stock);
     data.append('material', formData.material);
     data.append('weight', formData.weight);
+    data.append('dimensions', formData.dimensions);
+    data.append('widthCm', formData.widthCm);
+    data.append('heightCm', formData.heightCm);
+    data.append('careInstructions', formData.careInstructions);
     data.append('isFeatured', formData.isFeatured);
     data.append('isActive', formData.isActive);
 
@@ -314,6 +323,26 @@ export default function AdminProducts() {
                   <label>Weight <small style={{ fontWeight: 'normal', color: 'var(--gray)' }}>(e.g., 350g)</small></label>
                   <input type="text" value={formData.weight} onChange={e => setFormData({...formData, weight: e.target.value})} />
                 </div>
+              </div>
+
+              {/* Dimensions + Care */}
+              <div className="checkout-form-group">
+                <label>Overall Dimensions <small style={{ fontWeight: 'normal', color: 'var(--gray)' }}>(e.g., 19 cm × 8 cm × 19 cm)</small></label>
+                <input type="text" value={formData.dimensions} onChange={e => setFormData({...formData, dimensions: e.target.value})} />
+              </div>
+              <div className="checkout-form-row">
+                <div className="checkout-form-group">
+                  <label>Bag Width (cm) <small style={{ fontWeight: 'normal', color: 'var(--gray)' }}>(For Size Guide illustration)</small></label>
+                  <input type="number" value={formData.widthCm} onChange={e => setFormData({...formData, widthCm: e.target.value})} />
+                </div>
+                <div className="checkout-form-group">
+                  <label>Bag Height (cm) <small style={{ fontWeight: 'normal', color: 'var(--gray)' }}>(For Size Guide illustration)</small></label>
+                  <input type="number" value={formData.heightCm} onChange={e => setFormData({...formData, heightCm: e.target.value})} />
+                </div>
+              </div>
+              <div className="checkout-form-group">
+                <label>Care Instructions</label>
+                <input type="text" value={formData.careInstructions} onChange={e => setFormData({...formData, careInstructions: e.target.value})} />
               </div>
 
               {/* Colors */}

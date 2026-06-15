@@ -8,6 +8,19 @@ import Accordion from '../components/ui/Accordion';
 import InfoTip from '../components/ui/InfoTip';
 import EmptyState from '../components/ui/EmptyState';
 
+const FALLBACK_IMAGES = [
+  '/Images/image-6.jpeg',
+  '/Images/image-7.jpeg',
+  '/Images/image-8.jpeg',
+  '/Images/image-9.jpeg',
+  '/Images/image-10.jpeg',
+  '/Images/image-11.jpeg',
+  '/Images/image-12.jpeg',
+  '/Images/image-13.jpeg',
+  '/Images/image-14.jpeg',
+  '/Images/image-15.jpeg'
+];
+
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -20,6 +33,7 @@ export default function ProductDetail() {
   const [activeImage, setActiveImage] = useState(0);
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
+  const [showSizeGuide, setShowSizeGuide] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -48,7 +62,7 @@ export default function ProductDetail() {
         productId: product._id,
         name: product.name,
         price: product.price,
-        image: product.images[0] || '/premium/model-tote-premium-new.png',
+        image: product.images?.[0] || FALLBACK_IMAGES[0],
         quantity: qty,
         color: selectedColor ? selectedColor.name : undefined,
         size: selectedSize ? selectedSize : undefined
@@ -86,17 +100,19 @@ export default function ProductDetail() {
     );
   }
 
+  const displayImages = product.images?.length > 0 ? product.images : FALLBACK_IMAGES;
+
   return (
     <div className="product-detail-page">
       <Toast message={toastMsg} onClose={() => setToastMsg('')} />
       
       <div className="product-detail-images">
         <div className="main-image">
-          <img src={product.images?.[activeImage] || '/premium/model-crossbody-premium-new.png'} alt={product.name} />
+          <img src={displayImages[activeImage]} alt={product.name} />
         </div>
-        {product.images && product.images.length > 1 && (
+        {displayImages.length > 1 && (
           <div className="thumbnail-gallery">
-            {product.images.map((img, idx) => (
+            {displayImages.map((img, idx) => (
               <img 
                 key={idx} 
                 src={img} 
@@ -131,6 +147,10 @@ export default function ProductDetail() {
           )}
           <span className="price-current">Rs. {product.price.toLocaleString()}</span>
         </div>
+        <button className="size-guide-btn" onClick={() => setShowSizeGuide(true)} style={{ background: 'none', border: 'none', color: 'var(--navy)', opacity: 0.7, fontSize: '12px', letterSpacing: '2px', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', padding: '0', marginBottom: '16px', fontFamily: 'var(--font-body)' }}>
+          <svg viewBox="0 0 24 24" style={{ width: '13px', height: '13px', stroke: 'var(--gold)', fill: 'none', strokeWidth: 1.5 }}><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          Size Guide &amp; Dimensions
+        </button>
         
         <p className="product-detail-desc">{product.description || 'A timeless woven piece built with unparalleled craftsmanship.'}</p>
         
@@ -255,6 +275,60 @@ export default function ProductDetail() {
           />
         </div>
       </div>
+
+      {showSizeGuide && (
+        <div className="size-guide-overlay open" onClick={() => setShowSizeGuide(false)}>
+          <div className="size-guide-modal" onClick={e => e.stopPropagation()}>
+            <button className="size-guide-close" onClick={() => setShowSizeGuide(false)}>
+              <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+            <span className="size-guide-label">Size Guide</span>
+            <h3>{product.name}</h3>
+            <p className="size-guide-product-name">{product.material || 'Eco-friendly Jute Straw & Vegan Leather'}</p>
+
+            <div className="dimension-visual">
+              <div className="dim-bag">
+                <div className="dim-handle-left"></div>
+                <div className="dim-handle-right"></div>
+                <div className="dim-bag-shape"></div>
+                
+                <div className="dim-width-arrow">
+                  <div className="dim-arrow-tip-left"></div>
+                  <div className="dim-arrow-line"></div>
+                  <div className="dim-arrow-tip-right"></div>
+                  <div className="dim-width-label">{product.widthCm || '19'} cm</div>
+                </div>
+
+                <div className="dim-height-arrow">
+                  <div className="dim-arrow-tip-up"></div>
+                  <div className="dim-height-line"></div>
+                  <div className="dim-arrow-tip-down"></div>
+                  <div className="dim-height-label">{product.heightCm || '19'} cm</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="size-guide-specs">
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid rgba(197,160,89,0.15)' }}>
+                <span style={{ fontSize: '9px', letterSpacing: '2px', color: 'var(--gray)', textTransform: 'uppercase' }}>Dimensions</span>
+                <span style={{ fontSize: '13px', color: 'var(--navy)', fontWeight: 300 }}>{product.dimensions || '19 cm × 8 cm × 19 cm'}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid rgba(197,160,89,0.15)' }}>
+                <span style={{ fontSize: '9px', letterSpacing: '2px', color: 'var(--gray)', textTransform: 'uppercase' }}>Material</span>
+                <span style={{ fontSize: '13px', color: 'var(--navy)', fontWeight: 300 }}>{product.material || 'Eco-friendly Jute Straw & Vegan Leather'}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid rgba(197,160,89,0.15)' }}>
+                <span style={{ fontSize: '9px', letterSpacing: '2px', color: 'var(--gray)', textTransform: 'uppercase' }}>Care</span>
+                <span style={{ fontSize: '13px', color: 'var(--navy)', fontWeight: 300, textAlign: 'right', maxWidth: '200px' }}>{product.careInstructions || 'Wipe with dry cloth. Keep away from water.'}</span>
+              </div>
+            </div>
+
+            <p style={{ marginTop: '24px', fontSize: '10px', color: 'var(--gray)', fontStyle: 'italic', background: 'rgba(197,160,89,0.1)', padding: '12px' }}>
+              All measurements are approximate. Natural materials may show slight variation.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

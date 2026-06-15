@@ -33,7 +33,7 @@ function safeParseJSON(value, fallback = []) {
 
 // Create product (supports multiple images)
 const createProduct = asyncHandler(async (req, res) => {
-  const { name, description, price, originalPrice, category, stock, material, weight, isFeatured, isActive } = req.body;
+  const { name, description, price, originalPrice, category, stock, material, weight, dimensions, widthCm, heightCm, careInstructions, isFeatured, isActive } = req.body;
   if (!name || !price) {
     res.status(400);
     throw new Error('Name and price are required');
@@ -64,6 +64,10 @@ const createProduct = asyncHandler(async (req, res) => {
     sizes,
     material: material || '',
     weight: weight || '',
+    dimensions: dimensions || '',
+    widthCm: widthCm || '',
+    heightCm: heightCm || '',
+    careInstructions: careInstructions || 'Wipe with dry cloth. Keep away from water.',
     tags,
     isFeatured: isFeatured === 'true' || isFeatured === true,
     isActive: isActive === 'false' ? false : true
@@ -87,7 +91,7 @@ const updateProduct = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
   if (!product) { res.status(404); throw new Error('Product not found'); }
 
-  const { name, description, price, originalPrice, category, stock, material, weight, isFeatured, isActive } = req.body;
+  const { name, description, price, originalPrice, category, stock, material, weight, dimensions, widthCm, heightCm, careInstructions, isFeatured, isActive } = req.body;
   if (name !== undefined) product.name = name;
   if (description !== undefined) product.description = description;
   if (price !== undefined) product.price = price;
@@ -98,6 +102,10 @@ const updateProduct = asyncHandler(async (req, res) => {
   // New fields
   if (material !== undefined) product.material = material;
   if (weight !== undefined) product.weight = weight;
+  if (dimensions !== undefined) product.dimensions = dimensions;
+  if (widthCm !== undefined) product.widthCm = widthCm;
+  if (heightCm !== undefined) product.heightCm = heightCm;
+  if (careInstructions !== undefined) product.careInstructions = careInstructions;
   if (isFeatured !== undefined) product.isFeatured = isFeatured === 'true' || isFeatured === true;
   if (isActive !== undefined) product.isActive = isActive === 'true' || isActive === true;
 

@@ -26,14 +26,16 @@ export default function Home() {
 
   return (
     <>
-      {/* HERO */}
+      {/* HERO — image-1 */}
       <section id="hero">
-        <div className="hero-bg"><img src="/Images/FULL-ROOM.webp" alt="Premium handbag hero" /></div>
+        <div className="hero-bg">
+          <img src="/Images/image-1.jpeg" alt="Wovenaa woven bags" />
+        </div>
         <div className="hero-overlay"></div>
         <div className="hero-content">
-          <span className="hero-eyebrow">Premium Handbags</span>
-          <h1 className="hero-title">Tote &amp; Crossbody,<br /><em>Elevated</em> Everyday</h1>
-          <p className="hero-subtitle">Two signature silhouettes—crafted to feel timeless, polished, and effortless.</p>
+          <span className="hero-eyebrow">Est. 2026 · THE TIMELESS WEAVE</span>
+          <h1 className="hero-title">Some Things Were Never<br /><em>Meant to Be Replaced</em></h1>
+          <p className="hero-subtitle">Woven for the woman who buys once, and keeps forever.</p>
           <Link to="/shop" className="btn-ghost">Explore Collection</Link>
         </div>
         <div className="hero-scroll">
@@ -42,24 +44,32 @@ export default function Home() {
         </div>
       </section>
 
-      {/* HERITAGE */}
+      {/* HERITAGE — image-2 */}
       <section id="heritage">
         <div className="heritage-grid">
           <div className="heritage-image-side reveal">
-            <img src="/premium/craftsmanship.jpg" alt="Handbag craftsmanship" />
-            <div className="heritage-img-caption">Hand-finished craftsmanship</div>
+            <img src="/Images/image-2.jpeg" alt="The ancient weave craft" />
+            <div className="heritage-img-caption">THE ANCIENT WEAVE · EST. 2000 BC</div>
           </div>
           <div className="heritage-text-side reveal">
-            <span className="section-label">Our Legacy</span>
-            <h2 className="section-title">Rooted in <em>History</em></h2>
-            <p className="section-body">Every Wovena bag carries the weight of a 4,000-year-old craft. We haven’t reinvented weaving; we’ve simply honored it, bringing the resilience of ancient techniques into modern luxury.</p>
-            <div className="heritage-quote">"True luxury is not about excess. It is about permanence."</div>
-            <Link to="/shop" className="btn-gold">View Collection</Link>
+            <span className="section-label">ANCIENT CRAFT, MODERN STRENGTH</span>
+            <h2 className="section-title">Before fast fashion existed,<br /><em>this bag already did.</em></h2>
+            <div className="heritage-quote">
+              "In 2000 BC, Ancient Egyptians wove reeds and grass into bags that carried their world.
+              Four thousand years later, the weave is still here.
+              Some things simply refuse to be replaced."
+            </div>
+            <p className="section-body">
+              The world moves fast. Trends arrive Tuesday and disappear by Friday.
+              Wovenaa was built as a quiet answer to all of that — a bag that carries a lineage older than any brand,
+              any logo, or any season.
+            </p>
+            <Link to="/shop" className="btn-gold">Discover the Process</Link>
           </div>
         </div>
       </section>
 
-      {/* LOOKBOOK */}
+      {/* LOOKBOOK — image-3, image-4 */}
       <section id="lookbook">
         <div className="lookbook-header reveal">
           <span className="section-label">Lookbook</span>
@@ -71,22 +81,22 @@ export default function Home() {
 
         <div className="lookbook-grid reveal">
           <figure className="lookbook-item lookbook-item--a">
-            <img src="/Images/model-f-1.png" alt="Model holding a tote bag" />
+            <img src="/Images/image-3.jpeg" alt="Signature Tote" />
             <figcaption className="lookbook-caption">Signature Tote</figcaption>
           </figure>
           <figure className="lookbook-item lookbook-item--b">
-            <img src="/Images/model-f-2.png" alt="Model wearing a crossbody bag" />
+            <img src="/Images/image-4.jpeg" alt="Crossbody" />
             <figcaption className="lookbook-caption">Crossbody</figcaption>
           </figure>
         </div>
       </section>
 
-      {/* COLLECTION */}
+      {/* COLLECTION — product cards from DB */}
       <section id="collection">
         <div className="collection-header reveal">
           <div>
-            <span className="section-label">Curated Selection</span>
-            <h2 className="section-title" style={{ marginBottom: 0 }}>The <em>Signatures</em></h2>
+            <span className="section-label">THE TIMELESS WEAVE</span>
+            <h2 className="section-title" style={{ marginBottom: 0 }}>The <em>Wovenaa</em> Edit</h2>
           </div>
           <Link to="/shop" className="btn-ghost" style={{ color: 'var(--navy)', borderColor: 'var(--navy)' }}>View All</Link>
         </div>
@@ -98,13 +108,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* MATERIALS */}
+      {/* MATERIALS — image-5, image-6 */}
       <section id="materials">
         <span className="section-label reveal">The Elements</span>
         <h2 className="section-title reveal">Uncompromising <em>Quality</em></h2>
         <div className="materials-layout reveal">
           <div className="hotspot-container">
-            <img src="/Images/close-up.png" alt="Handbag materials close-up" />
+            <img src="/Images/image-5.jpeg" alt="Handbag materials close-up" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <div className="materials-info">
             <div className="material-item">
@@ -126,6 +136,29 @@ export default function Home() {
         </div>
       </section>
 
+      {/* GALLERY SHOWCASE — image-6, image-7, image-8 */}
+      <section id="gallery" style={{ padding: 'clamp(60px, 10vw, 120px) clamp(20px, 5vw, 72px)' }}>
+        <div style={{ textAlign: 'center', marginBottom: '48px' }} className="reveal">
+          <span className="section-label">Gallery</span>
+          <h2 className="section-title">Crafted with <em>Soul</em></h2>
+        </div>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: 'clamp(8px, 1.5vw, 16px)',
+        }} className="reveal">
+          <div style={{ overflow: 'hidden', aspectRatio: '3/4' }}>
+            <img src="/Images/image-6.jpeg" alt="Wovenaa product 1" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.6s ease' }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'} />
+          </div>
+          <div style={{ overflow: 'hidden', aspectRatio: '3/4' }}>
+            <img src="/Images/image-7.jpeg" alt="Wovenaa product 2" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.6s ease' }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'} />
+          </div>
+          <div style={{ overflow: 'hidden', aspectRatio: '3/4' }}>
+            <img src="/Images/image-8.jpeg" alt="Wovenaa product 3" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.6s ease' }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'} />
+          </div>
+        </div>
+      </section>
+
       {/* CONCIERGE / CLIENT CARE */}
       <section id="concierge">
         <div className="concierge-inner reveal">
@@ -137,7 +170,7 @@ export default function Home() {
           <span className="section-label">Client Care</span>
           <h2 className="section-title">We help you choose the <em>right</em> bag</h2>
           <p className="section-body" style={{ maxWidth: 620, margin: '0 auto' }}>
-            Need sizing advice, care guidance, or shipping details? We’ve added detailed pages (Materials, Care Guide, Shipping &amp; Returns, FAQ)
+            Need sizing advice, care guidance, or shipping details? We've added detailed pages (Materials, Care Guide, Shipping &amp; Returns, FAQ)
             so every part of the experience is clearly explained.
           </p>
 
