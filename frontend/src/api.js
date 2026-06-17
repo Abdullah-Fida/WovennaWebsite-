@@ -92,3 +92,13 @@ export const toggleUserStatus = (id) => apiFetch(`/admin/users/${id}/toggle-stat
 
 // Contact
 export const submitContactQuery = (body) => apiFetch('/contact', { method: 'POST', body });
+
+// Promos (Admin)
+export const getAdminPromos = () => apiFetch('/admin/promos');
+export const createPromo = (body) => apiFetch('/admin/promos', { method: 'POST', body });
+export const updatePromo = (id, body) => apiFetch(`/admin/promos/${id}`, { method: 'PUT', body });
+export const deletePromo = (id) => apiFetch(`/admin/promos/${id}`, { method: 'DELETE' });
+
+// Promos (Public)
+export const validatePromoCode = (body) => apiFetch('/promos/validate', { method: 'POST', body });
+

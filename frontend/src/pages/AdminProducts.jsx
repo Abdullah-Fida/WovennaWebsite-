@@ -193,6 +193,7 @@ export default function AdminProducts() {
         <Link to="/admin/orders">Orders</Link>
         <Link to="/admin/products" className="active">Products</Link>
         <Link to="/admin/users">Users</Link>
+        <Link to="/admin/promos">Promos</Link>
       </div>
 
       <div className="admin-table-wrap">

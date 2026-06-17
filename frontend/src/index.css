@@ -1742,3 +1742,407 @@ footer {
     .size-guide-specs { display: flex; flex-direction: column; gap: 0; margin-top: 52px; }
 
     .size-spec-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(197,160,89,0.15); }
+
+/* ============================================================
+   FEATURED COLLECTIONS SECTION
+   ============================================================ */
+#featured-collections {
+  background: var(--bg);
+  padding: clamp(64px, 9vw, 120px) clamp(20px, 5vw, 72px);
+}
+.collections-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.collections-header {
+  margin-bottom: clamp(36px, 5vw, 64px);
+}
+.collections-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: clamp(12px, 2vw, 20px);
+}
+.collection-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  display: block;
+}
+.collection-card--large {
+  grid-row: 1 / 3;
+}
+.collection-card-img {
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
+}
+.collection-card--large .collection-card-img {
+  min-height: 100%;
+}
+.collection-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  filter: brightness(0.88) contrast(1.04);
+}
+.collection-card:hover .collection-card-img img {
+  transform: scale(1.06);
+}
+.collection-card-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: clamp(20px, 3vw, 36px);
+  background: linear-gradient(to top, rgba(10,17,40,0.72) 0%, rgba(10,17,40,0.15) 50%, transparent 100%);
+  transition: background 0.5s ease;
+}
+.collection-card:hover .collection-card-overlay {
+  background: linear-gradient(to top, rgba(10,17,40,0.82) 0%, rgba(10,17,40,0.25) 50%, transparent 100%);
+}
+.collection-card-label {
+  font-family: var(--font-body);
+  font-size: 8px;
+  font-weight: 400;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+.collection-card-title {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3vw, 38px);
+  font-weight: 200;
+  color: var(--white);
+  line-height: 1.1;
+  margin-bottom: 14px;
+}
+.collection-card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.85);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.4s ease, transform 0.4s ease, color 0.3s ease;
+}
+.collection-card-cta svg {
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.5;
+  transition: transform 0.3s ease;
+}
+.collection-card:hover .collection-card-cta {
+  opacity: 1;
+  transform: translateY(0);
+}
+.collection-card:hover .collection-card-cta:hover {
+  color: var(--gold);
+}
+.collection-card:hover .collection-card-cta svg {
+  transform: translateX(4px);
+}
+
+@media (max-width: 768px) {
+  .collections-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+  .collection-card--large {
+    grid-row: auto;
+  }
+  .collection-card-img {
+    min-height: 220px;
+    aspect-ratio: 16 / 10;
+  }
+  .collection-card--large .collection-card-img {
+    min-height: 220px;
+    aspect-ratio: 16 / 10;
+  }
+  .collection-card-cta {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================
+   PROMO CODE — CHECKOUT SECTION
+   ============================================================ */
+.promo-section {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(197,160,89,0.15);
+}
+.promo-section-label {
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gray);
+  margin-bottom: 12px;
+}
+.promo-input-row {
+  display: flex;
+  gap: 0;
+  border: 1px solid rgba(197,160,89,0.3);
+  transition: border-color 0.3s ease;
+}
+.promo-input-row:focus-within {
+  border-color: var(--gold);
+}
+.promo-input {
+  flex: 1;
+  padding: 12px 14px;
+  border: none;
+  outline: none;
+  background: var(--white);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  color: var(--navy);
+  text-transform: uppercase;
+}
+.promo-apply-btn {
+  padding: 12px 20px;
+  background: var(--navy);
+  color: var(--white);
+  border: none;
+  font-family: var(--font-body);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  white-space: nowrap;
+}
+.promo-apply-btn:hover:not(:disabled) {
+  background: var(--gold);
+}
+.promo-apply-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.promo-error {
+  font-size: 11px;
+  color: #ef4444;
+  margin-top: 8px;
+  letter-spacing: 0.5px;
+}
+.promo-applied-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: rgba(34,197,94,0.06);
+  border: 1px solid rgba(34,197,94,0.25);
+  padding: 12px 16px;
+  transition: all 0.3s ease;
+}
+.promo-applied-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+.promo-applied-code {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  color: var(--navy);
+}
+.promo-applied-discount {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 300;
+  color: #22c55e;
+  margin-left: auto;
+}
+.promo-remove-btn {
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gray);
+  cursor: pointer;
+  transition: color 0.3s ease;
+  padding: 4px 0;
+  flex-shrink: 0;
+}
+.promo-remove-btn:hover {
+  color: #ef4444;
+}
+
+/* ============================================================
+   PROMO CODE — ADMIN MANAGEMENT STYLES
+   ============================================================ */
+.promo-code-display {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  color: var(--navy);
+  background: rgba(197,160,89,0.1);
+  border: 1px solid rgba(197,160,89,0.25);
+  padding: 4px 12px;
+  display: inline-block;
+}
+.promo-product-count {
+  font-size: 11px;
+  color: var(--gold);
+  font-weight: 400;
+}
+.promo-all-products {
+  font-size: 11px;
+  color: var(--gray);
+  font-style: italic;
+}
+.promo-expired {
+  color: #ef4444;
+  text-decoration: line-through;
+}
+.promo-toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+.promo-actions {
+  display: flex;
+  gap: 8px;
+}
+.promo-success-msg {
+  background: rgba(34,197,94,0.08);
+  border: 1px solid rgba(34,197,94,0.25);
+  border-left: 3px solid #22c55e;
+  padding: 12px 16px;
+  font-size: 12px;
+  color: #16a34a;
+  letter-spacing: 0.5px;
+  margin-bottom: 24px;
+  animation: fadeUp 0.4s ease;
+}
+
+/* Product Selector in Admin Promo Modal */
+.promo-product-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+.promo-product-chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid rgba(197,160,89,0.2);
+  background: var(--white);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--navy);
+}
+.promo-product-chip:hover {
+  border-color: var(--gold);
+  background: rgba(197,160,89,0.04);
+}
+.promo-product-chip.selected {
+  border-color: var(--gold);
+  background: rgba(197,160,89,0.08);
+  box-shadow: inset 0 0 0 1px rgba(197,160,89,0.15);
+}
+.promo-product-chip-img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  background: var(--cream);
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   PREMIUM UI MICRO-ANIMATIONS & ENHANCEMENTS
+   ============================================================ */
+
+/* Smooth page entrance */
+main {
+  animation: pageEnter 0.5s ease;
+}
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Enhanced button hover glow */
+.btn-gold {
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.btn-gold:hover {
+  box-shadow: 0 4px 20px rgba(197,160,89,0.25);
+}
+.btn-ghost:hover {
+  box-shadow: 0 4px 20px rgba(197,160,89,0.18);
+}
+
+/* Enhanced product card hover */
+.product-card {
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.5s ease;
+}
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 60px rgba(10,17,40,0.1);
+}
+
+/* Stat card shine effect */
+.stat-card {
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(197,160,89,0.06), transparent);
+  transition: left 0.6s ease;
+}
+.stat-card:hover::after {
+  left: 100%;
+}
+
+/* Smooth scroll reveal stagger */
+.collections-grid .reveal:nth-child(2) { transition-delay: 0.12s; }
+.collections-grid .reveal:nth-child(3) { transition-delay: 0.24s; }
+
+/* Enhanced admin table row transitions */
+.admin-table tbody tr {
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+/* Product info text hover shimmer */
+.product-name {
+  transition: color 0.3s ease;
+}
+.product-card:hover .product-name {
+  color: var(--gold);
+}

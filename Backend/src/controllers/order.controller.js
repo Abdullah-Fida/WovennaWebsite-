@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Order = require("../models/order.model");
 const Cart = require("../models/cart.model");
+const Promo = require("../models/promo.model");
 const { sendOrderConfirmationEmail } = require("../utils/email.service");
 
 // Generate unique order ID
@@ -15,7 +16,7 @@ const createOrder = asyncHandler(async (req, res) => {
   }
 
   const userId = req.user._id;
-  const { shippingAddress, paymentMethod } = req.body;
+  const { shippingAddress, paymentMethod, promoCode } = req.body;
 
   if (!shippingAddress) {
     return res.status(400).json({ message: "Shipping address missing" });
@@ -61,7 +62,46 @@ const createOrder = asyncHandler(async (req, res) => {
 
   const shippingCharges = subtotal > 500 ? 0 : 50;
   const taxAmount = Math.round(subtotal * 0.18);
-  const finalAmount = subtotal + shippingCharges + taxAmount;
+
+  // Promo code handling
+  let discountAmount = 0;
+  let appliedPromoCode = null;
+
+  if (promoCode) {
+    const promo = await Promo.findOne({ code: promoCode.toUpperCase(), isActive: true });
+
+    if (promo && new Date(promo.expirationDate) >= new Date()) {
+      if (promo.usageLimit === null || promo.usageCount < promo.usageLimit) {
+        if (subtotal >= promo.minOrderAmount) {
+          // Calculate discount based on applicable products or whole cart
+          if (promo.applicableProducts && promo.applicableProducts.length > 0) {
+            let applicableTotal = 0;
+            items.forEach(item => {
+              if (promo.applicableProducts.some(pid => pid.toString() === item.productId.toString())) {
+                applicableTotal += (item.price * item.quantity);
+              }
+            });
+            if (promo.discountType === 'percentage') {
+              discountAmount = Math.round((applicableTotal * promo.discountValue) / 100);
+            } else {
+              discountAmount = Math.min(promo.discountValue, applicableTotal);
+            }
+          } else {
+            if (promo.discountType === 'percentage') {
+              discountAmount = Math.round((subtotal * promo.discountValue) / 100);
+            } else {
+              discountAmount = Math.min(promo.discountValue, subtotal);
+            }
+          }
+          appliedPromoCode = promo.code;
+          promo.usageCount += 1;
+          await promo.save();
+        }
+      }
+    }
+  }
+
+  const finalAmount = subtotal + shippingCharges + taxAmount - discountAmount;
 
   const order = await Order.create({
     user: userId,
@@ -74,7 +114,9 @@ const createOrder = asyncHandler(async (req, res) => {
     totalAmount: subtotal,
     shippingCharges,
     taxAmount,
-    finalAmount
+    finalAmount,
+    promoCode: appliedPromoCode,
+    discountAmount
   });
 
   await Cart.deleteMany({ user: userId });

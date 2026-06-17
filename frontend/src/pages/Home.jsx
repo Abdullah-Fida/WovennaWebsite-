@@ -24,6 +24,20 @@ export default function Home() {
     return () => observer.disconnect();
   }, []);
 
+  // Re-observe after products load (new .reveal elements appear)
+  useEffect(() => {
+    if (products.length === 0) return;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal:not(.visible)').forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [products]);
+
   return (
     <>
       {/* HERO — image-1 */}
@@ -41,6 +55,63 @@ export default function Home() {
         <div className="hero-scroll">
           <span>Scroll</span>
           <div className="scroll-line"></div>
+        </div>
+      </section>
+
+      {/* COLLECTIONS — Featured categories after hero */}
+      <section id="featured-collections">
+        <div className="collections-inner reveal">
+          <div className="collections-header">
+            <span className="section-label">Shop by Category</span>
+            <h2 className="section-title">Our <em>Collections</em></h2>
+            <p className="section-body" style={{ maxWidth: 580 }}>
+              Curated selections for every occasion. Explore our signature styles crafted with heritage techniques and modern elegance.
+            </p>
+          </div>
+
+          <div className="collections-grid">
+            <Link to="/shop?category=Tote" className="collection-card collection-card--large reveal">
+              <div className="collection-card-img">
+                <img src="/Images/image-3.jpeg" alt="Tote Collection" />
+              </div>
+              <div className="collection-card-overlay">
+                <span className="collection-card-label">Signature Collection</span>
+                <h3 className="collection-card-title">Totes</h3>
+                <span className="collection-card-cta">
+                  Shop Now
+                  <svg viewBox="0 0 24 24" width="14" height="14"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </span>
+              </div>
+            </Link>
+
+            <Link to="/shop?category=Crossbody" className="collection-card reveal">
+              <div className="collection-card-img">
+                <img src="/Images/image-4.jpeg" alt="Crossbody Collection" />
+              </div>
+              <div className="collection-card-overlay">
+                <span className="collection-card-label">Everyday Essentials</span>
+                <h3 className="collection-card-title">Crossbody</h3>
+                <span className="collection-card-cta">
+                  Shop Now
+                  <svg viewBox="0 0 24 24" width="14" height="14"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </span>
+              </div>
+            </Link>
+
+            <Link to="/shop" className="collection-card reveal">
+              <div className="collection-card-img">
+                <img src="/Images/image-6.jpeg" alt="New Arrivals" />
+              </div>
+              <div className="collection-card-overlay">
+                <span className="collection-card-label">Fresh Drops</span>
+                <h3 className="collection-card-title">New Arrivals</h3>
+                <span className="collection-card-cta">
+                  Shop Now
+                  <svg viewBox="0 0 24 24" width="14" height="14"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </span>
+              </div>
+            </Link>
+          </div>
         </div>
       </section>
 

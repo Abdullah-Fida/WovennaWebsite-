@@ -73,6 +73,10 @@ app.use('/api/contact', contactRoutes);
 const path = require('path');
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
+// promo routes (public validation)
+const promoRoutes = require('./routes/promo.routes');
+app.use('/api/promos', promoRoutes);
+
 // admin routes
 const adminRoutes = require('./routes/admin.routes');
 app.use('/api/admin', adminRoutes);

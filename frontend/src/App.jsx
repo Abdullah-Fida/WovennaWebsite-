@@ -30,6 +30,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminProducts from './pages/AdminProducts';
 import AdminOrders from './pages/AdminOrders';
 import AdminUsers from './pages/AdminUsers';
+import AdminPromos from './pages/AdminPromos';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -80,6 +81,7 @@ function App() {
             <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
             <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
             <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+            <Route path="/admin/promos" element={<AdminRoute><AdminPromos /></AdminRoute>} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" />} />

@@ -90,6 +90,14 @@ const orderSchema = new mongoose.Schema(
     finalAmount: {
       type: Number,
       required: true
+    },
+    promoCode: {
+      type: String,
+      default: null
+    },
+    discountAmount: {
+      type: Number,
+      default: 0
     }
   },
   { timestamps: true }

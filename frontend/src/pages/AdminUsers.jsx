@@ -69,6 +69,7 @@ export default function AdminUsers() {
         <Link to="/admin/orders">Orders</Link>
         <Link to="/admin/products">Products</Link>
         <Link to="/admin/users" className="active">Users</Link>
+        <Link to="/admin/promos">Promos</Link>
       </div>
 
       {/* Quick stats */}

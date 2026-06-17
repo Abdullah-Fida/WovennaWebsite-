@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getCart, createOrder } from '../api';
+import { getCart, createOrder, validatePromoCode } from '../api';
 import Toast from '../components/Toast';
 import PageHeader from '../components/ui/PageHeader';
 import InfoTip from '../components/ui/InfoTip';
@@ -14,6 +14,12 @@ export default function Checkout() {
   const [errorMsg, setErrorMsg] = useState('');
   const [loadError, setLoadError] = useState('');
   const navigate = useNavigate();
+
+  // Promo state
+  const [promoInput, setPromoInput] = useState('');
+  const [promoApplied, setPromoApplied] = useState(null); // { code, discountAmount }
+  const [promoError, setPromoError] = useState('');
+  const [promoLoading, setPromoLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     street: '',
@@ -40,6 +46,44 @@ export default function Checkout() {
   };
 
   const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const discountAmount = promoApplied ? promoApplied.discountAmount : 0;
+  const finalTotal = total - discountAmount;
+
+  const handleApplyPromo = async () => {
+    if (!promoInput.trim()) {
+      setPromoError('Please enter a promo code');
+      return;
+    }
+    setPromoLoading(true);
+    setPromoError('');
+    try {
+      const result = await validatePromoCode({
+        code: promoInput.trim(),
+        cartTotal: total,
+        cartItems: items.map(item => ({
+          productId: item.productId,
+          price: item.price,
+          quantity: item.quantity
+        }))
+      });
+      setPromoApplied({
+        code: result.promoCode,
+        discountAmount: result.discountAmount
+      });
+      setPromoError('');
+    } catch (err) {
+      setPromoError(err.message || 'Invalid promo code');
+      setPromoApplied(null);
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setPromoApplied(null);
+    setPromoInput('');
+    setPromoError('');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -58,7 +102,8 @@ export default function Checkout() {
           zipCode: formData.zipCode,
           phone: formData.phone
         },
-        paymentMethod: 'COD'
+        paymentMethod: 'COD',
+        promoCode: promoApplied ? promoApplied.code : null
       });
       navigate(`/order-success/${order._id}`);
     } catch (err) {
@@ -92,7 +137,7 @@ export default function Checkout() {
         {loadError ? (
           <EmptyState
             title="Checkout is unavailable right now"
-            description={`${loadError}. If the backend is offline, you won’t be able to place an order. You can still browse the collection and try again later.`}
+            description={`${loadError}. If the backend is offline, you won't be able to place an order. You can still browse the collection and try again later.`}
             actions={
               <>
                 <Link to="/cart" className="btn-gold">
@@ -212,6 +257,42 @@ export default function Checkout() {
                 ))}
               </div>
 
+              {/* Promo Code Section */}
+              <div className="promo-section">
+                <div className="promo-section-label">Promo Code</div>
+                {promoApplied ? (
+                  <div className="promo-applied-badge">
+                    <div className="promo-applied-info">
+                      <svg viewBox="0 0 24 24" width="16" height="16" style={{ stroke: '#22c55e', fill: 'none', strokeWidth: 2, flexShrink: 0 }}>
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                      <span className="promo-applied-code">{promoApplied.code}</span>
+                      <span className="promo-applied-discount">−Rs. {promoApplied.discountAmount.toLocaleString()}</span>
+                    </div>
+                    <button className="promo-remove-btn" onClick={handleRemovePromo}>Remove</button>
+                  </div>
+                ) : (
+                  <div className="promo-input-row">
+                    <input
+                      type="text"
+                      value={promoInput}
+                      onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                      placeholder="Enter code"
+                      className="promo-input"
+                    />
+                    <button
+                      type="button"
+                      className="promo-apply-btn"
+                      onClick={handleApplyPromo}
+                      disabled={promoLoading}
+                    >
+                      {promoLoading ? '...' : 'Apply'}
+                    </button>
+                  </div>
+                )}
+                {promoError && <div className="promo-error">{promoError}</div>}
+              </div>
+
               <div className="summary-row">
                 <span className="summary-label">Subtotal</span>
                 <span className="summary-value">Rs. {total.toLocaleString()}</span>
@@ -222,10 +303,16 @@ export default function Checkout() {
                   Free
                 </span>
               </div>
+              {discountAmount > 0 && (
+                <div className="summary-row">
+                  <span className="summary-label" style={{ color: '#22c55e' }}>Discount</span>
+                  <span className="summary-value" style={{ color: '#22c55e' }}>−Rs. {discountAmount.toLocaleString()}</span>
+                </div>
+              )}
               <div className="summary-divider"></div>
               <div className="summary-total">
                 <span className="summary-total-label">Total</span>
-                <span className="summary-total-amount">Rs. {total.toLocaleString()}</span>
+                <span className="summary-total-amount">Rs. {finalTotal.toLocaleString()}</span>
               </div>
             </div>
           </div>
