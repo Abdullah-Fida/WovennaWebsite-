@@ -23,6 +23,7 @@ const productSchema = new mongoose.Schema({
   careInstructions: { type: String, default: 'Wipe with dry cloth. Keep away from water.' },
   tags: [{ type: String }],
   isFeatured: { type: Boolean, default: false },
+  showInSoldOutRow: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true }
 }, { timestamps: true });
 

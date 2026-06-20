@@ -12,7 +12,7 @@ const emptyForm = {
   name: '', description: '', price: '', originalPrice: '',
   category: 'General', stock: '', material: '', weight: '',
   dimensions: '', widthCm: '', heightCm: '', careInstructions: 'Wipe with dry cloth. Keep away from water.',
-  isFeatured: false, isActive: true
+  isFeatured: false, showInSoldOutRow: false, isActive: true
 };
 
 export default function AdminProducts() {
@@ -61,6 +61,7 @@ export default function AdminProducts() {
         heightCm: product.heightCm || '',
         careInstructions: product.careInstructions || 'Wipe with dry cloth. Keep away from water.',
         isFeatured: product.isFeatured || false,
+        showInSoldOutRow: product.showInSoldOutRow || false,
         isActive: product.isActive !== false
       });
       setColors(product.colors || []);
@@ -123,6 +124,7 @@ export default function AdminProducts() {
     data.append('heightCm', formData.heightCm);
     data.append('careInstructions', formData.careInstructions);
     data.append('isFeatured', formData.isFeatured);
+    data.append('showInSoldOutRow', formData.showInSoldOutRow);
     data.append('isActive', formData.isActive);
 
     // JSON-encode array fields
@@ -410,12 +412,18 @@ export default function AdminProducts() {
               </div>
 
               {/* Toggles */}
-              <div className="admin-toggles-row">
+              <div className="admin-toggles-row" style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
                 <label className="admin-toggle-label">
                   <span className={`admin-toggle-switch ${formData.isFeatured ? 'on' : ''}`} onClick={() => setFormData({...formData, isFeatured: !formData.isFeatured})}>
                     <span className="admin-toggle-knob"></span>
                   </span>
-                  <span>Featured Product</span>
+                  <span>Feature on Homepage (Top Row)</span>
+                </label>
+                <label className="admin-toggle-label">
+                  <span className={`admin-toggle-switch ${formData.showInSoldOutRow ? 'on' : ''}`} onClick={() => setFormData({...formData, showInSoldOutRow: !formData.showInSoldOutRow})}>
+                    <span className="admin-toggle-knob"></span>
+                  </span>
+                  <span>Feature in Sold Out Row</span>
                 </label>
                 <label className="admin-toggle-label">
                   <span className={`admin-toggle-switch ${formData.isActive ? 'on' : ''}`} onClick={() => setFormData({...formData, isActive: !formData.isActive})}>

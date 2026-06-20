@@ -33,7 +33,7 @@ function safeParseJSON(value, fallback = []) {
 
 // Create product (supports multiple images)
 const createProduct = asyncHandler(async (req, res) => {
-  const { name, description, price, originalPrice, category, stock, material, weight, dimensions, widthCm, heightCm, careInstructions, isFeatured, isActive } = req.body;
+  const { name, description, price, originalPrice, category, stock, material, weight, dimensions, widthCm, heightCm, careInstructions, isFeatured, showInSoldOutRow, isActive } = req.body;
   if (!name || !price) {
     res.status(400);
     throw new Error('Name and price are required');
@@ -52,6 +52,19 @@ const createProduct = asyncHandler(async (req, res) => {
     images = results.map(r => r.secure_url);
   }
 
+    const featuredFlag = isFeatured === 'true' || isFeatured === true;
+    const soldOutFlag = showInSoldOutRow === 'true' || showInSoldOutRow === true;
+
+    if (featuredFlag) {
+      const count = await Product.countDocuments({ isFeatured: true });
+      if (count >= 3) { res.status(400); throw new Error('You can only feature up to 3 products on the top row. Please unfeature another product first.'); }
+    }
+
+    if (soldOutFlag) {
+      const count = await Product.countDocuments({ showInSoldOutRow: true });
+      if (count >= 3) { res.status(400); throw new Error('You can only feature up to 3 sold-out products. Please unfeature another product first.'); }
+    }
+
   const product = await Product.create({
     name,
     description,
@@ -69,7 +82,8 @@ const createProduct = asyncHandler(async (req, res) => {
     heightCm: heightCm || '',
     careInstructions: careInstructions || 'Wipe with dry cloth. Keep away from water.',
     tags,
-    isFeatured: isFeatured === 'true' || isFeatured === true,
+    isFeatured: featuredFlag,
+    showInSoldOutRow: soldOutFlag,
     isActive: isActive === 'false' ? false : true
   });
 
@@ -91,7 +105,7 @@ const updateProduct = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
   if (!product) { res.status(404); throw new Error('Product not found'); }
 
-  const { name, description, price, originalPrice, category, stock, material, weight, dimensions, widthCm, heightCm, careInstructions, isFeatured, isActive } = req.body;
+  const { name, description, price, originalPrice, category, stock, material, weight, dimensions, widthCm, heightCm, careInstructions, isFeatured, showInSoldOutRow, isActive } = req.body;
   if (name !== undefined) product.name = name;
   if (description !== undefined) product.description = description;
   if (price !== undefined) product.price = price;
@@ -106,7 +120,25 @@ const updateProduct = asyncHandler(async (req, res) => {
   if (widthCm !== undefined) product.widthCm = widthCm;
   if (heightCm !== undefined) product.heightCm = heightCm;
   if (careInstructions !== undefined) product.careInstructions = careInstructions;
-  if (isFeatured !== undefined) product.isFeatured = isFeatured === 'true' || isFeatured === true;
+  
+  if (isFeatured !== undefined) {
+    const featuredFlag = isFeatured === 'true' || isFeatured === true;
+    if (featuredFlag && !product.isFeatured) {
+      const count = await Product.countDocuments({ isFeatured: true });
+      if (count >= 3) { res.status(400); throw new Error('You can only feature up to 3 products on the top row. Please unfeature another product first.'); }
+    }
+    product.isFeatured = featuredFlag;
+  }
+
+  if (showInSoldOutRow !== undefined) {
+    const soldOutFlag = showInSoldOutRow === 'true' || showInSoldOutRow === true;
+    if (soldOutFlag && !product.showInSoldOutRow) {
+      const count = await Product.countDocuments({ showInSoldOutRow: true });
+      if (count >= 3) { res.status(400); throw new Error('You can only feature up to 3 sold-out products. Please unfeature another product first.'); }
+    }
+    product.showInSoldOutRow = soldOutFlag;
+  }
+
   if (isActive !== undefined) product.isActive = isActive === 'true' || isActive === true;
 
   // Parse JSON array fields

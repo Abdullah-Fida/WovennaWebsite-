@@ -1,6 +1,8 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function ProductCard({ product }) {
+  const navigate = useNavigate();
+
   // Only show images that are actually added via backend
   const imageUrl = product.images && product.images.length > 0 ? product.images[0] : null;
   const lifestyleUrl = product.images && product.images.length > 1 ? product.images[1] : null;
@@ -8,17 +10,34 @@ export default function ProductCard({ product }) {
   // Only render if we have at least one image
   if (!imageUrl) return null;
 
+  const isSoldOut = product.stock === 0 || product.showInSoldOutRow;
+
+  const handleAction = (e, path) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(path);
+  };
+
   return (
-    <Link to={`/product/${product._id}`} className="product-card grid-card">
+    <Link to={`/product/${product._id}`} className={`product-card grid-card ${isSoldOut ? 'product-card--sold-out' : ''}`}>
       {product.stock <= 5 && product.stock > 0 && <div className="product-badge product-badge--limited">Low Stock</div>}
-      {product.stock === 0 && <div className="product-badge product-badge--new">Sold Out</div>}
       
       <div className="product-image-wrap">
         <img src={imageUrl} alt={product.name} className="primary" />
         {lifestyleUrl && <img src={lifestyleUrl} alt={product.name} className="lifestyle" />}
-        <div className="product-overlay">
-          <button className="overlay-view">View Details</button>
-        </div>
+        
+        {isSoldOut ? (
+          <div className="product-overlay product-overlay--sold-out">
+            <span className="overlay-sold-out-text">Sold Out</span>
+          </div>
+        ) : (
+          <div className="product-overlay">
+            <div className="overlay-btn-group">
+              <button className="overlay-btn overlay-btn--primary" onClick={(e) => handleAction(e, `/product/${product._id}`)}>Add to Cart</button>
+              <button className="overlay-btn overlay-btn--secondary" onClick={(e) => handleAction(e, `/checkout`)}>Buy Now</button>
+            </div>
+          </div>
+        )}
       </div>
       
       <div className="product-info">

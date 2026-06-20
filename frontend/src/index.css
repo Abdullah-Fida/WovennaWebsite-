@@ -1,5 +1,5 @@
 /* ============================================================
-   GLOBAL VARIABLES — identical to original Wovena design
+   GLOBAL VARIABLES — identical to original Wovenaa design
    ============================================================ */
 :root {
   --bg:         #FDFCF8;
@@ -233,8 +233,8 @@ main { min-height: 60vh; }
 /* ============================================================
    SCROLL REVEAL
    ============================================================ */
-.reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.9s ease, transform 0.9s ease; }
-.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal { opacity: 0; transform: translateY(40px) scale(0.96); transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.25, 1, 0.5, 1); }
+.reveal.visible { opacity: 1; transform: translateY(0) scale(1); }
 
 /* ============================================================
    NAVIGATION
@@ -284,7 +284,21 @@ main { min-height: 60vh; }
 .main-nav.scrolled .nav-cart-btn svg,
 .main-nav.scrolled .nav-user-btn svg { stroke: var(--navy); }
 .main-nav.scrolled .nav-hamburger span { background: var(--navy); }
-.nav-logo { display: flex; align-items: center; gap: 14px; cursor: pointer; }
+.nav-logo { display: flex; align-items: center; justify-content: flex-start; text-decoration: none; cursor: pointer; color: var(--navy); transition: color 0.3s ease; }
+.main-nav.on-hero .nav-logo { color: rgba(255,255,255,0.92); }
+.main-nav.scrolled .nav-logo { color: var(--navy); }
+footer .nav-logo { color: var(--white); }
+.nav-logo-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  mix-blend-mode: multiply;
+  display: block;
+}
+.main-nav.on-hero .nav-logo-circle {
+  filter: brightness(0) invert(1);
+}
 .logo-icon {
   width: 36px; height: 36px; border: 1px solid var(--gold);
   border-radius: 50%; display: flex; align-items: center;
@@ -607,15 +621,34 @@ section { padding: clamp(64px, 10vw, 140px) clamp(20px, 5vw, 72px); }
   max-width: var(--container);
   margin: 0 auto;
 }
+.collection-grid--3col {
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (max-width: 960px) {
+  .collection-grid--3col {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
 @media (max-width: 768px) {
   .collection-grid {
+    grid-template-columns: 1fr;
+  }
+  .collection-grid--3col {
     grid-template-columns: 1fr;
   }
 }
 
 /* Product Card */
 .product-card {
-  width: 340px; flex-shrink: 0; position: relative; overflow: hidden; cursor: pointer;
+  width: 340px; flex-shrink: 0; position: relative; cursor: pointer;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.4s ease;
+  background: var(--white);
+}
+.product-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
 }
 .product-card.grid-card { width: 100%; }
 .product-badge {
@@ -629,16 +662,56 @@ section { padding: clamp(64px, 10vw, 140px) clamp(20px, 5vw, 72px); }
 .product-badge--limited { background: rgba(10,17,40,0.92); color: rgba(255,255,255,0.92); border: 1px solid rgba(255,255,255,0.22); }
 .product-image-wrap {
   position: relative; height: 440px; overflow: hidden; background: var(--cream);
+  border-radius: 12px 12px 0 0;
 }
 .product-image-wrap img {
   position: absolute; inset: 0; width: 100%; height: 100%;
-  object-fit: contain; transition: opacity 0.7s ease, transform 0.9s ease;
+  object-fit: cover; transition: opacity 0.7s ease, transform 0.5s ease;
 }
 .product-image-wrap img.primary { opacity: 1; }
 .product-image-wrap img.lifestyle { opacity: 0; }
-.product-card:hover .product-image-wrap img.primary { opacity: 0; }
-.product-card:hover .product-image-wrap img.lifestyle { opacity: 1; }
-.product-card:hover .product-image-wrap img { transform: scale(1.04); }
+.w-logo-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: block;
+  background-image: url('/Images/favicon-wovenaa.png');
+  background-position: center;
+  background-size: 130%;
+  background-repeat: no-repeat;
+}
+
+/* Typographic Text Logo */
+.text-logo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.text-logo-w {
+  font-family: var(--font-heading);
+  font-size: 26px;
+  font-weight: 500;
+  margin-bottom: -2px;
+}
+.text-logo-brand {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+  text-transform: lowercase;
+}
+.text-logo-tagline {
+  font-family: var(--font-body);
+  font-size: 6px;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  font-weight: 300;
+}
+.product-card:hover .product-image-wrap img.primary { opacity: 0; transform: scale(1.05); }
+.product-card:hover .product-image-wrap img.lifestyle { opacity: 1; transform: scale(1.05); }
+.product-card:hover .product-image-wrap img { transform: scale(1.05); }
 .product-overlay {
   position: absolute; inset: 0; background: rgba(10,17,40,0.38);
   display: flex; flex-direction: column; align-items: center;
@@ -646,21 +719,34 @@ section { padding: clamp(64px, 10vw, 140px) clamp(20px, 5vw, 72px); }
   transition: opacity 0.4s ease; z-index: 3;
 }
 .product-card:hover .product-overlay { opacity: 1; }
-.product-overlay .overlay-view {
-  font-size: 9px; letter-spacing: 4px; text-transform: uppercase;
-  color: var(--white); border: 1px solid rgba(255,255,255,0.55);
-  padding: 12px 28px; transition: var(--transition-fast);
-  background: transparent; cursor: pointer; font-family: var(--font-body);
+.overlay-btn-group {
+  display: flex; flex-direction: column; gap: 10px;
+  transform: translateY(20px);
+  transition: transform 0.4s ease;
 }
-.product-overlay .overlay-view:hover { background: rgba(255,255,255,0.15); border-color: var(--white); }
-.product-overlay .overlay-add {
+.product-card:hover .overlay-btn-group {
+  transform: translateY(0);
+}
+.overlay-btn {
+  font-family: var(--font-body);
   font-size: 9px; letter-spacing: 4px; text-transform: uppercase;
+  padding: 12px 28px; transition: var(--transition-fast);
+  cursor: pointer; min-width: 160px; text-align: center;
+}
+.overlay-btn--primary {
   color: var(--navy); background: var(--gold); border: 1px solid var(--gold);
-  padding: 12px 28px; transition: var(--transition-fast);
-  cursor: pointer; font-family: var(--font-body);
 }
-.product-overlay .overlay-add:hover { background: var(--gold-light); border-color: var(--gold-light); }
-.product-info { padding: 28px 0 18px; }
+.overlay-btn--primary:hover {
+  background: var(--gold-light); border-color: var(--gold-light);
+}
+.overlay-btn--secondary {
+  color: var(--white); border: 1px solid rgba(255,255,255,0.55);
+  background: transparent;
+}
+.overlay-btn--secondary:hover {
+  background: rgba(255,255,255,0.15); border-color: var(--white);
+}
+.product-info { padding: 24px 20px 20px; }
 .product-tag {
   font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
   color: var(--gold); margin-bottom: 10px;
@@ -1144,6 +1230,73 @@ footer {
   font-weight: 300; color: var(--gray);
 }
 .auth-link a { color: var(--gold); border-bottom: 1px solid rgba(197,160,89,0.4); }
+
+/* Password Show/Hide Toggle */
+.password-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.password-input-wrap input {
+  padding-right: 48px;
+}
+.password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray);
+  transition: color 0.25s ease;
+}
+.password-toggle-btn:hover {
+  color: var(--gold);
+}
+.password-toggle-btn svg {
+  display: block;
+}
+
+/* Sold Out Product Card */
+.product-card--sold-out {
+  opacity: 0.9;
+}
+.product-card--sold-out .product-image-wrap {
+  filter: grayscale(0.1);
+}
+.product-card--sold-out:hover {
+  transform: none;
+  box-shadow: none;
+}
+.product-overlay--sold-out {
+  position: absolute;
+  inset: 0;
+  background: rgba(10,17,40,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 3;
+}
+.product-card--sold-out:hover .product-overlay--sold-out {
+  opacity: 1;
+}
+.overlay-sold-out-text {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--white);
+  border: 1px solid rgba(255,255,255,0.5);
+  padding: 12px 28px;
+}
 
 /* ============================================================
    PROFILE PAGE

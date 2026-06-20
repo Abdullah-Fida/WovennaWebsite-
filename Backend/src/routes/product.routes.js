@@ -6,12 +6,27 @@ const router = express.Router();
 
 // GET /api/products - public
 router.get('/', asyncHandler(async (req, res) => {
-  const { category, q } = req.query;
+  const { category, q, isFeatured, showInSoldOutRow, limit } = req.query;
   const filter = {};
   if (category) filter.category = category;
   if (q) filter.name = { $regex: q, $options: 'i' };
+  
+  if (isFeatured === 'true') {
+    filter.isFeatured = true;
+    filter.stock = { $gt: 0 };
+  }
+  
+  if (showInSoldOutRow === 'true') {
+    filter.showInSoldOutRow = true;
+  }
 
-  const products = await Product.find(filter).sort({ createdAt: -1 });
+  const query = Product.find(filter).sort({ createdAt: -1 });
+  
+  if (limit) {
+    query.limit(parseInt(limit));
+  }
+
+  const products = await query;
   res.json(products);
 }));
 

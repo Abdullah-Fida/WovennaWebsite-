@@ -10,13 +10,13 @@ export default function About() {
             { label: 'Home', to: '/' },
             { label: 'About Us' },
           ]}
-          eyebrow="Discover Wovena"
+          eyebrow="Discover Wovenaa"
           title={
             <>
               About <em>Us</em>
             </>
           }
-          subtitle="Wovena is inspired by ancient weaving traditions and built for modern life. This page explains what we make, why we make it, and how to care for it so your bag stays beautiful for years."
+          subtitle="Wovenaa is inspired by ancient weaving traditions and built for modern life. This page explains what we make, why we make it, and how to care for it so your bag stays beautiful for years."
         />
 
         <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 28, alignItems: 'start' }}>
@@ -29,7 +29,7 @@ export default function About() {
             </p>
             <div className="gold-line" />
             <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 300, marginBottom: 10 }}>
-              What makes Wovena different
+              What makes Wovenaa different
             </h3>
             <ul className="help-list">
               <li>Minimal design, strong details (stitching, edge finishing, structured shape).</li>

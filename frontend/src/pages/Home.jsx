@@ -3,8 +3,11 @@ import { useEffect, useState } from 'react';
 import { getProducts } from '../api';
 import ProductCard from '../components/ProductCard';
 
+
+
 export default function Home() {
   const [products, setProducts] = useState([]);
+  const [soldOutProducts, setSoldOutProducts] = useState([]);
 
   useEffect(() => {
     // Reveal animation
@@ -18,8 +21,11 @@ export default function Home() {
 
     document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
 
-    // Fetch featured products
-    getProducts('?limit=2').then(data => setProducts(data.slice(0, 2))).catch(console.error);
+    // Fetch featured top row products (top 3)
+    getProducts('isFeatured=true&limit=3').then(data => setProducts(data.slice(0, 3))).catch(console.error);
+
+    // Fetch featured sold out products (bottom 3)
+    getProducts('showInSoldOutRow=true&limit=3').then(data => setSoldOutProducts(data.slice(0, 3))).catch(console.error);
 
     return () => observer.disconnect();
   }, []);
@@ -58,61 +64,24 @@ export default function Home() {
         </div>
       </section>
 
-      {/* COLLECTIONS — Featured categories after hero */}
-      <section id="featured-collections">
-        <div className="collections-inner reveal">
-          <div className="collections-header">
-            <span className="section-label">Shop by Category</span>
-            <h2 className="section-title">Our <em>Collections</em></h2>
-            <p className="section-body" style={{ maxWidth: 580 }}>
-              Curated selections for every occasion. Explore our signature styles crafted with heritage techniques and modern elegance.
-            </p>
+      {/* PRODUCT CARDS — 2 rows: 3 main + 3 dummy sold out */}
+      <section id="collection">
+        <div className="collection-header reveal">
+          <div>
+            <span className="section-label">OUR PRODUCTS</span>
+            <h2 className="section-title" style={{ marginBottom: 0 }}>The <em>Wovenaa</em> Edit</h2>
           </div>
-
-          <div className="collections-grid">
-            <Link to="/shop?category=Tote" className="collection-card collection-card--large reveal">
-              <div className="collection-card-img">
-                <img src="/Images/image-3.jpeg" alt="Tote Collection" />
-              </div>
-              <div className="collection-card-overlay">
-                <span className="collection-card-label">Signature Collection</span>
-                <h3 className="collection-card-title">Totes</h3>
-                <span className="collection-card-cta">
-                  Shop Now
-                  <svg viewBox="0 0 24 24" width="14" height="14"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                </span>
-              </div>
-            </Link>
-
-            <Link to="/shop?category=Crossbody" className="collection-card reveal">
-              <div className="collection-card-img">
-                <img src="/Images/image-4.jpeg" alt="Crossbody Collection" />
-              </div>
-              <div className="collection-card-overlay">
-                <span className="collection-card-label">Everyday Essentials</span>
-                <h3 className="collection-card-title">Crossbody</h3>
-                <span className="collection-card-cta">
-                  Shop Now
-                  <svg viewBox="0 0 24 24" width="14" height="14"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                </span>
-              </div>
-            </Link>
-
-            <Link to="/shop" className="collection-card reveal">
-              <div className="collection-card-img">
-                <img src="/Images/image-6.jpeg" alt="New Arrivals" />
-              </div>
-              <div className="collection-card-overlay">
-                <span className="collection-card-label">Fresh Drops</span>
-                <h3 className="collection-card-title">New Arrivals</h3>
-                <span className="collection-card-cta">
-                  Shop Now
-                  <svg viewBox="0 0 24 24" width="14" height="14"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                </span>
-              </div>
-            </Link>
-          </div>
+          <Link to="/shop" className="btn-ghost" style={{ color: 'var(--navy)', borderColor: 'var(--navy)' }}>View All</Link>
         </div>
+        
+        {/* Upper Row — 3 main products */}
+        <div className="collection-grid collection-grid--3col reveal">
+          {products.map(product => (
+            <ProductCard key={product._id} product={product} />
+          ))}
+        </div>
+
+
       </section>
 
       {/* HERITAGE — image-2 */}
@@ -140,6 +109,39 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Lower Row — 3 backend sold out products */}
+      <section style={{ padding: '0 0 clamp(64px, 10vw, 140px) 0' }}>
+        <div className="collection-grid collection-grid--3col reveal">
+          {soldOutProducts.map(product => (
+            <div key={product._id} className="product-card grid-card product-card--sold-out">
+              <div className="product-image-wrap">
+                <img src={product.images && product.images[0] ? product.images[0] : ''} alt={product.name} className="primary" />
+                <div className="product-overlay product-overlay--sold-out">
+                  <span className="overlay-sold-out-text">Sold Out</span>
+                </div>
+              </div>
+              <div className="product-info">
+                <div className="product-tag-row" style={{ display: 'flex', gap: '6px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                  <div className="product-tag" style={{ marginBottom: 0 }}>{product.category}</div>
+                  {product.tags && product.tags.map((tag, idx) => (
+                    <div key={idx} className="product-tag" style={{ marginBottom: 0, color: 'var(--navy)', borderColor: 'var(--navy)' }}>{tag}</div>
+                  ))}
+                </div>
+                <h3 className="product-name">{product.name}</h3>
+                <div className="product-price">
+                  {product.originalPrice && product.originalPrice > product.price && (
+                    <span className="price-original-card" style={{ textDecoration: 'line-through', color: 'rgba(10,17,40,0.4)', marginRight: '8px', fontSize: '11px' }}>
+                      Rs. {product.originalPrice.toLocaleString()}
+                    </span>
+                  )}
+                  <span className="price-current-card">Rs. {product.price.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* LOOKBOOK — image-3, image-4 */}
       <section id="lookbook">
         <div className="lookbook-header reveal">
@@ -159,23 +161,6 @@ export default function Home() {
             <img src="/Images/image-4.jpeg" alt="Crossbody" />
             <figcaption className="lookbook-caption">Crossbody</figcaption>
           </figure>
-        </div>
-      </section>
-
-      {/* COLLECTION — product cards from DB */}
-      <section id="collection">
-        <div className="collection-header reveal">
-          <div>
-            <span className="section-label">THE TIMELESS WEAVE</span>
-            <h2 className="section-title" style={{ marginBottom: 0 }}>The <em>Wovenaa</em> Edit</h2>
-          </div>
-          <Link to="/shop" className="btn-ghost" style={{ color: 'var(--navy)', borderColor: 'var(--navy)' }}>View All</Link>
-        </div>
-        
-        <div className="collection-grid reveal">
-          {products.map(product => (
-            <ProductCard key={product._id} product={product} />
-          ))}
         </div>
       </section>
 

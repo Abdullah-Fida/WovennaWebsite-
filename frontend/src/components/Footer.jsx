@@ -5,7 +5,12 @@ export default function Footer() {
     <footer>
       <div className="footer-grid">
         <div className="footer-brand">
-          <div className="footer-logo-text">Wovena</div>
+          <Link to="/" className="nav-logo" style={{ marginBottom: '16px' }}>
+            <div className="text-logo-container">
+              <div className="text-logo-w">W</div>
+              <div className="text-logo-brand">wovenaa</div>
+            </div>
+          </Link>
           <p>Woven bags Carrying 4000 years Legacy. Built for permanence, Not just Seasons.</p>
         </div>
 
@@ -35,7 +40,7 @@ export default function Footer() {
       </div>
 
       <div className="footer-bottom">
-        <p>© 2026 Wovena. All rights reserved.</p>
+        <p>© 2026 Wovenaa. All rights reserved.</p>
         <p>Crafted in <span>Pakistan</span></p>
       </div>
     </footer>

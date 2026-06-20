@@ -51,8 +51,10 @@ export default function Navbar() {
     <>
       <nav className={`main-nav ${scrolled ? 'scrolled' : ''} ${onHero ? 'on-hero' : ''}`}>
         <Link to="/" className="nav-logo">
-          <div className="logo-icon">W</div>
-          <div className="logo-text">Wovena</div>
+          <div className="text-logo-container">
+            <div className="text-logo-w">W</div>
+            <div className="text-logo-brand">wovenaa</div>
+          </div>
         </Link>
         
         <ul className="nav-links">
