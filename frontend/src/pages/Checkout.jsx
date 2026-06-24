@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getCart, createOrder, validatePromoCode } from '../api';
+import { getCart, createOrder, createGuestOrder, validatePromoCode } from '../api';
+import { useAuth } from '../context/AuthContext';
+import { getGuestCart, clearGuestCart } from '../guestCart';
 import Toast from '../components/Toast';
 import PageHeader from '../components/ui/PageHeader';
 import InfoTip from '../components/ui/InfoTip';
@@ -13,6 +15,7 @@ export default function Checkout() {
   const [toastMsg, setToastMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [loadError, setLoadError] = useState('');
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   // Promo state
@@ -25,16 +28,24 @@ export default function Checkout() {
     street: '',
     city: '',
     zipCode: '',
-    phone: ''
+    phone: '',
+    // Guest-only fields
+    guestName: '',
+    guestEmail: ''
   });
 
   useEffect(() => {
     fetchCart();
-  }, []);
+  }, [user]);
 
   const fetchCart = async () => {
     try {
-      const data = await getCart();
+      let data;
+      if (user) {
+        data = await getCart();
+      } else {
+        data = getGuestCart();
+      }
       if (data.length === 0) navigate('/cart');
       setItems(data);
     } catch (err) {
@@ -91,20 +102,57 @@ export default function Checkout() {
       setErrorMsg('Please fill in all shipping fields');
       return;
     }
+    // Validate guest fields
+    if (!user) {
+      if (!formData.guestName.trim()) {
+        setErrorMsg('Please enter your full name');
+        return;
+      }
+      if (!formData.guestEmail.trim() || !formData.guestEmail.includes('@')) {
+        setErrorMsg('Please enter a valid email address');
+        return;
+      }
+    }
     setProcessing(true);
     setErrorMsg('');
     try {
-      const order = await createOrder({
-        shippingAddress: {
-          street: formData.street,
-          city: formData.city,
-          country: 'Pakistan',
-          zipCode: formData.zipCode,
-          phone: formData.phone
-        },
-        paymentMethod: 'COD',
-        promoCode: promoApplied ? promoApplied.code : null
-      });
+      let order;
+      if (user) {
+        order = await createOrder({
+          shippingAddress: {
+            street: formData.street,
+            city: formData.city,
+            country: 'Pakistan',
+            zipCode: formData.zipCode,
+            phone: formData.phone
+          },
+          paymentMethod: 'COD',
+          promoCode: promoApplied ? promoApplied.code : null
+        });
+      } else {
+        // Guest checkout
+        order = await createGuestOrder({
+          items: items.map(item => ({
+            productId: item.productId,
+            name: item.name,
+            price: item.price,
+            image: item.image,
+            quantity: item.quantity
+          })),
+          shippingAddress: {
+            street: formData.street,
+            city: formData.city,
+            country: 'Pakistan',
+            zipCode: formData.zipCode,
+            phone: formData.phone
+          },
+          paymentMethod: 'COD',
+          promoCode: promoApplied ? promoApplied.code : null,
+          guestName: formData.guestName.trim(),
+          guestEmail: formData.guestEmail.trim()
+        });
+        clearGuestCart();
+      }
       navigate(`/order-success/${order._id}`);
     } catch (err) {
       setErrorMsg(err.message || 'Failed to place order');
@@ -158,6 +206,48 @@ export default function Checkout() {
               </div>
 
               <form onSubmit={handleSubmit}>
+                {/* Guest Contact Info */}
+                {!user && (
+                  <>
+                    <div className="checkout-section-title">
+                      Contact Information{' '}
+                      <InfoTip tip="Since you're checking out as a guest, we need your name and email to send order confirmation and delivery updates." ariaLabel="Guest info help" />
+                    </div>
+
+                    <div className="guest-checkout-notice">
+                      <svg viewBox="0 0 24 24" width="16" height="16" style={{ stroke: 'var(--gold)', fill: 'none', strokeWidth: 1.5, flexShrink: 0 }}>
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                      </svg>
+                      <span>You're checking out as a <strong>guest</strong>. <Link to="/login" style={{ color: 'var(--gold)' }}>Sign in</Link> or <Link to="/register" style={{ color: 'var(--gold)' }}>create an account</Link> to track your orders.</span>
+                    </div>
+
+                    <div className="checkout-form-row">
+                      <div className="checkout-form-group">
+                        <label>Full Name</label>
+                        <input
+                          type="text"
+                          value={formData.guestName}
+                          onChange={(e) => setFormData({ ...formData, guestName: e.target.value })}
+                          required
+                          placeholder="Your full name"
+                        />
+                      </div>
+                      <div className="checkout-form-group">
+                        <label>Email</label>
+                        <input
+                          type="email"
+                          value={formData.guestEmail}
+                          onChange={(e) => setFormData({ ...formData, guestEmail: e.target.value })}
+                          required
+                          placeholder="you@example.com"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
                 <div className="checkout-section-title">
                   Shipping Details{' '}
                   <InfoTip tip="This address will be used for delivery. Double-check phone number so the courier can contact you." ariaLabel="Shipping help" />

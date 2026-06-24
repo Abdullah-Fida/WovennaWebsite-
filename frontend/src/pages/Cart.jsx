@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getCart, updateCartItem, deleteCartItem } from '../api';
+import { useAuth } from '../context/AuthContext';
+import { getGuestCart, updateGuestCartItem, deleteGuestCartItem } from '../guestCart';
 import Toast from '../components/Toast';
 import PageHeader from '../components/ui/PageHeader';
 import EmptyState from '../components/ui/EmptyState';
@@ -11,17 +13,24 @@ export default function Cart() {
   const [loading, setLoading] = useState(true);
   const [toastMsg, setToastMsg] = useState('');
   const [error, setError] = useState('');
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchCart();
-  }, []);
+  }, [user]);
 
   const fetchCart = async () => {
     try {
       setError('');
-      const data = await getCart();
-      setItems(data);
+      if (user) {
+        const data = await getCart();
+        setItems(data);
+      } else {
+        // Guest cart from localStorage
+        const guestItems = getGuestCart();
+        setItems(guestItems);
+      }
     } catch (err) {
       console.error(err);
       setError(err.message || 'Failed to load cart');
@@ -33,8 +42,13 @@ export default function Cart() {
   const handleUpdateQty = async (productId, newQty) => {
     if (newQty < 1) return;
     try {
-      await updateCartItem(productId, { quantity: newQty });
-      fetchCart();
+      if (user) {
+        await updateCartItem(productId, { quantity: newQty });
+        fetchCart();
+      } else {
+        updateGuestCartItem(productId, newQty);
+        setItems(getGuestCart());
+      }
     } catch (err) {
       console.error(err);
     }
@@ -42,9 +56,17 @@ export default function Cart() {
 
   const handleRemove = async (productId) => {
     try {
-      await deleteCartItem(productId);
+      if (user) {
+        await deleteCartItem(productId);
+      } else {
+        deleteGuestCartItem(productId);
+      }
       setToastMsg('Item removed');
-      fetchCart();
+      if (user) {
+        fetchCart();
+      } else {
+        setItems(getGuestCart());
+      }
     } catch (err) {
       console.error(err);
     }
@@ -74,7 +96,7 @@ export default function Cart() {
 
           {error ? (
             <EmptyState
-              title="Can’t load your cart right now"
+              title="Can't load your cart right now"
               description={`${error}. This often happens when the backend is offline. You can still browse the informational pages and try again later.`}
               actions={
                 <>

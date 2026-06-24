@@ -49,7 +49,7 @@ export default function Home() {
       {/* HERO — image-1 */}
       <section id="hero">
         <div className="hero-bg">
-          <img src="/Images/image-1.jpeg" alt="Wovenaa woven bags" />
+          <img src="/Images/FULL-ROOM.webp" alt="Wovenaa woven bags" />
         </div>
         <div className="hero-overlay"></div>
         <div className="hero-content">

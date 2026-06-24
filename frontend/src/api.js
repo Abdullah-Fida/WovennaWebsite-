@@ -66,6 +66,10 @@ export const createOrder = async (body) => {
   const data = await apiFetch('/order/create', { method: 'POST', body });
   return data.order || data;
 };
+export const createGuestOrder = async (body) => {
+  const data = await apiFetch('/order/guest-create', { method: 'POST', body });
+  return data.order || data;
+};
 export const getUserOrders = async () => {
   const data = await apiFetch('/order/my-orders');
   return data.orders || data;

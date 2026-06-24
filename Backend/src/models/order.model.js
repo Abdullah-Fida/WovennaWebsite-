@@ -5,7 +5,7 @@ const orderSchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true
+      default: null
     },
     orderId: {
       type: String,
@@ -98,6 +98,14 @@ const orderSchema = new mongoose.Schema(
     discountAmount: {
       type: Number,
       default: 0
+    },
+    guestName: {
+      type: String,
+      default: null
+    },
+    guestEmail: {
+      type: String,
+      default: null
     }
   },
   { timestamps: true }

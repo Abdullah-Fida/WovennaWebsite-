@@ -127,15 +127,128 @@ const createOrder = asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, order });
 });
 
+// CREATE GUEST ORDER (no authentication required)
+const createGuestOrder = asyncHandler(async (req, res) => {
+  const { shippingAddress, paymentMethod, promoCode, items: cartItems, guestName, guestEmail } = req.body;
+
+  if (!guestName || !guestEmail) {
+    return res.status(400).json({ message: "Guest name and email are required" });
+  }
+
+  if (!shippingAddress) {
+    return res.status(400).json({ message: "Shipping address missing" });
+  }
+
+  const normalizedShippingAddress = {
+    street: shippingAddress.street || shippingAddress.address || "",
+    city: shippingAddress.city || "",
+    country: shippingAddress.country || "Pakistan",
+    zipCode: shippingAddress.zipCode || shippingAddress.postalCode || "",
+    phone: shippingAddress.phone || "",
+  };
+
+  if (!normalizedShippingAddress.street || !normalizedShippingAddress.zipCode) {
+    return res.status(400).json({
+      message: "Shipping address is incomplete (street and zipCode are required)",
+    });
+  }
+
+  if (!cartItems || cartItems.length === 0) {
+    return res.status(400).json({ message: "Cart is empty" });
+  }
+
+  let subtotal = 0;
+  const items = cartItems.map(item => {
+    if (!item.price || !item.quantity) {
+      throw new Error("Invalid cart item data");
+    }
+    subtotal += item.price * item.quantity;
+    return {
+      productId: item.productId,
+      name: item.name,
+      price: item.price,
+      image: item.image,
+      quantity: item.quantity
+    };
+  });
+
+  const shippingCharges = subtotal > 500 ? 0 : 50;
+  const taxAmount = Math.round(subtotal * 0.18);
+
+  // Promo code handling
+  let discountAmount = 0;
+  let appliedPromoCode = null;
+
+  if (promoCode) {
+    const promo = await Promo.findOne({ code: promoCode.toUpperCase(), isActive: true });
+    if (promo && new Date(promo.expirationDate) >= new Date()) {
+      if (promo.usageLimit === null || promo.usageCount < promo.usageLimit) {
+        if (subtotal >= promo.minOrderAmount) {
+          if (promo.applicableProducts && promo.applicableProducts.length > 0) {
+            let applicableTotal = 0;
+            items.forEach(item => {
+              if (promo.applicableProducts.some(pid => pid.toString() === item.productId.toString())) {
+                applicableTotal += (item.price * item.quantity);
+              }
+            });
+            if (promo.discountType === 'percentage') {
+              discountAmount = Math.round((applicableTotal * promo.discountValue) / 100);
+            } else {
+              discountAmount = Math.min(promo.discountValue, applicableTotal);
+            }
+          } else {
+            if (promo.discountType === 'percentage') {
+              discountAmount = Math.round((subtotal * promo.discountValue) / 100);
+            } else {
+              discountAmount = Math.min(promo.discountValue, subtotal);
+            }
+          }
+          appliedPromoCode = promo.code;
+          promo.usageCount += 1;
+          await promo.save();
+        }
+      }
+    }
+  }
+
+  const finalAmount = subtotal + shippingCharges + taxAmount - discountAmount;
+
+  const order = await Order.create({
+    orderId: `ORD${Date.now()}`,
+    items,
+    shippingAddress: normalizedShippingAddress,
+    paymentMethod: paymentMethod || "COD",
+    paymentStatus: "Pending",
+    orderStatus: "Processing",
+    totalAmount: subtotal,
+    shippingCharges,
+    taxAmount,
+    finalAmount,
+    promoCode: appliedPromoCode,
+    discountAmount,
+    guestName,
+    guestEmail
+  });
+
+  // Send confirmation email asynchronously
+  sendOrderConfirmationEmail(guestEmail, order).catch(err => console.error("Guest email failed:", err));
+
+  res.status(201).json({ success: true, order });
+});
+
 // GET ORDER BY ID
 const getOrderById = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const userId = req.user._id;
 
-  const order = await Order.findOne({
-    _id: id,
-    user: userId
-  });
+  // If user is authenticated, filter by user; otherwise allow guest order lookup by id
+  let order;
+  if (req.user) {
+    order = await Order.findOne({ _id: id, user: req.user._id });
+  }
+  // If not found for logged-in user, or no user, try finding by just _id (guest orders)
+  if (!order) {
+    order = await Order.findById(id);
+  }
 
   if (!order) {
     return res.status(404).json({
@@ -164,6 +277,7 @@ const getUserOrders = asyncHandler(async (req, res) => {
 
 module.exports = {
   createOrder,
+  createGuestOrder,
   getOrderById,
   getUserOrders
 };

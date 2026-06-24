@@ -24,6 +24,7 @@ import CareGuide from './pages/CareGuide';
 import Contact from './pages/Contact';
 import ShippingReturns from './pages/ShippingReturns';
 import FAQ from './pages/FAQ';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 // Admin Pages
 import AdminDashboard from './pages/AdminDashboard';
@@ -67,11 +68,12 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/shipping-returns" element={<ShippingReturns />} />
             <Route path="/faq" element={<FAQ />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             
-            {/* Protected User Routes */}
-            <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
-            <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-            <Route path="/order-success/:id" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
+            {/* Cart & Checkout — accessible to guests for guest checkout */}
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/order-success/:id" element={<OrderSuccess />} />
             <Route path="/orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
             <Route path="/orders/:id" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

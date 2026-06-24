@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getProduct, addToCart } from '../api';
+import { addToGuestCart } from '../guestCart';
 import { useAuth } from '../context/AuthContext';
 import Toast from '../components/Toast';
 import Breadcrumbs from '../components/ui/Breadcrumbs';
@@ -52,13 +53,9 @@ export default function ProductDetail() {
   }, [id]);
 
   const handleAddToCart = async () => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
     setAdding(true);
     try {
-      await addToCart({
+      const cartItem = {
         productId: product._id,
         name: product.name,
         price: product.price,
@@ -66,9 +63,13 @@ export default function ProductDetail() {
         quantity: qty,
         color: selectedColor ? selectedColor.name : undefined,
         size: selectedSize ? selectedSize : undefined
-      });
+      };
+      if (user) {
+        await addToCart(cartItem);
+      } else {
+        addToGuestCart(cartItem);
+      }
       setToastMsg('Added to bag');
-      // Trigger cart badge update by modifying location state slightly (or context)
     } catch (err) {
       console.error(err);
     } finally {

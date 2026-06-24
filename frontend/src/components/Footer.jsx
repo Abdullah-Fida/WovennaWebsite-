@@ -6,10 +6,11 @@ export default function Footer() {
       <div className="footer-grid">
         <div className="footer-brand">
           <Link to="/" className="nav-logo" style={{ marginBottom: '16px' }}>
-            <div className="text-logo-container">
-              <div className="text-logo-w">W</div>
-              <div className="text-logo-brand">wovenaa</div>
-            </div>
+            <img
+              src="/uploads/logo.jpeg"
+              alt="Wovenaa"
+              className="footer-logo-img"
+            />
           </Link>
           <p>Woven bags Carrying 4000 years Legacy. Built for permanence, Not just Seasons.</p>
         </div>
@@ -34,13 +35,17 @@ export default function Footer() {
           <h5>Client Care</h5>
           <ul>
             <li><Link to="/contact">Contact Us</Link></li>
-            <li><Link to="/shipping-returns">Shipping & Returns</Link></li>
+            <li><Link to="/shipping-returns">Shipping &amp; Returns</Link></li>
+            <li><Link to="/privacy-policy">Privacy Policy</Link></li>
           </ul>
         </div>
       </div>
 
       <div className="footer-bottom">
         <p>© 2026 Wovenaa. All rights reserved.</p>
+        <div className="footer-bottom-links">
+          <Link to="/privacy-policy">Privacy Policy</Link>
+        </div>
         <p>Crafted in <span>Pakistan</span></p>
       </div>
     </footer>

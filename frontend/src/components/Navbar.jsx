@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getCart } from '../api';
+import { getGuestCartCount } from '../guestCart';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -29,6 +30,9 @@ export default function Navbar() {
   useEffect(() => {
     if (user && user.role !== 'admin') {
       fetchCart();
+    } else if (!user) {
+      // Guest: read cart from localStorage
+      setCartCount(getGuestCartCount());
     }
   }, [user, location]); // Re-fetch when location changes to catch cart updates
 
@@ -51,12 +55,13 @@ export default function Navbar() {
     <>
       <nav className={`main-nav ${scrolled ? 'scrolled' : ''} ${onHero ? 'on-hero' : ''}`}>
         <Link to="/" className="nav-logo">
-          <div className="text-logo-container">
-            <div className="text-logo-w">W</div>
-            <div className="text-logo-brand">wovenaa</div>
-          </div>
+          <img
+            src="/uploads/logo.jpeg"
+            alt="Wovenaa"
+            className="nav-logo-img"
+          />
         </Link>
-        
+
         <ul className="nav-links">
           <li><Link to="/">Home</Link></li>
           <li><Link to="/shop">Shop</Link></li>
@@ -64,14 +69,14 @@ export default function Navbar() {
           <li><Link to="/contact">Contact</Link></li>
           {user?.role === 'admin' && <li><Link to="/admin">Dashboard</Link></li>}
         </ul>
-        
+
         <div className="nav-right">
           {user ? (
             <div style={{ position: 'relative' }}>
               <button className="nav-user-btn" onClick={() => setDropdownOpen(!dropdownOpen)}>
                 <svg viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
               </button>
-              
+
               <div className={`user-dropdown ${dropdownOpen ? 'open' : ''}`}>
                 <div className="user-dropdown-name">Hi, {user.name}</div>
                 {user.role === 'admin' ? (
@@ -99,7 +104,7 @@ export default function Navbar() {
               <span className={`cart-badge ${cartCount > 0 ? 'show' : ''}`}>{cartCount}</span>
             </Link>
           )}
-          
+
           <button className={`nav-hamburger ${menuOpen ? 'is-open' : ''}`} onClick={() => setMenuOpen(!menuOpen)}>
             <span></span><span></span><span></span>
           </button>
@@ -114,7 +119,7 @@ export default function Navbar() {
         <Link to="/about" className="mobile-menu-link">About Us</Link>
         <Link to="/shipping-returns" className="mobile-menu-link">Shipping</Link>
         <Link to="/contact" className="mobile-menu-link">Contact</Link>
-        
+
         {user ? (
           <>
             {user.role === 'admin' ? (
