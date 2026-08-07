@@ -7,7 +7,7 @@ export default function Footer() {
         <div className="footer-brand">
           <Link to="/" className="nav-logo" style={{ marginBottom: '16px' }}>
             <img
-              src="/uploads/logo.jpeg"
+              src="/Images/w-logo-transparent.png"
               alt="Wovenaa"
               className="footer-logo-img"
             />

@@ -56,7 +56,7 @@ export default function Navbar() {
       <nav className={`main-nav ${scrolled ? 'scrolled' : ''} ${onHero ? 'on-hero' : ''}`}>
         <Link to="/" className="nav-logo">
           <img
-            src="/uploads/logo.jpeg"
+            src="/Images/w-logo-transparent.png"
             alt="Wovenaa"
             className="nav-logo-img"
           />

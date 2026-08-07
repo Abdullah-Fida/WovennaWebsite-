@@ -22,9 +22,9 @@ router.put('/users/:id/toggle-status', protect, isAdmin, toggleUserStatus);
 
 // product routes
 router.get('/products', protect, isAdmin, getProducts);
-router.post('/products', protect, isAdmin, upload.array('images', 6), createProduct);
+router.post('/products', protect, isAdmin, upload.array('images', 20), createProduct);
 router.get('/products/:id', protect, isAdmin, getProduct);
-router.put('/products/:id', protect, isAdmin, upload.array('images', 6), updateProduct);
+router.put('/products/:id', protect, isAdmin, upload.array('images', 20), updateProduct);
 router.delete('/products/:id', protect, isAdmin, deleteProduct);
 
 // orders

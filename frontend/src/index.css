@@ -475,7 +475,9 @@ main {
 }
 
 .main-nav.on-hero .nav-logo {
-  color: rgba(255, 255, 255, 0.92);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .main-nav.scrolled .nav-logo {
@@ -4859,12 +4861,13 @@ main {
    LOGO IMAGE (replaces text-logo)
    ============================================================ */
 .nav-logo-img {
-  height: 72px;
+  height: 80px;
   width: auto;
   display: block;
   border-radius: 50px;
   object-fit: contain;
-  mix-blend-mode: multiply;
+  /* Use multiple tiny drop-shadows to stroke/thicken the image */
+  filter: drop-shadow(0.5px 0px 0px var(--gold)) drop-shadow(-0.5px 0px 0px var(--gold)) drop-shadow(0px 0.5px 0px var(--gold)) drop-shadow(0px -0.5px 0px var(--gold));
   transition: opacity 0.3s ease;
 }
 
@@ -4872,26 +4875,23 @@ main {
   opacity: 0.85;
 }
 
-/* On hero (dark bg): invert the logo to white */
+/* On hero (dark bg): invert the logo to white and make it thicker */
 .main-nav.on-hero .nav-logo-img {
-  filter: invert(1);
-  mix-blend-mode: screen;
+  filter: brightness(0) invert(1) drop-shadow(0.5px 0px 0px white) drop-shadow(-0.5px 0px 0px white) drop-shadow(0px 0.5px 0px white) drop-shadow(0px -0.5px 0px white);
 }
 
-/* Scrolled state: normal dark logo */
+/* Scrolled state: normal gold logo and keep it thicker */
 .main-nav.scrolled .nav-logo-img {
-  filter: none;
-  mix-blend-mode: multiply;
+  filter: drop-shadow(0.5px 0px 0px var(--gold)) drop-shadow(-0.5px 0px 0px var(--gold)) drop-shadow(0px 0.5px 0px var(--gold)) drop-shadow(0px -0.5px 0px var(--gold));
 }
 
 /* Footer logo: white on dark bg */
 .footer-logo-img {
-  height: 80px;
+  height: 120px;
   width: auto;
   display: block;
   object-fit: contain;
-  filter: invert(1);
-  mix-blend-mode: screen;
+  filter: brightness(0) invert(1) drop-shadow(0.5px 0px 0px white) drop-shadow(-0.5px 0px 0px white) drop-shadow(0px 0.5px 0px white) drop-shadow(0px -0.5px 0px white);
   transition: opacity 0.3s ease;
 }
 
