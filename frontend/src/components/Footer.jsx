@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import Logo from './Logo';
 
 export default function Footer() {
   return (
@@ -6,11 +7,7 @@ export default function Footer() {
       <div className="footer-grid">
         <div className="footer-brand">
           <Link to="/" className="nav-logo" style={{ marginBottom: '16px' }}>
-            <img
-              src="/Images/w-logo-transparent.png"
-              alt="Wovenaa"
-              className="footer-logo-img"
-            />
+            <Logo className="footer-logo-svg" />
           </Link>
           <p>Woven bags Carrying 4000 years Legacy. Built for permanence, Not just Seasons.</p>
         </div>

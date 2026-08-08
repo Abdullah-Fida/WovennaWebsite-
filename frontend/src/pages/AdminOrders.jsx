@@ -8,6 +8,7 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toastMsg, setToastMsg] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchOrders();
@@ -15,10 +16,13 @@ export default function AdminOrders() {
 
   const fetchOrders = async () => {
     try {
+      setError('');
       const data = await getAdminOrders();
       setOrders(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
+      setError(err.message || 'Failed to load orders');
+      setToastMsg(err.message || 'Failed to load orders');
     } finally {
       setLoading(false);
     }
@@ -31,7 +35,7 @@ export default function AdminOrders() {
       fetchOrders();
     } catch (err) {
       console.error(err);
-      setToastMsg('Failed to update status');
+      setToastMsg(err.message || 'Failed to update status');
     }
   };
 
@@ -65,48 +69,61 @@ export default function AdminOrders() {
         <Link to="/admin/promos">Promos</Link>
       </div>
 
-      <div className="admin-table-wrap">
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Order ID</th>
-              <th>Date</th>
-              <th>Customer</th>
-              <th>Items</th>
-              <th>Total</th>
-              <th>Status</th>
-              <th>Update Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map(order => (
-              <tr key={order._id}>
-                <td>#{order._id.slice(-6).toUpperCase()}</td>
-                <td>{new Date(order.createdAt).toLocaleDateString()}</td>
-                <td>
-                  {order.user?.name || 'Guest'}<br/>
-                  <small style={{ color: 'var(--gray)', fontSize: '11px' }}>{order.shippingAddress.phone}</small>
-                </td>
-                <td>{order.items.length}</td>
-                <td>Rs. {order.finalAmount.toLocaleString()}</td>
-                <td><span className={`order-status-badge ${order.orderStatus.toLowerCase()}`}>{order.orderStatus}</span></td>
-                <td>
-                  <select 
-                    className="status-select" 
-                    value={order.orderStatus}
-                    onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                  >
-                    <option value="Processing">Processing</option>
-                    <option value="Shipped">Shipped</option>
-                    <option value="Delivered">Delivered</option>
-                    <option value="Cancelled">Cancelled</option>
-                  </select>
-                </td>
+      {error ? (
+        <div className="state-panel">
+          <h3>Could not load orders</h3>
+          <p>{error}</p>
+          <button className="btn-gold" onClick={fetchOrders}>Try Again</button>
+        </div>
+      ) : orders.length === 0 ? (
+        <div className="state-panel">
+          <h3>No orders yet</h3>
+          <p>Orders placed by customers will appear here.</p>
+        </div>
+      ) : (
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Items</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Update Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {orders.map(order => (
+                <tr key={order._id}>
+                  <td>#{order._id?.slice(-6).toUpperCase()}</td>
+                  <td>{order.createdAt ? new Date(order.createdAt).toLocaleDateString() : '—'}</td>
+                  <td>
+                    {order.user?.name || 'Guest'}<br/>
+                    <small style={{ color: 'var(--gray)', fontSize: '11px' }}>{order.shippingAddress?.phone || '—'}</small>
+                  </td>
+                  <td>{order.items?.length || 0}</td>
+                  <td>Rs. {(order.finalAmount || 0).toLocaleString()}</td>
+                  <td><span className={`order-status-badge ${(order.orderStatus || '').toLowerCase()}`}>{order.orderStatus || 'Unknown'}</span></td>
+                  <td>
+                    <select 
+                      className="status-select" 
+                      value={order.orderStatus || 'Processing'}
+                      onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                    >
+                      <option value="Processing">Processing</option>
+                      <option value="Shipped">Shipped</option>
+                      <option value="Delivered">Delivered</option>
+                      <option value="Cancelled">Cancelled</option>
+                    </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

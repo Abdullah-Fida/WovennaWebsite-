@@ -21,6 +21,7 @@ export default function AdminProducts() {
   const [toastMsg, setToastMsg] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
   
   const [editId, setEditId] = useState(null);
   const [formData, setFormData] = useState({ ...emptyForm });
@@ -28,6 +29,7 @@ export default function AdminProducts() {
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [imageFiles, setImageFiles] = useState([]);
+  const [variants, setVariants] = useState([]);
 
   useEffect(() => {
     fetchProducts();
@@ -35,13 +37,40 @@ export default function AdminProducts() {
 
   const fetchProducts = async () => {
     try {
+      setError('');
       const data = await getAdminProducts();
-      setProducts(data);
+      setProducts(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
+      setError(err.message || 'Failed to load products');
+      setToastMsg(err.message || 'Failed to load products');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Build variant grid from colors + sizes
+  const buildVariantGrid = (colorsList, sizesList, existingVariants = []) => {
+    const newVariants = [];
+    if (colorsList.length === 0 && sizesList.length === 0) return [];
+    
+    const colorsToUse = colorsList.length > 0 ? colorsList : [{ name: '' }];
+    const sizesToUse = sizesList.length > 0 ? sizesList : [''];
+
+    for (const color of colorsToUse) {
+      for (const size of sizesToUse) {
+        // Check if existing variant has stock value
+        const existing = existingVariants.find(
+          v => v.color === (color.name || '') && v.size === (size || '')
+        );
+        newVariants.push({
+          color: color.name || '',
+          size: size || '',
+          stock: existing ? existing.stock : 0
+        });
+      }
+    }
+    return newVariants;
   };
 
   const handleOpenModal = (product = null) => {
@@ -64,44 +93,66 @@ export default function AdminProducts() {
         showInSoldOutRow: product.showInSoldOutRow || false,
         isActive: product.isActive !== false
       });
-      setColors(product.colors || []);
-      setSelectedSizes(product.sizes || []);
+      const prodColors = product.colors || [];
+      const prodSizes = product.sizes || [];
+      setColors(prodColors);
+      setSelectedSizes(prodSizes);
       setSelectedTags(product.tags || []);
+      setVariants(product.variants || buildVariantGrid(prodColors, prodSizes, product.variants || []));
     } else {
       setEditId(null);
       setFormData({ ...emptyForm });
       setColors([]);
       setSelectedSizes([]);
       setSelectedTags([]);
+      setVariants([]);
     }
     setImageFiles([]);
     setShowModal(true);
   };
 
   const handleAddColor = () => {
-    setColors([...colors, { name: '', hex: '#000000' }]);
+    const newColors = [...colors, { name: '', hex: '#000000' }];
+    setColors(newColors);
+    setVariants(buildVariantGrid(newColors, selectedSizes, variants));
   };
 
   const handleRemoveColor = (index) => {
-    setColors(colors.filter((_, i) => i !== index));
+    const newColors = colors.filter((_, i) => i !== index);
+    setColors(newColors);
+    setVariants(buildVariantGrid(newColors, selectedSizes, variants));
   };
 
   const handleColorChange = (index, field, value) => {
     const updated = [...colors];
     updated[index] = { ...updated[index], [field]: value };
     setColors(updated);
+    if (field === 'name') {
+      setVariants(buildVariantGrid(updated, selectedSizes, variants));
+    }
   };
 
   const toggleSize = (size) => {
-    setSelectedSizes(prev =>
-      prev.includes(size) ? prev.filter(s => s !== size) : [...prev, size]
-    );
+    const newSizes = selectedSizes.includes(size)
+      ? selectedSizes.filter(s => s !== size)
+      : [...selectedSizes, size];
+    setSelectedSizes(newSizes);
+    setVariants(buildVariantGrid(colors, newSizes, variants));
   };
 
   const toggleTag = (tag) => {
     setSelectedTags(prev =>
       prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
     );
+  };
+
+  const handleVariantStockChange = (variantIndex, newStock) => {
+    const updated = [...variants];
+    updated[variantIndex] = { ...updated[variantIndex], stock: Math.max(0, Number(newStock) || 0) };
+    setVariants(updated);
+    // Auto-update total stock
+    const totalStock = updated.reduce((sum, v) => sum + (v.stock || 0), 0);
+    setFormData(prev => ({ ...prev, stock: totalStock }));
   };
 
   const handleSubmit = async (e) => {
@@ -116,7 +167,7 @@ export default function AdminProducts() {
       data.append('originalPrice', formData.originalPrice);
     }
     data.append('category', formData.category);
-    data.append('stock', formData.stock);
+    data.append('stock', formData.stock || 0);
     data.append('material', formData.material);
     data.append('weight', formData.weight);
     data.append('dimensions', formData.dimensions);
@@ -128,27 +179,31 @@ export default function AdminProducts() {
     data.append('isActive', formData.isActive);
 
     // JSON-encode array fields
-    data.append('colors', JSON.stringify(colors)); // Do not filter silently, let 'required' catch it
+    data.append('colors', JSON.stringify(colors));
     data.append('sizes', JSON.stringify(selectedSizes));
     data.append('tags', JSON.stringify(selectedTags));
+    data.append('variants', JSON.stringify(variants));
     
-    for (let i = 0; i < imageFiles.length; i++) {
-      data.append('images', imageFiles[i]);
+    // Use Array.from to handle FileList properly
+    const files = Array.from(imageFiles);
+    for (let i = 0; i < files.length; i++) {
+      data.append('images', files[i]);
     }
 
     try {
       if (editId) {
         await updateProduct(editId, data);
-        setToastMsg('Product updated');
+        setToastMsg('Product updated successfully');
       } else {
         await createProduct(data);
-        setToastMsg('Product created');
+        setToastMsg('Product created successfully');
       }
       setShowModal(false);
       fetchProducts();
     } catch (err) {
       console.error(err);
-      setToastMsg('Error saving product');
+      // Show the ACTUAL error from the backend instead of generic message
+      setToastMsg(err.message || 'Error saving product');
     } finally {
       setSaving(false);
     }
@@ -162,6 +217,7 @@ export default function AdminProducts() {
         fetchProducts();
       } catch (err) {
         console.error(err);
+        setToastMsg(err.message || 'Failed to delete product');
       }
     }
   };
@@ -182,6 +238,7 @@ export default function AdminProducts() {
           How this page works <InfoTip tip="Add Product opens a modal. Upload multiple images if you have lifestyle shots—image #1 is used as primary in cards." ariaLabel="Products help" />:
           <ul className="help-list">
             <li><strong>Stock</strong> controls availability ("Out of Stock" if 0; "Low Stock" if ≤ 5).</li>
+            <li><strong>Variant Stock</strong>: set stock per color + size combination.</li>
             <li><strong>Category</strong> is used in Shop filters.</li>
             <li><strong>Colors</strong>: add color name + hex for swatches on product page.</li>
             <li><strong>Tags</strong>: badges shown on product cards (e.g., "New Arrival").</li>
@@ -198,78 +255,90 @@ export default function AdminProducts() {
         <Link to="/admin/promos">Promos</Link>
       </div>
 
-      <div className="admin-table-wrap">
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Image</th>
-              <th>Name</th>
-              <th>Category</th>
-              <th>Price</th>
-              <th>Stock</th>
-              <th>Colors</th>
-              <th>Tags</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map(p => (
-              <tr key={p._id} style={{ opacity: p.isActive === false ? 0.5 : 1 }}>
-                <td>
-                  <img src={p.images?.[0] || '/premium/flatlay-marble.jpg'} alt={p.name} />
-                  {p.images && p.images.length > 1 && (
-                    <div style={{ fontSize: '10px', color: 'var(--gray)', marginTop: '4px', textAlign: 'center' }}>
-                      {p.images.length} images
-                    </div>
-                  )}
-                </td>
-                <td>
-                  {p.name}
-                  {p.isFeatured && <span className="admin-featured-badge">★ Featured</span>}
-                </td>
-                <td>{p.category}</td>
-                <td>
-                  Rs. {p.price.toLocaleString()}
-                  {p.originalPrice && p.originalPrice > p.price && (
-                    <div style={{ textDecoration: 'line-through', color: 'var(--gray)', fontSize: '11px' }}>
-                      Rs. {p.originalPrice.toLocaleString()}
-                    </div>
-                  )}
-                </td>
-                <td>{p.stock}</td>
-                <td>
-                  <div className="admin-color-swatches">
-                    {p.colors && p.colors.map((c, i) => (
-                      <span key={i} className="admin-color-dot" style={{ background: c.hex }} title={c.name}></span>
-                    ))}
-                    {(!p.colors || p.colors.length === 0) && <span style={{ color: 'var(--gray)', fontSize: '11px' }}>—</span>}
-                  </div>
-                </td>
-                <td>
-                  <div className="admin-tag-list">
-                    {p.tags && p.tags.map((t, i) => (
-                      <span key={i} className="admin-tag-chip">{t}</span>
-                    ))}
-                    {(!p.tags || p.tags.length === 0) && <span style={{ color: 'var(--gray)', fontSize: '11px' }}>—</span>}
-                  </div>
-                </td>
-                <td>
-                  <span className={`admin-status-indicator ${p.isActive !== false ? 'active' : 'inactive'}`}>
-                    {p.isActive !== false ? 'Active' : 'Inactive'}
-                  </span>
-                </td>
-                <td>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button className="admin-btn admin-btn-primary admin-btn-sm" onClick={() => handleOpenModal(p)}>Edit</button>
-                    <button className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => handleDelete(p._id)}>Delete</button>
-                  </div>
-                </td>
+      {error && !products.length ? (
+        <div className="state-panel">
+          <h3>Could not load products</h3>
+          <p>{error}</p>
+          <button className="btn-gold" onClick={fetchProducts}>Try Again</button>
+        </div>
+      ) : (
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Colors</th>
+                <th>Tags</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {products.length > 0 ? products.map(p => (
+                <tr key={p._id} style={{ opacity: p.isActive === false ? 0.5 : 1 }}>
+                  <td>
+                    <img src={p.images?.[0] || '/premium/flatlay-marble.jpg'} alt={p.name} />
+                    {p.images && p.images.length > 1 && (
+                      <div style={{ fontSize: '10px', color: 'var(--gray)', marginTop: '4px', textAlign: 'center' }}>
+                        {p.images.length} images
+                      </div>
+                    )}
+                  </td>
+                  <td>
+                    {p.name}
+                    {p.isFeatured && <span className="admin-featured-badge">★ Featured</span>}
+                  </td>
+                  <td>{p.category}</td>
+                  <td>
+                    Rs. {(p.price || 0).toLocaleString()}
+                    {p.originalPrice && p.originalPrice > p.price && (
+                      <div style={{ textDecoration: 'line-through', color: 'var(--gray)', fontSize: '11px' }}>
+                        Rs. {p.originalPrice.toLocaleString()}
+                      </div>
+                    )}
+                  </td>
+                  <td>{p.stock || 0}</td>
+                  <td>
+                    <div className="admin-color-swatches">
+                      {p.colors && p.colors.map((c, i) => (
+                        <span key={i} className="admin-color-dot" style={{ background: c.hex }} title={c.name}></span>
+                      ))}
+                      {(!p.colors || p.colors.length === 0) && <span style={{ color: 'var(--gray)', fontSize: '11px' }}>—</span>}
+                    </div>
+                  </td>
+                  <td>
+                    <div className="admin-tag-list">
+                      {p.tags && p.tags.map((t, i) => (
+                        <span key={i} className="admin-tag-chip">{t}</span>
+                      ))}
+                      {(!p.tags || p.tags.length === 0) && <span style={{ color: 'var(--gray)', fontSize: '11px' }}>—</span>}
+                    </div>
+                  </td>
+                  <td>
+                    <span className={`admin-status-indicator ${p.isActive !== false ? 'active' : 'inactive'}`}>
+                      {p.isActive !== false ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                  <td>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button className="admin-btn admin-btn-primary admin-btn-sm" onClick={() => handleOpenModal(p)}>Edit</button>
+                      <button className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => handleDelete(p._id)}>Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              )) : (
+                <tr>
+                  <td colSpan="9" style={{ textAlign: 'center', padding: '32px 0', color: 'var(--gray)' }}>No products yet. Click "+ Add Product" to create one.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {showModal && (
         <div className="admin-modal-bg">
@@ -305,8 +374,15 @@ export default function AdminProducts() {
               {/* Stock + Category */}
               <div className="checkout-form-row">
                 <div className="checkout-form-group">
-                  <label>Stock</label>
-                  <input type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} required />
+                  <label>Total Stock <small style={{ fontWeight: 'normal', color: 'var(--gray)' }}>{variants.length > 0 ? '(auto-calculated from variants)' : ''}</small></label>
+                  <input
+                    type="number"
+                    value={formData.stock}
+                    onChange={e => setFormData({...formData, stock: e.target.value})}
+                    required
+                    readOnly={variants.length > 0}
+                    style={variants.length > 0 ? { background: 'var(--cream)', cursor: 'not-allowed' } : {}}
+                  />
                 </div>
                 <div className="checkout-form-group">
                   <label>Category</label>
@@ -394,6 +470,68 @@ export default function AdminProducts() {
                 </div>
               </div>
 
+              {/* Variant Stock Grid */}
+              {variants.length > 0 && (
+                <div className="checkout-form-group">
+                  <label>
+                    Variant Stock
+                    <small style={{ fontWeight: 'normal', color: 'var(--gray)', marginLeft: 8 }}>
+                      (Set stock for each color + size combination)
+                    </small>
+                  </label>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                    gap: '12px',
+                    marginTop: '8px'
+                  }}>
+                    {variants.map((v, idx) => (
+                      <div key={idx} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        padding: '10px 14px',
+                        background: 'var(--cream)',
+                        border: '1px solid rgba(197,160,89,0.2)',
+                        borderRadius: '8px'
+                      }}>
+                        {v.color && (
+                          <span style={{
+                            width: '16px',
+                            height: '16px',
+                            borderRadius: '50%',
+                            background: colors.find(c => c.name === v.color)?.hex || '#ccc',
+                            border: '1px solid rgba(0,0,0,0.1)',
+                            flexShrink: 0
+                          }}></span>
+                        )}
+                        <span style={{ fontSize: '12px', color: 'var(--navy)', flex: 1, minWidth: 0 }}>
+                          {[v.color, v.size].filter(Boolean).join(' / ') || 'Default'}
+                        </span>
+                        <input
+                          type="number"
+                          min="0"
+                          value={v.stock}
+                          onChange={e => handleVariantStockChange(idx, e.target.value)}
+                          style={{
+                            width: '60px',
+                            padding: '6px 8px',
+                            textAlign: 'center',
+                            fontSize: '13px',
+                            border: '1px solid rgba(197,160,89,0.3)',
+                            borderRadius: '6px',
+                            background: 'var(--white)'
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--gray)' }}>
+                    Total stock: <strong style={{ color: 'var(--navy)' }}>{variants.reduce((sum, v) => sum + (v.stock || 0), 0)}</strong>
+                  </div>
+                </div>
+              )}
+
               {/* Tags */}
               <div className="checkout-form-group">
                 <label>Tags</label>
@@ -435,9 +573,11 @@ export default function AdminProducts() {
 
               {/* Images */}
               <div className="checkout-form-group">
-                <label>Images</label>
+                <label>Images <small style={{ fontWeight: 'normal', color: 'var(--gray)' }}>(Max 10MB per image)</small></label>
                 <input type="file" multiple accept="image/*" onChange={e => setImageFiles(e.target.files)} style={{ border: 'none', padding: '14px 0' }} />
-                <small style={{ color: 'var(--gray)' }}>{editId ? 'Upload new images to replace existing ones, or leave blank to keep current.' : ''}</small>
+                <small style={{ color: 'var(--gray)' }}>
+                  {editId ? 'Upload new images to add to existing ones, or leave blank to keep current.' : 'Select product images. First image will be used as primary.'}
+                </small>
               </div>
               
               <button type="submit" className="auth-submit-btn" disabled={saving}>

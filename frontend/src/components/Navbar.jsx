@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Logo from './Logo';
 import { getCart } from '../api';
 import { getGuestCartCount } from '../guestCart';
 
@@ -55,11 +56,7 @@ export default function Navbar() {
     <>
       <nav className={`main-nav ${scrolled ? 'scrolled' : ''} ${onHero ? 'on-hero' : ''}`}>
         <Link to="/" className="nav-logo">
-          <img
-            src="/Images/w-logo-transparent.png"
-            alt="Wovenaa"
-            className="nav-logo-img"
-          />
+          <Logo className="nav-logo-svg" />
         </Link>
 
         <ul className="nav-links">

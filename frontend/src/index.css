@@ -4858,44 +4858,40 @@ main {
 }
 
 /* ============================================================
-   LOGO IMAGE (replaces text-logo)
+   LOGO SVG
    ============================================================ */
-.nav-logo-img {
-  height: 80px;
+.nav-logo-svg {
+  height: 60px;
   width: auto;
-  display: block;
-  border-radius: 50px;
-  object-fit: contain;
-  /* Use multiple tiny drop-shadows to stroke/thicken the image */
-  filter: drop-shadow(0.5px 0px 0px var(--gold)) drop-shadow(-0.5px 0px 0px var(--gold)) drop-shadow(0px 0.5px 0px var(--gold)) drop-shadow(0px -0.5px 0px var(--gold));
-  transition: opacity 0.3s ease;
+  color: var(--navy);
+  transition: opacity 0.3s ease, color 0.3s ease;
+  transform: translateY(4px);
 }
 
-.nav-logo-img:hover {
+.nav-logo-svg:hover {
   opacity: 0.85;
 }
 
-/* On hero (dark bg): invert the logo to white and make it thicker */
-.main-nav.on-hero .nav-logo-img {
-  filter: brightness(0) invert(1) drop-shadow(0.5px 0px 0px white) drop-shadow(-0.5px 0px 0px white) drop-shadow(0px 0.5px 0px white) drop-shadow(0px -0.5px 0px white);
+/* On hero (dark bg): white logo */
+.main-nav.on-hero .nav-logo-svg {
+  color: var(--white);
 }
 
-/* Scrolled state: normal gold logo and keep it thicker */
-.main-nav.scrolled .nav-logo-img {
-  filter: drop-shadow(0.5px 0px 0px var(--gold)) drop-shadow(-0.5px 0px 0px var(--gold)) drop-shadow(0px 0.5px 0px var(--gold)) drop-shadow(0px -0.5px 0px var(--gold));
+/* Scrolled state: navy logo */
+.main-nav.scrolled .nav-logo-svg {
+  color: var(--navy);
 }
 
 /* Footer logo: white on dark bg */
-.footer-logo-img {
-  height: 120px;
+.footer-logo-svg {
+  height: 70px;
   width: auto;
-  display: block;
-  object-fit: contain;
-  filter: brightness(0) invert(1) drop-shadow(0.5px 0px 0px white) drop-shadow(-0.5px 0px 0px white) drop-shadow(0px 0.5px 0px white) drop-shadow(0px -0.5px 0px white);
+  color: var(--white);
   transition: opacity 0.3s ease;
+  transform: translateY(4px);
 }
 
-.footer-logo-img:hover {
+.footer-logo-svg:hover {
   opacity: 0.85;
 }
 

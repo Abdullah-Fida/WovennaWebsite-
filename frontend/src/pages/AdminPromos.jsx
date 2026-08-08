@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getAdminPromos, createPromo, updatePromo, deletePromo, getAdminProducts } from '../api';
+import Toast from '../components/Toast';
 
 export default function AdminPromos() {
   const [promos, setPromos] = useState([]);
@@ -11,6 +12,8 @@ export default function AdminPromos() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [toastMsg, setToastMsg] = useState('');
+  const [fetchError, setFetchError] = useState('');
 
   const emptyForm = {
     code: '',
@@ -30,14 +33,17 @@ export default function AdminPromos() {
 
   const fetchData = async () => {
     try {
+      setFetchError('');
       const [promosData, productsData] = await Promise.all([
         getAdminPromos(),
         getAdminProducts()
       ]);
-      setPromos(promosData);
-      setProducts(productsData);
+      setPromos(Array.isArray(promosData) ? promosData : []);
+      setProducts(Array.isArray(productsData) ? productsData : []);
     } catch (err) {
       console.error(err);
+      setFetchError(err.message || 'Failed to load promos');
+      setToastMsg(err.message || 'Failed to load promos');
     } finally {
       setLoading(false);
     }
@@ -139,6 +145,7 @@ export default function AdminPromos() {
 
   return (
     <div className="admin-page">
+      <Toast message={toastMsg} onClose={() => setToastMsg('')} />
       <div className="admin-header">
         <h1>Promo <em>Codes</em></h1>
         <button className="admin-btn admin-btn-primary" onClick={openCreate}>

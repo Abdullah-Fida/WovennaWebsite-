@@ -52,7 +52,7 @@ export default function ProductDetail() {
     fetchProduct();
   }, [id]);
 
-  const handleAddToCart = async () => {
+  const handleOrderNow = async () => {
     setAdding(true);
     try {
       const cartItem = {
@@ -69,9 +69,11 @@ export default function ProductDetail() {
       } else {
         addToGuestCart(cartItem);
       }
-      setToastMsg('Added to bag');
+      // Navigate directly to checkout
+      navigate('/checkout');
     } catch (err) {
       console.error(err);
+      setToastMsg(err.message || 'Failed to process order');
     } finally {
       setAdding(false);
     }
@@ -158,7 +160,7 @@ export default function ProductDetail() {
         <div className="product-detail-divider"></div>
 
         <div className="qty-label">
-          Quantity <InfoTip tip="Choose how many pieces you want to add to your bag. You can always change quantity later in the Cart page." ariaLabel="Quantity help" />
+          Quantity <InfoTip tip="Choose how many pieces you want to order. You can always change quantity later in the Cart page." ariaLabel="Quantity help" />
         </div>
         <div className="qty-selector">
           <button className="qty-btn" onClick={() => setQty(q => Math.max(1, q - 1))}>-</button>
@@ -221,12 +223,12 @@ export default function ProductDetail() {
 
         <button 
           className="add-to-bag-btn" 
-          onClick={handleAddToCart}
+          onClick={handleOrderNow}
           disabled={product.stock === 0 || adding}
         >
           {adding ? (
-            <span className="btn-loading"><span className="btn-spinner"></span> Adding...</span>
-          ) : product.stock === 0 ? 'Sold Out' : 'Add to Bag'}
+            <span className="btn-loading"><span className="btn-spinner"></span> Processing...</span>
+          ) : product.stock === 0 ? 'Sold Out' : 'Order Now'}
         </button>
 
         <div className="product-specs">

@@ -15,6 +15,14 @@ const productSchema = new mongoose.Schema({
     hex: { type: String, required: true }
   }],
   sizes: [{ type: String }],
+
+  // Per-variant stock (color + size combination)
+  variants: [{
+    color: { type: String, default: '' },
+    size: { type: String, default: '' },
+    stock: { type: Number, default: 0 }
+  }],
+
   material: { type: String, default: '' },
   weight: { type: String, default: '' },
   dimensions: { type: String, default: '' },
