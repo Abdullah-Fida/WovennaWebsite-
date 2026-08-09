@@ -12,7 +12,11 @@ export default function Cart() {
   const navigate = useNavigate();
 
   const handleUpdateQty = async (item, newQty) => {
-    if (newQty < 1) return;
+    if (newQty < 1) {
+      // Stepping below 1 removes the line rather than doing nothing.
+      handleRemove(item);
+      return;
+    }
     try {
       await updateQty(item, newQty);
     } catch (err) {

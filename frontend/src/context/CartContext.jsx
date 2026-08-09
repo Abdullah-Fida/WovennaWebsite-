@@ -125,10 +125,23 @@ export function CartProvider({ children }) {
         setItems(updateGuestCartItem(cartLineKey(item), quantity));
         return;
       }
-      await apiUpdateCartItem(lineKeyOf(item), { quantity });
-      await refresh();
+
+      // Move the number immediately, then reconcile with the server. Waiting
+      // on the round-trip made every +/- click feel stuck.
+      const key = lineKeyOf(item);
+      const previous = items;
+      setItems((cur) =>
+        cur.map((i) => (lineKeyOf(i) === key ? { ...i, quantity } : i))
+      );
+
+      try {
+        await apiUpdateCartItem(key, { quantity });
+      } catch (err) {
+        setItems(previous); // roll back (e.g. not enough stock)
+        throw err;
+      }
     },
-    [isGuest, refresh]
+    [isGuest, items]
   );
 
   const removeItem = useCallback(
@@ -137,10 +150,19 @@ export function CartProvider({ children }) {
         setItems(deleteGuestCartItem(cartLineKey(item)));
         return;
       }
-      await apiDeleteCartItem(lineKeyOf(item));
-      await refresh();
+
+      const key = lineKeyOf(item);
+      const previous = items;
+      setItems((cur) => cur.filter((i) => lineKeyOf(i) !== key));
+
+      try {
+        await apiDeleteCartItem(key);
+      } catch (err) {
+        setItems(previous);
+        throw err;
+      }
     },
-    [isGuest, refresh]
+    [isGuest, items]
   );
 
   // Called after an order is placed so the badge empties immediately.

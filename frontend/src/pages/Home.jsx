@@ -127,7 +127,7 @@ export default function Home() {
       {/* Lower Row — sold out products from the admin panel. Hidden entirely
           until real products with images are marked for this row. */}
       {soldOutProducts.length > 0 && (
-      <section style={{ padding: '0 0 clamp(64px, 10vw, 140px) 0' }}>
+      <section style={{ padding: '0 clamp(20px, 5vw, 72px) clamp(24px, 3vw, 40px)' }}>
         <div className="collection-grid collection-grid--3col reveal">
           {soldOutProducts.map(product => (
             <div key={product._id} className="product-card grid-card product-card--sold-out">

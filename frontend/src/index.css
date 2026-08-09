@@ -2133,6 +2133,16 @@ footer {
   cursor: not-allowed;
 }
 
+.cart-qty-btn {
+  transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+  user-select: none;
+}
+
+.cart-qty-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .cart-item-variant {
   font-size: 12px;
   letter-spacing: 2px;
