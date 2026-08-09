@@ -10,39 +10,54 @@ export default function Home() {
   const [soldOutProducts, setSoldOutProducts] = useState([]);
 
   useEffect(() => {
-    // Reveal animation
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-        }
+    // Reveal-on-scroll. Sections start at opacity 0, so anything that never
+    // gets observed stays invisible forever — a MutationObserver keeps late
+    // content (products fetched after mount) from being stranded.
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            io.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
+    );
+
+    const observeAll = () =>
+      document
+        .querySelectorAll('.reveal:not(.visible)')
+        .forEach((el) => io.observe(el));
+
+    observeAll();
+
+    const mo = new MutationObserver(observeAll);
+    mo.observe(document.body, { childList: true, subtree: true });
+
+    // Safety net: if IntersectionObserver never fires (e.g. the element is
+    // already past the fold on load), reveal everything after a beat.
+    const fallback = setTimeout(() => {
+      document.querySelectorAll('.reveal:not(.visible)').forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.top < window.innerHeight) el.classList.add('visible');
       });
-    }, { threshold: 0.1 });
+    }, 600);
 
-    document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+    getProducts('isFeatured=true&limit=3')
+      .then((data) => setProducts(data.slice(0, 3)))
+      .catch(console.error);
 
-    // Fetch featured top row products (top 3)
-    getProducts('isFeatured=true&limit=3').then(data => setProducts(data.slice(0, 3))).catch(console.error);
+    getProducts('showInSoldOutRow=true&limit=3')
+      .then((data) => setSoldOutProducts(data.slice(0, 3)))
+      .catch(console.error);
 
-    // Fetch featured sold out products (bottom 3)
-    getProducts('showInSoldOutRow=true&limit=3').then(data => setSoldOutProducts(data.slice(0, 3))).catch(console.error);
-
-    return () => observer.disconnect();
+    return () => {
+      io.disconnect();
+      mo.disconnect();
+      clearTimeout(fallback);
+    };
   }, []);
-
-  // Re-observe after products load (new .reveal elements appear)
-  useEffect(() => {
-    if (products.length === 0) return;
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-        }
-      });
-    }, { threshold: 0.1 });
-    document.querySelectorAll('.reveal:not(.visible)').forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-  }, [products]);
 
   return (
     <>
