@@ -27,9 +27,18 @@ const orderSchema = new mongoose.Schema(
           type: Number,
           required: true
         },
+        // Products without a photo must still be orderable.
         image: {
           type: String,
-          required: true
+          default: ''
+        },
+        color: {
+          type: String,
+          default: ''
+        },
+        size: {
+          type: String,
+          default: ''
         },
         quantity: {
           type: Number,
@@ -49,7 +58,7 @@ const orderSchema = new mongoose.Schema(
       country: {
         type: String,
         required: true,
-        default: "India"
+        default: "Pakistan"
       },
       zipCode: {
         type: String,

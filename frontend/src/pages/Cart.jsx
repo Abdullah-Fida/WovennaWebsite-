@@ -1,78 +1,35 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getCart, updateCartItem, deleteCartItem } from '../api';
-import { useAuth } from '../context/AuthContext';
-import { getGuestCart, updateGuestCartItem, deleteGuestCartItem } from '../guestCart';
+import { useCart } from '../context/CartContext';
 import Toast from '../components/Toast';
 import PageHeader from '../components/ui/PageHeader';
 import EmptyState from '../components/ui/EmptyState';
 import InfoTip from '../components/ui/InfoTip';
 
 export default function Cart() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { items, subtotal: total, loading, error, updateQty, removeItem, refresh, lineKeyOf } = useCart();
   const [toastMsg, setToastMsg] = useState('');
-  const [error, setError] = useState('');
-  const { user } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchCart();
-  }, [user]);
-
-  const fetchCart = async () => {
-    try {
-      setError('');
-      if (user) {
-        const data = await getCart();
-        setItems(data);
-      } else {
-        // Guest cart from localStorage
-        const guestItems = getGuestCart();
-        setItems(guestItems);
-      }
-    } catch (err) {
-      console.error(err);
-      setError(err.message || 'Failed to load cart');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdateQty = async (productId, newQty) => {
+  const handleUpdateQty = async (item, newQty) => {
     if (newQty < 1) return;
     try {
-      if (user) {
-        await updateCartItem(productId, { quantity: newQty });
-        fetchCart();
-      } else {
-        updateGuestCartItem(productId, newQty);
-        setItems(getGuestCart());
-      }
+      await updateQty(item, newQty);
     } catch (err) {
-      console.error(err);
+      setToastMsg(err.message || 'Could not update quantity');
     }
   };
 
-  const handleRemove = async (productId) => {
+  const handleRemove = async (item) => {
     try {
-      if (user) {
-        await deleteCartItem(productId);
-      } else {
-        deleteGuestCartItem(productId);
-      }
+      await removeItem(item);
       setToastMsg('Item removed');
-      if (user) {
-        fetchCart();
-      } else {
-        setItems(getGuestCart());
-      }
     } catch (err) {
-      console.error(err);
+      setToastMsg(err.message || 'Could not remove item');
     }
   };
 
-  const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const fetchCart = refresh;
 
   if (loading) return <div className="page-loader"><div className="spinner"></div></div>;
 
@@ -160,26 +117,36 @@ export default function Cart() {
         <div className="cart-page-grid">
           <div className="cart-items-list">
             {items.map((item) => (
-              <div key={item.productId} className="cart-item">
-                <img src={item.image} alt={item.name} className="cart-item-img" />
+              <div key={lineKeyOf(item)} className="cart-item">
+                <img
+                  src={item.image || '/premium/flatlay-marble.jpg'}
+                  alt={item.name}
+                  className="cart-item-img"
+                  onError={(e) => { e.currentTarget.src = '/premium/flatlay-marble.jpg'; }}
+                />
                 <div className="cart-item-info">
                   <div className="cart-item-name">{item.name}</div>
-                  <div className="cart-item-unit-price">Rs. {item.price.toLocaleString()}</div>
+                  {(item.color || item.size) && (
+                    <div className="cart-item-variant">
+                      {[item.color, item.size].filter(Boolean).join(' / ')}
+                    </div>
+                  )}
+                  <div className="cart-item-unit-price">Rs. {(item.price || 0).toLocaleString()}</div>
 
                   <div className="cart-qty-row">
                     <div className="cart-qty-selector">
-                      <button className="cart-qty-btn" onClick={() => handleUpdateQty(item.productId, item.quantity - 1)} aria-label="Decrease quantity">
+                      <button className="cart-qty-btn" onClick={() => handleUpdateQty(item, item.quantity - 1)} aria-label="Decrease quantity">
                         -
                       </button>
                       <div className="cart-qty-num">{item.quantity}</div>
-                      <button className="cart-qty-btn" onClick={() => handleUpdateQty(item.productId, item.quantity + 1)} aria-label="Increase quantity">
+                      <button className="cart-qty-btn" onClick={() => handleUpdateQty(item, item.quantity + 1)} aria-label="Increase quantity">
                         +
                       </button>
                     </div>
-                    <div className="cart-item-subtotal">Rs. {(item.price * item.quantity).toLocaleString()}</div>
+                    <div className="cart-item-subtotal">Rs. {((item.price || 0) * (item.quantity || 0)).toLocaleString()}</div>
                   </div>
 
-                  <button className="cart-item-remove" onClick={() => handleRemove(item.productId)}>
+                  <button className="cart-item-remove" onClick={() => handleRemove(item)}>
                     Remove
                   </button>
                 </div>

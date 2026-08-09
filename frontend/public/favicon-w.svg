@@ -1,12 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <text 
-    x="32" 
-    y="50" 
-    text-anchor="middle" 
-    font-family="Georgia, 'Times New Roman', serif" 
-    font-size="52" 
-    font-weight="300" 
-    font-style="italic" 
-    fill="#0A1128"
-  >W</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">
+  <rect width="1000" height="1000" fill="#0A1128"/>
+  <g transform="translate(75 185) scale(0.85)" fill="#C5A059">
+    <path d="M26 30 L180 30 L368 606 L342 664 Q316 660 300 606 Z"/>
+    <path d="M342 664 Q300 470 316 288 Q330 128 424 104 L438 168 Q378 190 372 306 Q366 424 396 600 Z"/>
+    <path d="M424 104 Q516 84 552 268 L664 664 L596 664 L500 296 Q476 176 438 168 Z"/>
+    <path d="M700 30 L978 30 L716 664 L648 664 L628 592 L830 96 Q762 92 726 74 Q702 60 700 30 Z"/>
+  </g>
 </svg>

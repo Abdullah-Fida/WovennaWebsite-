@@ -1,20 +1,19 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getCart, createOrder, createGuestOrder, validatePromoCode } from '../api';
+import { createOrder, createGuestOrder, validatePromoCode } from '../api';
 import { useAuth } from '../context/AuthContext';
-import { getGuestCart, clearGuestCart } from '../guestCart';
+import { useCart } from '../context/CartContext';
+import { rememberGuestOrder } from '../guestOrders';
 import Toast from '../components/Toast';
 import PageHeader from '../components/ui/PageHeader';
 import InfoTip from '../components/ui/InfoTip';
 import EmptyState from '../components/ui/EmptyState';
 
 export default function Checkout() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { items, subtotal: total, loading, error: loadError, resetCart, lineKeyOf } = useCart();
   const [processing, setProcessing] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
-  const [loadError, setLoadError] = useState('');
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -34,29 +33,14 @@ export default function Checkout() {
     guestEmail: ''
   });
 
+  // Send shoppers back to the cart if there is nothing left to check out —
+  // but not while the order is being placed, since the cart empties then.
   useEffect(() => {
-    fetchCart();
-  }, [user]);
-
-  const fetchCart = async () => {
-    try {
-      let data;
-      if (user) {
-        data = await getCart();
-      } else {
-        data = getGuestCart();
-      }
-      if (data.length === 0) navigate('/cart');
-      setItems(data);
-    } catch (err) {
-      console.error(err);
-      setLoadError(err.message || 'Failed to load cart');
-    } finally {
-      setLoading(false);
+    if (!loading && !processing && items.length === 0) {
+      navigate('/cart');
     }
-  };
+  }, [loading, processing, items.length, navigate]);
 
-  const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const discountAmount = promoApplied ? promoApplied.discountAmount : 0;
   const finalTotal = total - discountAmount;
 
@@ -137,7 +121,9 @@ export default function Checkout() {
             name: item.name,
             price: item.price,
             image: item.image,
-            quantity: item.quantity
+            quantity: item.quantity,
+            color: item.color || '',
+            size: item.size || ''
           })),
           shippingAddress: {
             street: formData.street,
@@ -151,8 +137,10 @@ export default function Checkout() {
           guestName: formData.guestName.trim(),
           guestEmail: formData.guestEmail.trim()
         });
-        clearGuestCart();
+        // Keep a local receipt so the guest can find this order again.
+        rememberGuestOrder(order, formData.guestEmail.trim());
       }
+      resetCart();
       navigate(`/order-success/${order._id}`);
     } catch (err) {
       setErrorMsg(err.message || 'Failed to place order');
@@ -336,12 +324,20 @@ export default function Checkout() {
 
               <div className="summary-items" style={{ marginBottom: '32px' }}>
                 {items.map((item) => (
-                  <div key={item.productId} className="summary-item">
-                    <img src={item.image} alt={item.name} className="summary-item-img" />
+                  <div key={lineKeyOf(item)} className="summary-item">
+                    <img
+                      src={item.image || '/premium/flatlay-marble.jpg'}
+                      alt={item.name}
+                      className="summary-item-img"
+                      onError={(e) => { e.currentTarget.src = '/premium/flatlay-marble.jpg'; }}
+                    />
                     <div>
                       <div className="summary-item-name">{item.name}</div>
+                      {(item.color || item.size) && (
+                        <div className="summary-item-qty">{[item.color, item.size].filter(Boolean).join(' / ')}</div>
+                      )}
                       <div className="summary-item-qty">Qty: {item.quantity}</div>
-                      <div className="summary-item-price">Rs. {(item.price * item.quantity).toLocaleString()}</div>
+                      <div className="summary-item-price">Rs. {((item.price || 0) * (item.quantity || 0)).toLocaleString()}</div>
                     </div>
                   </div>
                 ))}

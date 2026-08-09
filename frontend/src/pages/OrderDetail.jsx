@@ -106,7 +106,7 @@ export default function OrderDetail() {
                 <div className="order-item-name">{item.name}</div>
                 <div className="order-item-qty">Qty: {item.quantity}</div>
               </div>
-              <div className="order-item-price">Rs. {(item.price * item.quantity).toLocaleString()}</div>
+              <div className="order-item-price">Rs. {((item.price || 0) * (item.quantity || 0)).toLocaleString()}</div>
             </div>
           ))}
         </div>
@@ -132,7 +132,7 @@ export default function OrderDetail() {
             <div className="cart-summary-title">Summary</div>
             <div className="summary-row">
               <span className="summary-label">Subtotal</span>
-              <span className="summary-value">Rs. {order.totalAmount.toLocaleString()}</span>
+              <span className="summary-value">Rs. {(order.totalAmount || 0).toLocaleString()}</span>
             </div>
             <div className="summary-row">
               <span className="summary-label">Shipping</span>
@@ -143,7 +143,7 @@ export default function OrderDetail() {
             <div className="summary-divider"></div>
             <div className="summary-total" style={{ marginBottom: 0 }}>
               <span className="summary-total-label">Total</span>
-              <span className="summary-total-amount">Rs. {order.finalAmount.toLocaleString()}</span>
+              <span className="summary-total-amount">Rs. {(order.finalAmount || 0).toLocaleString()}</span>
             </div>
           </div>
         </div>

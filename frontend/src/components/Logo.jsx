@@ -1,20 +1,20 @@
+// Wovenaa monogram. Four closed wedges — the white space between the left arm
+// and the loop's rising flank forms the counter. Uses currentColor so the
+// navbar (dark/light states) and footer can tint it without separate assets.
 export default function Logo({ className }) {
   return (
-    <svg 
-      className={className} 
-      viewBox="0 0 120 100" 
-      fill="currentColor" 
+    <svg
+      className={className}
+      viewBox="0 0 1000 700"
+      fill="currentColor"
       xmlns="http://www.w3.org/2000/svg"
+      role="img"
+      aria-label="Wovenaa"
     >
-      <text
-        x="60"
-        y="82"
-        textAnchor="middle"
-        fontFamily="var(--font-display)"
-        fontSize="100"
-        fontWeight="300"
-        fontStyle="italic"
-      >W</text>
+      <path d="M26 30 L180 30 L368 606 L342 664 Q316 660 300 606 Z" />
+      <path d="M342 664 Q300 470 316 288 Q330 128 424 104 L438 168 Q378 190 372 306 Q366 424 396 600 Z" />
+      <path d="M424 104 Q516 84 552 268 L664 664 L596 664 L500 296 Q476 176 438 168 Z" />
+      <path d="M700 30 L978 30 L716 664 L648 664 L628 592 L830 96 Q762 92 726 74 Q702 60 700 30 Z" />
     </svg>
   );
 }

@@ -78,6 +78,10 @@ export const getOrderById = async (id) => {
   const data = await apiFetch(`/order/${id}`);
   return data.order || data;
 };
+export const trackOrder = async (body) => {
+  const data = await apiFetch('/order/track', { method: 'POST', body });
+  return data.order || data;
+};
 
 // Admin
 export const getAdminStats = () => apiFetch('/admin/stats');

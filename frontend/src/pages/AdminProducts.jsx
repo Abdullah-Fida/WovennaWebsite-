@@ -28,8 +28,12 @@ export default function AdminProducts() {
   const [colors, setColors] = useState([]);
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
-  const [imageFiles, setImageFiles] = useState([]);
   const [variants, setVariants] = useState([]);
+
+  // Image manager state: URLs already saved on the product, plus newly picked
+  // files held as { file, preview } so both can be reordered/removed together.
+  const [existingImages, setExistingImages] = useState([]);
+  const [newImages, setNewImages] = useState([]);
 
   useEffect(() => {
     fetchProducts();
@@ -99,6 +103,7 @@ export default function AdminProducts() {
       setSelectedSizes(prodSizes);
       setSelectedTags(product.tags || []);
       setVariants(product.variants || buildVariantGrid(prodColors, prodSizes, product.variants || []));
+      setExistingImages(product.images || []);
     } else {
       setEditId(null);
       setFormData({ ...emptyForm });
@@ -106,9 +111,83 @@ export default function AdminProducts() {
       setSelectedSizes([]);
       setSelectedTags([]);
       setVariants([]);
+      setExistingImages([]);
     }
-    setImageFiles([]);
+    newImages.forEach((img) => URL.revokeObjectURL(img.preview));
+    setNewImages([]);
+    setError('');
     setShowModal(true);
+  };
+
+  // --- Image management -------------------------------------------------
+
+  const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+  const MAX_IMAGES = 20;
+
+  const handlePickImages = (e) => {
+    const picked = Array.from(e.target.files || []);
+    e.target.value = ''; // let the same file be re-picked after a removal
+
+    const room = MAX_IMAGES - (existingImages.length + newImages.length);
+    if (room <= 0) {
+      setToastMsg(`Maximum ${MAX_IMAGES} images per product`);
+      return;
+    }
+
+    const tooBig = picked.filter((f) => f.size > MAX_IMAGE_BYTES);
+    if (tooBig.length) {
+      setToastMsg(`${tooBig[0].name} is larger than 10MB and was skipped`);
+    }
+
+    const accepted = picked
+      .filter((f) => f.size <= MAX_IMAGE_BYTES && f.type.startsWith('image/'))
+      .slice(0, room);
+
+    setNewImages((prev) => [
+      ...prev,
+      ...accepted.map((file) => ({ file, preview: URL.createObjectURL(file) })),
+    ]);
+  };
+
+  const removeExistingImage = (index) => {
+    setExistingImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const removeNewImage = (index) => {
+    setNewImages((prev) => {
+      URL.revokeObjectURL(prev[index].preview);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  // Cover = first image. Promoting a newly added file moves it ahead of the
+  // saved ones, which the server honours because new files append in order.
+  const makeExistingCover = (index) => {
+    setExistingImages((prev) => {
+      const next = [...prev];
+      const [item] = next.splice(index, 1);
+      return [item, ...next];
+    });
+  };
+
+  const moveExistingImage = (index, delta) => {
+    setExistingImages((prev) => {
+      const target = index + delta;
+      if (target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
+
+  const moveNewImage = (index, delta) => {
+    setNewImages((prev) => {
+      const target = index + delta;
+      if (target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
   };
 
   const handleAddColor = () => {
@@ -184,11 +263,10 @@ export default function AdminProducts() {
     data.append('tags', JSON.stringify(selectedTags));
     data.append('variants', JSON.stringify(variants));
     
-    // Use Array.from to handle FileList properly
-    const files = Array.from(imageFiles);
-    for (let i = 0; i < files.length; i++) {
-      data.append('images', files[i]);
-    }
+    // Ordered list of saved images to keep — anything omitted gets deleted.
+    data.append('existingImages', JSON.stringify(existingImages));
+
+    newImages.forEach(({ file }) => data.append('images', file));
 
     try {
       if (editId) {
@@ -198,11 +276,14 @@ export default function AdminProducts() {
         await createProduct(data);
         setToastMsg('Product created successfully');
       }
+      newImages.forEach((img) => URL.revokeObjectURL(img.preview));
+      setNewImages([]);
       setShowModal(false);
       fetchProducts();
     } catch (err) {
       console.error(err);
       // Show the ACTUAL error from the backend instead of generic message
+      setError(err.message || 'Error saving product');
       setToastMsg(err.message || 'Error saving product');
     } finally {
       setSaving(false);
@@ -573,13 +654,67 @@ export default function AdminProducts() {
 
               {/* Images */}
               <div className="checkout-form-group">
-                <label>Images <small style={{ fontWeight: 'normal', color: 'var(--gray)' }}>(Max 10MB per image)</small></label>
-                <input type="file" multiple accept="image/*" onChange={e => setImageFiles(e.target.files)} style={{ border: 'none', padding: '14px 0' }} />
-                <small style={{ color: 'var(--gray)' }}>
-                  {editId ? 'Upload new images to add to existing ones, or leave blank to keep current.' : 'Select product images. First image will be used as primary.'}
+                <label>
+                  Images
+                  <small style={{ fontWeight: 'normal', color: 'var(--gray)', marginLeft: 8 }}>
+                    (Max 10MB each, up to {MAX_IMAGES}. The first image is the cover.)
+                  </small>
+                </label>
+
+                {(existingImages.length > 0 || newImages.length > 0) ? (
+                  <div className="admin-image-grid">
+                    {existingImages.map((url, index) => (
+                      <div key={url} className={`admin-image-tile ${index === 0 ? 'is-cover' : ''}`}>
+                        <img src={url} alt={`Product image ${index + 1}`} />
+                        {index === 0 && <span className="admin-image-cover-badge">Cover</span>}
+                        <div className="admin-image-actions">
+                          <button type="button" onClick={() => moveExistingImage(index, -1)} disabled={index === 0} title="Move left">‹</button>
+                          <button type="button" onClick={() => makeExistingCover(index)} disabled={index === 0} title="Set as cover">★</button>
+                          <button type="button" onClick={() => moveExistingImage(index, 1)} disabled={index === existingImages.length - 1} title="Move right">›</button>
+                          <button type="button" className="danger" onClick={() => removeExistingImage(index)} title="Remove image">×</button>
+                        </div>
+                      </div>
+                    ))}
+
+                    {newImages.map((img, index) => (
+                      <div
+                        key={img.preview}
+                        className={`admin-image-tile is-new ${existingImages.length === 0 && index === 0 ? 'is-cover' : ''}`}
+                      >
+                        <img src={img.preview} alt={`New upload ${index + 1}`} />
+                        <span className="admin-image-new-badge">New</span>
+                        <div className="admin-image-actions">
+                          <button type="button" onClick={() => moveNewImage(index, -1)} disabled={index === 0} title="Move left">‹</button>
+                          <button type="button" onClick={() => moveNewImage(index, 1)} disabled={index === newImages.length - 1} title="Move right">›</button>
+                          <button type="button" className="danger" onClick={() => removeNewImage(index)} title="Remove image">×</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="admin-image-empty">No images yet. Add at least one so the product shows in the shop.</div>
+                )}
+
+                <label className="admin-image-add-btn">
+                  + Add Images
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handlePickImages}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+
+                <small style={{ color: 'var(--gray)', display: 'block', marginTop: 8 }}>
+                  Removing a saved image deletes it permanently when you save.
                 </small>
               </div>
-              
+
+              {error && (
+                <div className="auth-error" style={{ marginBottom: 16 }}>{error}</div>
+              )}
+
               <button type="submit" className="auth-submit-btn" disabled={saving}>
                 {saving ? 'Saving...' : 'Save Product'}
               </button>

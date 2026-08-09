@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700" fill="currentColor" role="img" aria-label="Wovenaa">
+  <!--
+    Wovenaa monogram: high-contrast serif W.
+
+    Four closed wedges. The white space between the left arm and the loop's
+    rising flank IS the counter, so no stroke needs an interior hole; the
+    shapes simply must not touch above the valley where they meet.
+  -->
+
+  <!-- 1. Left arm: thick cap tapering to a point in the first valley -->
+  <path d="M26 30 L180 30 L368 606 L342 664 Q316 660 300 606 Z"/>
+
+  <!-- 2. Loop, rising flank: a fine stroke sweeping up from the first valley
+          and over the apex, staying clear of the arm above it -->
+  <path d="M342 664 Q300 470 316 288 Q330 128 424 104 L438 168
+           Q378 190 372 306 Q366 424 396 600 Z"/>
+
+  <!-- 3. Loop, descending flank: swells from the apex into the second valley,
+          becoming the thick stroke that meets the right arm -->
+  <path d="M424 104 Q516 84 552 268 L664 664 L596 664 L500 296
+           Q476 176 438 168 Z"/>
+
+  <!-- 4. Right arm: thick cap tapering into the second valley, with the
+          bracketed serif across its top -->
+  <path d="M700 30 L978 30 L716 664 L648 664 L628 592 L830 96
+           Q762 92 726 74 Q702 60 700 30 Z"/>
+</svg>

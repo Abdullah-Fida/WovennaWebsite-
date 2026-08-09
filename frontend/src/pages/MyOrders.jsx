@@ -86,7 +86,7 @@ export default function MyOrders() {
                     </div>
                     <div className="order-meta-item">
                       <div className="order-meta-label">Total</div>
-                      <div className="order-meta-value">Rs. {order.finalAmount.toLocaleString()}</div>
+                      <div className="order-meta-value">Rs. {(order.finalAmount || 0).toLocaleString()}</div>
                     </div>
                     <div className="order-meta-item">
                       <div className="order-meta-label">Items</div>

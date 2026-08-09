@@ -83,10 +83,27 @@ app.use('/api/admin', adminRoutes);
 
 // Centralized error handler - always return JSON for errors
 app.use((err, req, res, next) => {
-  const statusCode = res.statusCode && res.statusCode !== 200 ? res.statusCode : 500;
-  res.status(statusCode).json({
-    message: err.message || 'Internal Server Error'
-  });
+  let statusCode = res.statusCode && res.statusCode !== 200 ? res.statusCode : 500;
+  let message = err.message || 'Internal Server Error';
+
+  // Turn Mongoose failures into messages an admin can act on, instead of
+  // surfacing them as an opaque "error saving product".
+  if (err.name === 'ValidationError' && err.errors) {
+    statusCode = 400;
+    message = Object.values(err.errors).map((e) => e.message).join('. ');
+  } else if (err.name === 'CastError') {
+    statusCode = 400;
+    message = `Invalid value for "${err.path}"`;
+  } else if (err.code === 11000) {
+    statusCode = 400;
+    message = 'That record already exists';
+  }
+
+  if (statusCode >= 500) {
+    console.error('Unhandled error:', err);
+  }
+
+  res.status(statusCode).json({ message });
 });
 
 module.exports = app;

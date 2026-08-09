@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getProduct, addToCart } from '../api';
-import { addToGuestCart } from '../guestCart';
-import { useAuth } from '../context/AuthContext';
+import { getProduct } from '../api';
+import { useCart } from '../context/CartContext';
 import Toast from '../components/Toast';
 import Breadcrumbs from '../components/ui/Breadcrumbs';
 import Accordion from '../components/ui/Accordion';
@@ -25,7 +24,7 @@ const FALLBACK_IMAGES = [
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { addItem } = useCart();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
@@ -52,24 +51,47 @@ export default function ProductDetail() {
     fetchProduct();
   }, [id]);
 
-  const handleOrderNow = async () => {
+  // Stock for the selected color/size, falling back to the product total.
+  const variantStock = (() => {
+    if (!product) return 0;
+    if (product.variants && product.variants.length > 0) {
+      const match = product.variants.find(
+        (v) => (v.color || '') === (selectedColor?.name || '') && (v.size || '') === (selectedSize || '')
+      );
+      if (match) return match.stock;
+    }
+    return product.stock;
+  })();
+
+  const addCurrentSelection = async () => {
+    await addItem({
+      productId: product._id,
+      name: product.name,
+      price: product.price,
+      image: product.images?.[0] || '',
+      quantity: qty,
+      color: selectedColor ? selectedColor.name : '',
+      size: selectedSize || ''
+    });
+  };
+
+  const handleAddToBag = async () => {
     setAdding(true);
     try {
-      const cartItem = {
-        productId: product._id,
-        name: product.name,
-        price: product.price,
-        image: product.images?.[0] || FALLBACK_IMAGES[0],
-        quantity: qty,
-        color: selectedColor ? selectedColor.name : undefined,
-        size: selectedSize ? selectedSize : undefined
-      };
-      if (user) {
-        await addToCart(cartItem);
-      } else {
-        addToGuestCart(cartItem);
-      }
-      // Navigate directly to checkout
+      await addCurrentSelection();
+      setToastMsg('Added to your bag');
+    } catch (err) {
+      console.error(err);
+      setToastMsg(err.message || 'Failed to add to bag');
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const handleBuyNow = async () => {
+    setAdding(true);
+    try {
+      await addCurrentSelection();
       navigate('/checkout');
     } catch (err) {
       console.error(err);
@@ -165,7 +187,11 @@ export default function ProductDetail() {
         <div className="qty-selector">
           <button className="qty-btn" onClick={() => setQty(q => Math.max(1, q - 1))}>-</button>
           <div className="qty-num">{qty}</div>
-          <button className="qty-btn" onClick={() => setQty(q => q + 1)}>+</button>
+          <button
+            className="qty-btn"
+            onClick={() => setQty(q => Math.min(variantStock || 1, q + 1))}
+            disabled={qty >= variantStock}
+          >+</button>
         </div>
 
         {product.colors && product.colors.length > 0 && (
@@ -221,20 +247,32 @@ export default function ProductDetail() {
           </div>
         )}
 
-        <button 
-          className="add-to-bag-btn" 
-          onClick={handleOrderNow}
-          disabled={product.stock === 0 || adding}
+        <button
+          className="add-to-bag-btn"
+          onClick={handleAddToBag}
+          disabled={variantStock === 0 || adding}
         >
           {adding ? (
             <span className="btn-loading"><span className="btn-spinner"></span> Processing...</span>
-          ) : product.stock === 0 ? 'Sold Out' : 'Order Now'}
+          ) : variantStock === 0 ? 'Sold Out' : 'Add to Bag'}
         </button>
+
+        <button
+          className="buy-now-btn"
+          onClick={handleBuyNow}
+          disabled={variantStock === 0 || adding}
+        >
+          Buy Now
+        </button>
+
+        {variantStock > 0 && variantStock <= 5 && (
+          <div className="stock-warning">Only {variantStock} left in stock</div>
+        )}
 
         <div className="product-specs">
           <div className="spec-row">
             <span className="spec-label">Availability</span>
-            <span className="spec-value">{product.stock > 0 ? 'In Stock' : 'Sold Out'}</span>
+            <span className="spec-value">{variantStock > 0 ? 'In Stock' : 'Sold Out'}</span>
           </div>
           <div className="spec-row">
             <span className="spec-label">Material</span>

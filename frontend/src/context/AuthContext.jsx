@@ -16,6 +16,10 @@ export function AuthProvider({ children }) {
       const data = await verifyAuthAPI();
       if (data.authenticated) {
         setUser(data.user);
+      } else {
+        // Signed out is a normal response, not a failure.
+        setUser(null);
+        localStorage.removeItem('authToken');
       }
     } catch {
       setUser(null);

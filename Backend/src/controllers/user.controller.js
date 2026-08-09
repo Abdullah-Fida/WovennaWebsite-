@@ -57,7 +57,9 @@ const verifyAuth = asyncHandler(async (req, res) => {
       }
     });
   } else {
-    res.status(401).json({ authenticated: false, message: "Not authenticated" });
+    // Browsing signed-out is a normal state, not an error — returning 401 here
+    // made every page load log a console error for guests.
+    res.status(200).json({ authenticated: false });
   }
 });
 

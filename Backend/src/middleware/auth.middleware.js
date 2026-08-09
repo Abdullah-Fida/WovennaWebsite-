@@ -39,4 +39,22 @@ const protect = asyncHandler(async (req, res, next) => {
   next();
 });
 
-module.exports = { protect };
+// Attaches req.user when a valid session exists, but never rejects. Used by
+// endpoints that behave differently for guests instead of refusing them.
+const optionalAuth = asyncHandler(async (req, res, next) => {
+  let token = req.cookies.sessionToken;
+  if (!token && req.headers.authorization?.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+  if (!token) return next();
+
+  const session = getSession(token);
+  if (!session) return next();
+
+  const user = await User.findById(session.userId).select('-password');
+  if (user && user.isActive) req.user = user;
+
+  next();
+});
+
+module.exports = { protect, optionalAuth };

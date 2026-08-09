@@ -2,14 +2,13 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Logo from './Logo';
-import { getCart } from '../api';
-import { getGuestCartCount } from '../guestCart';
+import { useCart } from '../context/CartContext';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
+  const { count: cartCount } = useCart();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -27,25 +26,6 @@ export default function Navbar() {
     setMenuOpen(false);
     setDropdownOpen(false);
   }, [location]);
-
-  useEffect(() => {
-    if (user && user.role !== 'admin') {
-      fetchCart();
-    } else if (!user) {
-      // Guest: read cart from localStorage
-      setCartCount(getGuestCartCount());
-    }
-  }, [user, location]); // Re-fetch when location changes to catch cart updates
-
-  const fetchCart = async () => {
-    try {
-      const items = await getCart();
-      const count = items.reduce((acc, item) => acc + item.quantity, 0);
-      setCartCount(count);
-    } catch (err) {
-      console.error('Failed to fetch cart', err);
-    }
-  };
 
   const handleLogout = async () => {
     await logout();
@@ -95,12 +75,10 @@ export default function Navbar() {
             <Link to="/login" className="nav-cta">Sign In</Link>
           )}
 
-          {(!user || user.role !== 'admin') && (
-            <Link to="/cart" className="nav-cart-btn">
+          <Link to="/cart" className="nav-cart-btn" aria-label={`Cart, ${cartCount} item${cartCount === 1 ? '' : 's'}`}>
               <svg viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 20a1 1 0 1 0 0 2 1 1 0 0 0 0-2zM20 20a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"></path><path strokeLinecap="round" strokeLinejoin="round" d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-              <span className={`cart-badge ${cartCount > 0 ? 'show' : ''}`}>{cartCount}</span>
-            </Link>
-          )}
+            <span className={`cart-badge ${cartCount > 0 ? 'show' : ''}`}>{cartCount}</span>
+          </Link>
 
           <button className={`nav-hamburger ${menuOpen ? 'is-open' : ''}`} onClick={() => setMenuOpen(!menuOpen)}>
             <span></span><span></span><span></span>
@@ -130,7 +108,10 @@ export default function Navbar() {
             <button onClick={handleLogout} className="mobile-menu-link" style={{ color: '#ef4444' }}>Log Out</button>
           </>
         ) : (
-          <Link to="/login" className="mobile-menu-link">Sign In / Register</Link>
+          <>
+            <Link to="/track-order" className="mobile-menu-link">Track Order</Link>
+            <Link to="/login" className="mobile-menu-link">Sign In / Register</Link>
+          </>
         )}
       </div>
     </>

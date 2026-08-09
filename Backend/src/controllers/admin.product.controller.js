@@ -38,6 +38,24 @@ async function uploadImagesSequentially(files, folder = 'products') {
   return urls;
 }
 
+// Derive the Cloudinary public_id from a delivery URL so removed images can be
+// cleaned up. Returns null for URLs we didn't upload (e.g. local placeholders).
+function publicIdFromUrl(url) {
+  const match = /\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z0-9]+$/.exec(url || '');
+  return match ? match[1] : null;
+}
+
+async function destroyCloudinaryImage(url) {
+  const publicId = publicIdFromUrl(url);
+  if (!publicId) return;
+  try {
+    await cloudinary.uploader.destroy(publicId);
+  } catch (err) {
+    // Losing an orphaned file is not worth failing the whole save over.
+    console.error('Failed to delete image from Cloudinary:', err.message);
+  }
+}
+
 // Helper: safely parse JSON string fields from FormData
 function safeParseJSON(value, fallback = []) {
   if (!value) return fallback;
@@ -53,9 +71,14 @@ function safeParseJSON(value, fallback = []) {
 const createProduct = asyncHandler(async (req, res) => {
   try {
     const { name, description, price, originalPrice, category, stock, material, weight, dimensions, widthCm, heightCm, careInstructions, isFeatured, showInSoldOutRow, isActive } = req.body;
-    if (!name || !price) {
+
+    if (!name || !String(name).trim()) {
       res.status(400);
-      throw new Error('Name and price are required');
+      throw new Error('Product name is required');
+    }
+    if (price === undefined || price === '' || Number.isNaN(Number(price)) || Number(price) < 0) {
+      res.status(400);
+      throw new Error('Price is required and must be a valid number');
     }
 
     // Parse JSON array fields from FormData
@@ -84,12 +107,13 @@ const createProduct = asyncHandler(async (req, res) => {
     }
 
     const product = await Product.create({
-      name,
-      description,
-      price,
-      originalPrice,
-      category,
-      stock: stock || 0,
+      name: String(name).trim(),
+      description: description || '',
+      price: Number(price),
+      // An empty "original price" field must stay unset, not become NaN.
+      originalPrice: originalPrice ? Number(originalPrice) : undefined,
+      category: category || 'General',
+      stock: Number(stock) || 0,
       images,
       colors,
       sizes,
@@ -134,12 +158,24 @@ const updateProduct = asyncHandler(async (req, res) => {
     if (!product) { res.status(404); throw new Error('Product not found'); }
 
     const { name, description, price, originalPrice, category, stock, material, weight, dimensions, widthCm, heightCm, careInstructions, isFeatured, showInSoldOutRow, isActive } = req.body;
-    if (name !== undefined) product.name = name;
+    if (name !== undefined) {
+      if (!String(name).trim()) { res.status(400); throw new Error('Product name cannot be empty'); }
+      product.name = String(name).trim();
+    }
     if (description !== undefined) product.description = description;
-    if (price !== undefined) product.price = price;
-    if (originalPrice !== undefined) product.originalPrice = originalPrice;
+    if (price !== undefined) {
+      if (price === '' || Number.isNaN(Number(price)) || Number(price) < 0) {
+        res.status(400);
+        throw new Error('Price must be a valid number');
+      }
+      product.price = Number(price);
+    }
+    // Clearing the field removes the crossed-out compare-at price.
+    if (originalPrice !== undefined) {
+      product.originalPrice = originalPrice ? Number(originalPrice) : undefined;
+    }
     if (category !== undefined) product.category = category;
-    if (stock !== undefined) product.stock = stock;
+    if (stock !== undefined) product.stock = Number(stock) || 0;
 
     // New fields
     if (material !== undefined) product.material = material;
@@ -175,11 +211,28 @@ const updateProduct = asyncHandler(async (req, res) => {
     if (req.body.tags !== undefined) product.tags = safeParseJSON(req.body.tags, []);
     if (req.body.variants !== undefined) product.variants = safeParseJSON(req.body.variants, []);
 
-    // Upload new images sequentially if any
+    // Image management.
+    //
+    // `existingImages` is the ordered list of already-uploaded URLs the admin
+    // chose to KEEP — dropping a URL from it deletes that image, and the first
+    // entry is the cover. Newly uploaded files are appended.
+    //
+    // When the field is absent entirely (older clients), keep what's there.
+    let images = product.images;
+    if (req.body.existingImages !== undefined) {
+      const keep = safeParseJSON(req.body.existingImages, []);
+      const current = new Set(product.images);
+      images = keep.filter((url) => current.has(url));
+
+      const removed = product.images.filter((url) => !images.includes(url));
+      await Promise.all(removed.map((url) => destroyCloudinaryImage(url)));
+    }
+
     if (req.files && req.files.length) {
       const newImages = await uploadImagesSequentially(req.files);
-      product.images = product.images.concat(newImages);
+      images = images.concat(newImages);
     }
+    product.images = images;
 
     const updated = await product.save();
     res.json(updated);

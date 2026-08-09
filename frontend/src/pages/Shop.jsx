@@ -48,6 +48,12 @@ export default function Shop() {
 
   const categories = ['All', 'Tote', 'Crossbody'];
 
+  // Sold-out and placeholder pieces move to their own section below the
+  // buyable range so the top of the page is always shoppable.
+  const isSoldOut = (p) => p.stock === 0 || p.showInSoldOutRow;
+  const available = products.filter((p) => !isSoldOut(p));
+  const soldOut = products.filter(isSoldOut);
+
   return (
     <div className="page">
       <div className="container">
@@ -63,7 +69,7 @@ export default function Shop() {
             </>
           }
           subtitle="Use category filters and search to quickly find the right bag. Open any product to see full details and photos."
-          right={<div className="shop-count">{products.length} Products</div>}
+          right={<div className="shop-count">{available.length} Available</div>}
         />
 
         <div className="shop-controls reveal visible" style={{ marginBottom: 34 }}>
@@ -141,11 +147,31 @@ export default function Shop() {
             }
           />
         ) : (
-          <div className="shop-grid">
-            {products.map((product) => (
-              <ProductCard key={product._id} product={product} />
-            ))}
-          </div>
+          <>
+            {available.length > 0 && (
+              <div className="shop-grid">
+                {available.map((product) => (
+                  <ProductCard key={product._id} product={product} />
+                ))}
+              </div>
+            )}
+
+            {soldOut.length > 0 && (
+              <section className="shop-soldout-section">
+                <div className="shop-soldout-header">
+                  <h2 className="shop-soldout-title">Sold <em>Out</em></h2>
+                  <p className="shop-soldout-sub">
+                    These pieces are currently unavailable. Restocks are announced first to our newsletter.
+                  </p>
+                </div>
+                <div className="shop-grid">
+                  {soldOut.map((product) => (
+                    <ProductCard key={product._id} product={product} />
+                  ))}
+                </div>
+              </section>
+            )}
+          </>
         )}
       </div>
     </div>

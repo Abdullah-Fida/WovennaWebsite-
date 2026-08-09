@@ -109,13 +109,20 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Lower Row — 3 backend sold out products */}
+      {/* Lower Row — sold out products from the admin panel. Hidden entirely
+          until real products with images are marked for this row. */}
+      {soldOutProducts.length > 0 && (
       <section style={{ padding: '0 0 clamp(64px, 10vw, 140px) 0' }}>
         <div className="collection-grid collection-grid--3col reveal">
           {soldOutProducts.map(product => (
             <div key={product._id} className="product-card grid-card product-card--sold-out">
               <div className="product-image-wrap">
-                <img src={product.images && product.images[0] ? product.images[0] : ''} alt={product.name} className="primary" />
+                <img
+                  src={product.images?.[0] || '/premium/flatlay-marble.jpg'}
+                  alt={product.name}
+                  className="primary"
+                  onError={(e) => { e.currentTarget.src = '/premium/flatlay-marble.jpg'; }}
+                />
                 <div className="product-overlay product-overlay--sold-out">
                   <span className="overlay-sold-out-text">Sold Out</span>
                 </div>
@@ -141,8 +148,9 @@ export default function Home() {
           ))}
         </div>
       </section>
+      )}
 
-      {/* LOOKBOOK — image-3, image-4 */}
+      {/* LOOKBOOK — Straw Tote (left), Crossbody (right) */}
       <section id="lookbook">
         <div className="lookbook-header reveal">
           <span className="section-label">Lookbook</span>
@@ -154,23 +162,23 @@ export default function Home() {
 
         <div className="lookbook-grid reveal">
           <figure className="lookbook-item lookbook-item--a">
-            <img src="/Images/image-3.jpeg" alt="Signature Tote" />
-            <figcaption className="lookbook-caption">Signature Tote</figcaption>
+            <img src="/Images/image-1.jpeg" alt="Straw Tote" />
+            <figcaption className="lookbook-caption">Straw Tote</figcaption>
           </figure>
           <figure className="lookbook-item lookbook-item--b">
-            <img src="/Images/image-4.jpeg" alt="Crossbody" />
-            <figcaption className="lookbook-caption">Crossbody</figcaption>
+            <img src="/Images/image-6.jpeg" alt="Straw Crossbody" />
+            <figcaption className="lookbook-caption">Straw Crossbody</figcaption>
           </figure>
         </div>
       </section>
 
-      {/* MATERIALS — image-5, image-6 */}
+      {/* MATERIALS / THE ELEMENTS — Straw Crossbody */}
       <section id="materials">
         <span className="section-label reveal">The Elements</span>
         <h2 className="section-title reveal">Uncompromising <em>Quality</em></h2>
         <div className="materials-layout reveal">
           <div className="hotspot-container">
-            <img src="/Images/image-5.jpeg" alt="Handbag materials close-up" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src="/Images/image-2.jpeg" alt="Straw Crossbody detail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <div className="materials-info">
             <div className="material-item">
@@ -192,25 +200,21 @@ export default function Home() {
         </div>
       </section>
 
-      {/* GALLERY SHOWCASE — image-6, image-7, image-8 */}
+      {/* GALLERY SHOWCASE — craft shot, Straw Tote, Woven Tote */}
       <section id="gallery" style={{ padding: 'clamp(60px, 10vw, 120px) clamp(20px, 5vw, 72px)' }}>
         <div style={{ textAlign: 'center', marginBottom: '48px' }} className="reveal">
           <span className="section-label">Gallery</span>
           <h2 className="section-title">Crafted with <em>Soul</em></h2>
         </div>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 'clamp(8px, 1.5vw, 16px)',
-        }} className="reveal">
+        <div className="reveal home-gallery-grid">
           <div style={{ overflow: 'hidden', aspectRatio: '3/4' }}>
             <img src="/Images/image-6.jpeg" alt="Wovenaa product 1" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.6s ease' }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'} />
           </div>
           <div style={{ overflow: 'hidden', aspectRatio: '3/4' }}>
-            <img src="/Images/image-7.jpeg" alt="Wovenaa product 2" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.6s ease' }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'} />
+            <img src="/Images/image-1.jpeg" alt="Straw Tote" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.6s ease' }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'} />
           </div>
           <div style={{ overflow: 'hidden', aspectRatio: '3/4' }}>
-            <img src="/Images/image-8.jpeg" alt="Wovenaa product 3" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.6s ease' }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'} />
+            <img src="/Images/image-3.jpeg" alt="Woven Tote" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.6s ease' }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'} />
           </div>
         </div>
       </section>

@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Order = require("../models/order.model");
 const Cart = require("../models/cart.model");
+const Product = require("../models/product.model");
 const Promo = require("../models/promo.model");
 const { sendOrderConfirmationEmail } = require("../utils/email.service");
 
@@ -55,7 +56,9 @@ const createOrder = asyncHandler(async (req, res) => {
       productId: item.productId,
       name: item.name,
       price: item.price,
-      image: item.image,
+      image: item.image || '',
+      color: item.color || '',
+      size: item.size || '',
       quantity: item.quantity
     };
   });
@@ -157,20 +160,38 @@ const createGuestOrder = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "Cart is empty" });
   }
 
+  // Guests post their own cart, so prices must be re-read from the database
+  // rather than trusted from the browser.
   let subtotal = 0;
-  const items = cartItems.map(item => {
-    if (!item.price || !item.quantity) {
-      throw new Error("Invalid cart item data");
+  const items = [];
+
+  for (const item of cartItems) {
+    const quantity = Number(item.quantity);
+    if (!item.productId || !Number.isFinite(quantity) || quantity < 1) {
+      return res.status(400).json({ message: "Invalid cart item data" });
     }
-    subtotal += item.price * item.quantity;
-    return {
-      productId: item.productId,
-      name: item.name,
-      price: item.price,
-      image: item.image,
-      quantity: item.quantity
-    };
-  });
+
+    const product = await Product.findById(item.productId);
+    if (!product || product.isActive === false) {
+      return res.status(400).json({ message: `"${item.name || 'A product'}" is no longer available` });
+    }
+    if (product.stock < quantity) {
+      return res.status(400).json({
+        message: `Only ${product.stock} left in stock for ${product.name}`
+      });
+    }
+
+    subtotal += product.price * quantity;
+    items.push({
+      productId: product._id,
+      name: product.name,
+      price: product.price,
+      image: (product.images && product.images[0]) || '',
+      color: item.color || '',
+      size: item.size || '',
+      quantity
+    });
+  }
 
   const shippingCharges = subtotal > 500 ? 0 : 50;
   const taxAmount = Math.round(subtotal * 0.18);
@@ -236,6 +257,36 @@ const createGuestOrder = asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, order });
 });
 
+// TRACK ORDER (public) — guests look up an order with its number plus the
+// email they checked out with, so an order id alone never exposes an address.
+const trackOrder = asyncHandler(async (req, res) => {
+  const orderId = String(req.body.orderId || '').trim();
+  const email = String(req.body.email || '').trim().toLowerCase();
+
+  if (!orderId || !email) {
+    return res.status(400).json({ message: 'Order number and email are both required' });
+  }
+
+  // Accept either the human-facing "ORD..." number or the raw database id.
+  const query = { orderId: new RegExp(`^${orderId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') };
+  let order = await Order.findOne(query).populate('user', 'email name');
+
+  if (!order && /^[0-9a-fA-F]{24}$/.test(orderId)) {
+    order = await Order.findById(orderId).populate('user', 'email name');
+  }
+
+  if (!order) {
+    return res.status(404).json({ message: 'No order found with that number' });
+  }
+
+  const orderEmail = (order.guestEmail || order.user?.email || '').toLowerCase();
+  if (orderEmail !== email) {
+    return res.status(404).json({ message: 'No order found with that number and email' });
+  }
+
+  res.json({ success: true, order });
+});
+
 // GET ORDER BY ID
 const getOrderById = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -278,6 +329,7 @@ const getUserOrders = asyncHandler(async (req, res) => {
 module.exports = {
   createOrder,
   createGuestOrder,
+  trackOrder,
   getOrderById,
   getUserOrders
 };

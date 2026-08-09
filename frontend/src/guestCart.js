@@ -3,48 +3,69 @@
 
 const CART_KEY = 'wovenaa_guest_cart';
 
-export function getGuestCart() {
+// Items are identified by product + chosen variant, so the same bag in two
+// colors stays as two separate lines.
+export function cartLineKey(item) {
+  return [item.productId, item.color || '', item.size || ''].join('::');
+}
+
+function readCart() {
   try {
     const raw = localStorage.getItem(CART_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }
 }
 
+function writeCart(cart) {
+  localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  return cart;
+}
+
+export function getGuestCart() {
+  return readCart();
+}
+
 export function addToGuestCart(item) {
-  const cart = getGuestCart();
-  const idx = cart.findIndex(i => i.productId === item.productId);
+  const cart = readCart();
+  const key = cartLineKey(item);
+  const idx = cart.findIndex((i) => cartLineKey(i) === key);
+  const qty = Number(item.quantity) || 1;
+
   if (idx >= 0) {
-    cart[idx].quantity += item.quantity || 1;
+    cart[idx].quantity += qty;
   } else {
     cart.push({
       productId: item.productId,
       name: item.name,
       price: item.price,
       image: item.image,
-      quantity: item.quantity || 1,
+      color: item.color || '',
+      size: item.size || '',
+      quantity: qty,
     });
   }
-  localStorage.setItem(CART_KEY, JSON.stringify(cart));
-  return cart;
+  return writeCart(cart);
 }
 
-export function updateGuestCartItem(productId, quantity) {
-  const cart = getGuestCart();
-  const idx = cart.findIndex(i => i.productId === productId);
+export function updateGuestCartItem(key, quantity) {
+  const cart = readCart();
+  const idx = cart.findIndex((i) => cartLineKey(i) === key);
   if (idx >= 0) {
-    cart[idx].quantity = quantity;
-    localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    if (quantity < 1) {
+      cart.splice(idx, 1);
+    } else {
+      cart[idx].quantity = quantity;
+    }
+    writeCart(cart);
   }
-  return cart;
+  return readCart();
 }
 
-export function deleteGuestCartItem(productId) {
-  let cart = getGuestCart();
-  cart = cart.filter(i => i.productId !== productId);
-  localStorage.setItem(CART_KEY, JSON.stringify(cart));
-  return cart;
+export function deleteGuestCartItem(key) {
+  return writeCart(readCart().filter((i) => cartLineKey(i) !== key));
 }
 
 export function clearGuestCart() {
@@ -53,6 +74,5 @@ export function clearGuestCart() {
 }
 
 export function getGuestCartCount() {
-  const cart = getGuestCart();
-  return cart.reduce((sum, item) => sum + item.quantity, 0);
+  return readCart().reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
 }

@@ -32,6 +32,7 @@ export default function Footer() {
           <h5>Client Care</h5>
           <ul>
             <li><Link to="/contact">Contact Us</Link></li>
+            <li><Link to="/track-order">Track Order</Link></li>
             <li><Link to="/shipping-returns">Shipping &amp; Returns</Link></li>
             <li><Link to="/privacy-policy">Privacy Policy</Link></li>
           </ul>
