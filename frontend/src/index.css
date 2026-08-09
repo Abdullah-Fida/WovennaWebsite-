@@ -3948,6 +3948,60 @@ footer {
   align-items: start;
 }
 
+.track-req,
+.track-opt {
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 3px;
+  margin-left: 4px;
+}
+
+.track-req {
+  background: rgba(197, 160, 89, 0.2);
+  color: #8A6D2F;
+}
+
+.track-opt {
+  background: rgba(10, 17, 40, 0.07);
+  color: var(--gray);
+}
+
+.track-matches {
+  margin-bottom: 22px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(197, 160, 89, 0.2);
+}
+
+.track-matches-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.track-match-chip {
+  font-family: var(--font-body);
+  font-size: 12px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(197, 160, 89, 0.35);
+  background: transparent;
+  color: var(--navy);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.track-match-chip:hover {
+  border-color: var(--gold);
+}
+
+.track-match-chip.is-active {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: var(--white);
+}
+
 .track-submit {
   width: 100%;
   border: none;

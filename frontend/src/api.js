@@ -80,7 +80,7 @@ export const getOrderById = async (id) => {
 };
 export const trackOrder = async (body) => {
   const data = await apiFetch('/order/track', { method: 'POST', body });
-  return data.order || data;
+  return { order: data.order, orders: data.orders || (data.order ? [data.order] : []) };
 };
 
 // Admin

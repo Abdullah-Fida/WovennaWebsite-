@@ -3,6 +3,10 @@ const Order = require("../models/order.model");
 const Cart = require("../models/cart.model");
 const Product = require("../models/product.model");
 const Promo = require("../models/promo.model");
+const User = require("../models/user.model");
+
+// User input goes into a RegExp for case-insensitive matching, so escape it.
+const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const { sendOrderConfirmationEmail } = require("../utils/email.service");
 
 // Generate unique order ID
@@ -257,34 +261,45 @@ const createGuestOrder = asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, order });
 });
 
-// TRACK ORDER (public) — guests look up an order with its number plus the
-// email they checked out with, so an order id alone never exposes an address.
+// TRACK ORDER (public). The email is always required and must match the
+// order, so an order number alone never exposes someone's address. The order
+// number is optional — with just an email we return that address's recent
+// orders so a shopper who lost their number can still find them.
 const trackOrder = asyncHandler(async (req, res) => {
   const orderId = String(req.body.orderId || '').trim();
   const email = String(req.body.email || '').trim().toLowerCase();
 
-  if (!orderId || !email) {
-    return res.status(400).json({ message: 'Order number and email are both required' });
+  if (!email) {
+    return res.status(400).json({ message: 'Please enter the email you used at checkout' });
   }
 
-  // Accept either the human-facing "ORD..." number or the raw database id.
-  const query = { orderId: new RegExp(`^${orderId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') };
-  let order = await Order.findOne(query).populate('user', 'email name');
+  // Orders placed by a signed-in user store the email on the user document.
+  const usersWithEmail = await User.find({ email: new RegExp(`^${escapeRegex(email)}$`, 'i') })
+    .select('_id');
+  const emailFilter = {
+    $or: [
+      { guestEmail: new RegExp(`^${escapeRegex(email)}$`, 'i') },
+      ...(usersWithEmail.length ? [{ user: { $in: usersWithEmail.map((u) => u._id) } }] : []),
+    ],
+  };
 
-  if (!order && /^[0-9a-fA-F]{24}$/.test(orderId)) {
-    order = await Order.findById(orderId).populate('user', 'email name');
+  if (orderId) {
+    const idFilter = { $or: [{ orderId: new RegExp(`^${escapeRegex(orderId)}$`, 'i') }] };
+    if (/^[0-9a-fA-F]{24}$/.test(orderId)) idFilter.$or.push({ _id: orderId });
+
+    const order = await Order.findOne({ $and: [idFilter, emailFilter] });
+    if (!order) {
+      return res.status(404).json({ message: 'No order found with that number and email' });
+    }
+    return res.json({ success: true, order });
   }
 
-  if (!order) {
-    return res.status(404).json({ message: 'No order found with that number' });
+  const orders = await Order.find(emailFilter).sort({ createdAt: -1 }).limit(10);
+  if (orders.length === 0) {
+    return res.status(404).json({ message: 'No orders found for that email' });
   }
 
-  const orderEmail = (order.guestEmail || order.user?.email || '').toLowerCase();
-  if (orderEmail !== email) {
-    return res.status(404).json({ message: 'No order found with that number and email' });
-  }
-
-  res.json({ success: true, order });
+  res.json({ success: true, order: orders[0], orders });
 });
 
 // GET ORDER BY ID

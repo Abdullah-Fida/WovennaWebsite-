@@ -14,6 +14,7 @@ export default function TrackOrder() {
   const [orderId, setOrderId] = useState(searchParams.get('order') || '');
   const [email, setEmail] = useState(searchParams.get('email') || '');
   const [order, setOrder] = useState(null);
+  const [matches, setMatches] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -22,18 +23,21 @@ export default function TrackOrder() {
     const id = (presetId ?? orderId).trim();
     const mail = (presetEmail ?? email).trim();
 
-    if (!id || !mail) {
-      setError('Please enter both your order number and email.');
+    // The order number is optional — the email alone finds recent orders.
+    if (!mail) {
+      setError('Please enter the email you used at checkout.');
       return;
     }
 
     setLoading(true);
     setError('');
     try {
-      const found = await trackOrder({ orderId: id, email: mail });
+      const { order: found, orders } = await trackOrder({ orderId: id, email: mail });
       setOrder(found);
+      setMatches(orders);
     } catch (err) {
       setOrder(null);
+      setMatches([]);
       setError(err.message || 'Could not find that order');
     } finally {
       setLoading(false);
@@ -50,32 +54,33 @@ export default function TrackOrder() {
           breadcrumbs={[{ label: 'Home', to: '/' }, { label: 'Track Order' }]}
           eyebrow="Order Status"
           title={<>Track your <em>order</em></>}
-          subtitle="Enter the order number from your confirmation along with the email you used at checkout. No account needed."
+          subtitle="Enter the email you used at checkout. Add your order number to jump straight to one order, or leave it blank to see everything ordered with that email. No account needed."
         />
 
         <div className="track-layout">
           <div>
             <form className="card card--soft card-pad track-form" onSubmit={lookup}>
               <div className="checkout-form-group">
-                <label>
-                  Order Number{' '}
-                  <InfoTip tip="Looks like ORD1786296232854 — it's in your confirmation email and on the order success page." ariaLabel="Order number help" />
-                </label>
-                <input
-                  type="text"
-                  value={orderId}
-                  onChange={(e) => setOrderId(e.target.value)}
-                  placeholder="ORD..."
-                />
-              </div>
-
-              <div className="checkout-form-group">
-                <label>Email</label>
+                <label>Email <span className="track-req">required</span></label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
+                  required
+                />
+              </div>
+
+              <div className="checkout-form-group">
+                <label>
+                  Order Number <span className="track-opt">optional</span>{' '}
+                  <InfoTip tip="Looks like ORD1786296232854 — it's in your confirmation email. Leave it blank to see all orders placed with this email." ariaLabel="Order number help" />
+                </label>
+                <input
+                  type="text"
+                  value={orderId}
+                  onChange={(e) => setOrderId(e.target.value)}
+                  placeholder="ORD... (leave blank to see all)"
                 />
               </div>
 
@@ -117,6 +122,26 @@ export default function TrackOrder() {
           <div>
             {order ? (
               <div className="card card--soft card-pad">
+                {matches.length > 1 && (
+                  <div className="track-matches">
+                    <div className="track-recent-title">
+                      {matches.length} orders for this email — pick one
+                    </div>
+                    <div className="track-matches-row">
+                      {matches.map((o) => (
+                        <button
+                          key={o._id}
+                          type="button"
+                          className={`track-match-chip ${o._id === order._id ? 'is-active' : ''}`}
+                          onClick={() => setOrder(o)}
+                        >
+                          {o.orderId}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="track-result-head">
                   <div>
                     <div className="track-result-label">Order</div>

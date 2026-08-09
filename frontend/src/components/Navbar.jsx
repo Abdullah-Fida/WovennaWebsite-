@@ -44,6 +44,8 @@ export default function Navbar() {
           <li><Link to="/shop">Shop</Link></li>
           <li><Link to="/about">About Us</Link></li>
           <li><Link to="/contact">Contact</Link></li>
+          {/* Guests have no "My Orders", so surface tracking in the main nav. */}
+          {!user && <li><Link to="/track-order">Track Order</Link></li>}
           {user?.role === 'admin' && <li><Link to="/admin">Dashboard</Link></li>}
         </ul>
 
