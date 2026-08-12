@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import SmartImage from '../components/ui/SmartImage';
 import Toast from '../components/Toast';
 import PageHeader from '../components/ui/PageHeader';
 import EmptyState from '../components/ui/EmptyState';
@@ -122,11 +123,12 @@ export default function Cart() {
           <div className="cart-items-list">
             {items.map((item) => (
               <div key={lineKeyOf(item)} className="cart-item">
-                <img
-                  src={item.image || '/premium/flatlay-marble.jpg'}
+                <SmartImage
+                  src={item.image}
                   alt={item.name}
                   className="cart-item-img"
-                  onError={(e) => { e.currentTarget.src = '/premium/flatlay-marble.jpg'; }}
+                  width={260}
+                  sizes="130px"
                 />
                 <div className="cart-item-info">
                   <div className="cart-item-name">{item.name}</div>

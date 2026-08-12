@@ -16,11 +16,17 @@ const productSchema = new mongoose.Schema({
   }],
   sizes: [{ type: String }],
 
-  // Per-variant stock (color + size combination)
+  // One buyable combination (colour × size). Price and image are optional and
+  // fall back to the product's own values, so existing variants that only set
+  // stock keep working unchanged.
   variants: [{
     color: { type: String, default: '' },
     size: { type: String, default: '' },
-    stock: { type: Number, default: 0 }
+    sku: { type: String, default: '' },
+    price: { type: Number, default: null },
+    originalPrice: { type: Number, default: null },
+    stock: { type: Number, default: 0 },
+    image: { type: String, default: '' }
   }],
 
   material: { type: String, default: '' },

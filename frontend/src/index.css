@@ -1321,28 +1321,29 @@ section {
 
 .product-image-wrap {
   position: relative;
-  height: 440px;
+  /* A fixed 440px height squashed or stretched the photo as the card width
+     changed. A ratio keeps every card's image correctly proportioned at any
+     breakpoint and reserves the space before the image arrives. */
+  aspect-ratio: 4 / 5;
   overflow: hidden;
   background: var(--cream);
   border-radius: 12px 12px 0 0;
 }
 
-.product-image-wrap img {
+/* Images are wrapped by SmartImage, so the hover cross-fade lives on the
+   wrapper rather than the <img> itself. */
+.product-image-wrap .smart-img {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
   transition: opacity 0.7s ease, transform 0.5s ease;
 }
 
-.product-image-wrap img.primary {
-  opacity: 1;
+.product-image-wrap .smart-img > img {
+  object-fit: cover;
 }
 
-.product-image-wrap img.lifestyle {
-  opacity: 0;
-}
+.product-image-wrap .smart-img.primary { opacity: 1; }
+.product-image-wrap .smart-img.lifestyle { opacity: 0; }
 
 .w-logo-circle {
   width: 44px;
@@ -1387,17 +1388,16 @@ section {
   font-weight: 300;
 }
 
-.product-card:hover .product-image-wrap img.primary {
+/* Only cross-fade when there is a second photo to reveal. */
+.product-card:hover .product-image-wrap:has(.smart-img.lifestyle) .smart-img.primary {
   opacity: 0;
-  transform: scale(1.05);
 }
 
-.product-card:hover .product-image-wrap img.lifestyle {
+.product-card:hover .product-image-wrap .smart-img.lifestyle {
   opacity: 1;
-  transform: scale(1.05);
 }
 
-.product-card:hover .product-image-wrap img {
+.product-card:hover .product-image-wrap .smart-img {
   transform: scale(1.05);
 }
 
@@ -1885,7 +1885,8 @@ footer {
 }
 
 .shop-grid .product-image-wrap {
-  height: 380px;
+  /* height comes from the 4/5 ratio; setting it here would override the
+     card width and leave a gap beside the photo */
 }
 
 .shop-empty {
@@ -1919,14 +1920,14 @@ footer {
 }
 
 .main-image {
+  position: relative;
   flex: 1;
+  min-height: 0;
   overflow: hidden;
   background: var(--cream);
 }
 
-.main-image img {
-  width: 100%;
-  height: 100%;
+.main-image .smart-img > img {
   object-fit: contain;
 }
 
@@ -2016,11 +2017,11 @@ footer {
 }
 
 .qty-label {
-  font-size: 11px;
-  letter-spacing: 2.2px;
+  font-size: 11.5px;
+  letter-spacing: 1.8px;
   text-transform: uppercase;
   color: var(--navy);
-  opacity: 0.5;
+  opacity: 0.75;
   margin-bottom: 12px;
 }
 
@@ -2213,10 +2214,12 @@ footer {
 .cart-item-img {
   width: 120px;
   height: 140px;
-  object-fit: contain;
   flex-shrink: 0;
   background: var(--cream);
+  border-radius: 6px;
 }
+
+.cart-item-img > img { object-fit: contain; }
 
 .cart-item-info {
   flex: 1;
@@ -2581,10 +2584,12 @@ footer {
 .summary-item-img {
   width: 68px;
   height: 78px;
-  object-fit: contain;
   flex-shrink: 0;
   background: var(--white);
+  border-radius: 4px;
 }
+
+.summary-item-img > img { object-fit: contain; }
 
 .summary-item-name {
   font-family: var(--font-display);
@@ -3609,7 +3614,6 @@ footer {
   }
 
   .product-image-wrap {
-    height: 340px;
   }
 
   /* Concierge */
@@ -3666,7 +3670,7 @@ footer {
   }
 
   .shop-grid .product-image-wrap {
-    height: 240px;
+    /* ratio-driven; see the base rule */
   }
 
   .shop-grid .product-name {
@@ -3776,7 +3780,6 @@ footer {
   }
 
   .product-image-wrap {
-    height: 300px;
   }
 
   .product-name {
@@ -3788,7 +3791,7 @@ footer {
   }
 
   .shop-grid .product-image-wrap {
-    height: 300px;
+    /* ratio-driven; see the base rule */
   }
 
   .cart-item {
@@ -3922,6 +3925,143 @@ footer {
 .admin-add-color-btn:hover {
   border-color: var(--gold);
   color: var(--gold);
+}
+
+/* --- Variant selectors & gallery controls --- */
+
+/* Swatches and size chips became <button>s so they can be disabled and
+   keyboard-reachable; strip the default button chrome. */
+.product-swatch-item,
+.product-size-chip,
+.thumbnail {
+  font-family: inherit;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.product-swatch-item {
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.62;
+  transition: opacity 0.2s ease;
+}
+
+.product-swatch-item.selected,
+.product-swatch-item:hover:not(:disabled) {
+  opacity: 1;
+}
+
+.product-size-chip {
+  padding: 9px 18px;
+  border: 1px solid rgba(197, 160, 89, 0.35);
+  font-size: 12.5px;
+  color: var(--navy);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.product-size-chip:hover:not(:disabled) {
+  border-color: var(--gold);
+}
+
+.product-size-chip.selected {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: var(--white);
+}
+
+/* Sold-out combinations stay visible but clearly out of reach. */
+.product-swatch-item.is-unavailable,
+.product-size-chip.is-unavailable {
+  cursor: not-allowed;
+  opacity: 0.32;
+}
+
+.product-size-chip.is-unavailable {
+  text-decoration: line-through;
+}
+
+.thumbnail {
+  width: 74px;
+  height: 74px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid rgba(197, 160, 89, 0.25);
+  border-radius: 6px;
+  opacity: 0.62;
+  transition: all 0.25s ease;
+}
+
+.thumbnail:hover { opacity: 1; }
+
+.thumbnail.active {
+  opacity: 1;
+  border-color: var(--gold);
+}
+
+.price-save {
+  margin-left: 10px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #2f7d4f;
+}
+
+.product-tag-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.product-tag-row .product-tag { margin-bottom: 0; }
+
+.product-tag--plain {
+  color: var(--navy);
+  border-color: var(--navy);
+}
+
+/* --- SmartImage --- */
+
+.smart-img {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  /* Warm tint rather than grey, so the gap before load reads as part of the
+     design instead of a hole in the page. */
+  background: linear-gradient(110deg, #F2EEE6 30%, #E9E3D7 50%, #F2EEE6 70%);
+  background-size: 200% 100%;
+  animation: smart-img-shimmer 1.4s ease-in-out infinite;
+}
+
+.smart-img.is-loaded {
+  animation: none;
+  background: none;
+}
+
+.smart-img > img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0;
+  transition: opacity 0.45s ease;
+}
+
+.smart-img.is-loaded > img {
+  opacity: 1;
+}
+
+@keyframes smart-img-shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .smart-img { animation: none; }
+  .smart-img > img { transition: none; }
 }
 
 /* --- Home gallery --- */
@@ -4135,10 +4275,9 @@ footer {
   align-items: center;
 }
 
-.track-item img {
+.track-item .smart-img {
   width: 58px;
   height: 58px;
-  object-fit: cover;
   border-radius: 6px;
   flex-shrink: 0;
 }
@@ -4218,6 +4357,95 @@ footer {
   font-weight: 300;
   color: var(--gray);
   max-width: 520px;
+}
+
+/* --- Admin variant table --- */
+
+.admin-variant-table-wrap {
+  overflow-x: auto;
+  margin-top: 10px;
+  border: 1px solid rgba(197, 160, 89, 0.25);
+  border-radius: 10px;
+}
+
+.admin-variant-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+}
+
+.admin-variant-table th {
+  text-align: left;
+  font-size: 10.5px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--gray);
+  font-weight: 400;
+  padding: 10px 12px;
+  background: var(--cream);
+  border-bottom: 1px solid rgba(197, 160, 89, 0.25);
+  white-space: nowrap;
+}
+
+.admin-variant-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(197, 160, 89, 0.14);
+  vertical-align: middle;
+}
+
+.admin-variant-table tr:last-child td { border-bottom: none; }
+
+.admin-variant-table input {
+  width: 100%;
+  min-width: 74px;
+  padding: 7px 9px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  border: 1px solid rgba(197, 160, 89, 0.3);
+  border-radius: 6px;
+  background: var(--white);
+}
+
+.admin-variant-table input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.admin-variant-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--navy);
+  white-space: nowrap;
+}
+
+.admin-variant-thumb {
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 1px dashed rgba(197, 160, 89, 0.5);
+  border-radius: 6px;
+  background: var(--cream);
+  cursor: pointer;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  transition: border-color 0.2s ease;
+}
+
+.admin-variant-thumb:hover { border-color: var(--gold); }
+
+.admin-variant-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-variant-thumb-empty {
+  font-size: 17px;
+  color: var(--gray);
+  line-height: 1;
 }
 
 /* --- Admin image manager --- */

@@ -53,28 +53,57 @@ export default function AdminProducts() {
     }
   };
 
-  // Build variant grid from colors + sizes
+  // Build the variant grid from the chosen colours × sizes, carrying over
+  // everything already entered for a combination so re-generating the grid
+  // never wipes prices, stock or photos.
   const buildVariantGrid = (colorsList, sizesList, existingVariants = []) => {
-    const newVariants = [];
     if (colorsList.length === 0 && sizesList.length === 0) return [];
-    
+
     const colorsToUse = colorsList.length > 0 ? colorsList : [{ name: '' }];
     const sizesToUse = sizesList.length > 0 ? sizesList : [''];
 
+    const newVariants = [];
     for (const color of colorsToUse) {
       for (const size of sizesToUse) {
-        // Check if existing variant has stock value
         const existing = existingVariants.find(
-          v => v.color === (color.name || '') && v.size === (size || '')
+          v => (v.color || '') === (color.name || '') && (v.size || '') === (size || '')
         );
         newVariants.push({
           color: color.name || '',
           size: size || '',
-          stock: existing ? existing.stock : 0
+          sku: existing?.sku || '',
+          price: existing?.price ?? '',
+          originalPrice: existing?.originalPrice ?? '',
+          stock: existing?.stock ?? 0,
+          image: existing?.image || ''
         });
       }
     }
     return newVariants;
+  };
+
+  const updateVariant = (index, field, value) => {
+    setVariants(prev => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  };
+
+  // Cycle a variant through the gallery: none -> image 1 -> image 2 -> none.
+  const cycleVariantImage = (index) => {
+    const gallery = [...existingImages, ...newImages.map(i => i.preview)];
+    if (gallery.length === 0) {
+      setToastMsg('Add product images first, then assign one to each variant');
+      return;
+    }
+    setVariants(prev => {
+      const next = [...prev];
+      const at = gallery.indexOf(next[index].image);
+      const following = at + 1 >= gallery.length ? '' : gallery[at + 1];
+      next[index] = { ...next[index], image: at === -1 ? gallery[0] : following };
+      return next;
+    });
   };
 
   const handleOpenModal = (product = null) => {
@@ -149,12 +178,26 @@ export default function AdminProducts() {
     ]);
   };
 
+  // Dropping an image must also release any variant that was using it,
+  // otherwise the variant would point at something no longer on the product.
+  const clearVariantImage = (url) => {
+    setVariants((prev) =>
+      prev.some((v) => v.image === url)
+        ? prev.map((v) => (v.image === url ? { ...v, image: '' } : v))
+        : prev
+    );
+  };
+
   const removeExistingImage = (index) => {
-    setExistingImages((prev) => prev.filter((_, i) => i !== index));
+    setExistingImages((prev) => {
+      clearVariantImage(prev[index]);
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   const removeNewImage = (index) => {
     setNewImages((prev) => {
+      clearVariantImage(prev[index].preview);
       URL.revokeObjectURL(prev[index].preview);
       return prev.filter((_, i) => i !== index);
     });
@@ -261,7 +304,17 @@ export default function AdminProducts() {
     data.append('colors', JSON.stringify(colors));
     data.append('sizes', JSON.stringify(selectedSizes));
     data.append('tags', JSON.stringify(selectedTags));
-    data.append('variants', JSON.stringify(variants));
+    // A variant may point at an image that hasn't been uploaded yet (a local
+    // preview). The server can't match a blob: URL, so send the position it
+    // will occupy once the new files are appended to the gallery.
+    const variantPayload = variants.map((v) => {
+      const previewAt = newImages.findIndex((img) => img.preview === v.image);
+      const { image, ...rest } = v;
+      return previewAt === -1
+        ? { ...rest, image }
+        : { ...rest, image: '', imageIndex: existingImages.length + previewAt };
+    });
+    data.append('variants', JSON.stringify(variantPayload));
     
     // Ordered list of saved images to keep — anything omitted gets deleted.
     data.append('existingImages', JSON.stringify(existingImages));
@@ -551,64 +604,101 @@ export default function AdminProducts() {
                 </div>
               </div>
 
-              {/* Variant Stock Grid */}
+              {/* Variants: price, stock and photo per colour + size */}
               {variants.length > 0 && (
                 <div className="checkout-form-group">
                   <label>
-                    Variant Stock
+                    Variants
                     <small style={{ fontWeight: 'normal', color: 'var(--gray)', marginLeft: 8 }}>
-                      (Set stock for each color + size combination)
+                      (Leave price blank to use the product price. Click a thumbnail
+                      to assign that variant's photo.)
                     </small>
                   </label>
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                    gap: '12px',
-                    marginTop: '8px'
-                  }}>
-                    {variants.map((v, idx) => (
-                      <div key={idx} style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        padding: '10px 14px',
-                        background: 'var(--cream)',
-                        border: '1px solid rgba(197,160,89,0.2)',
-                        borderRadius: '8px'
-                      }}>
-                        {v.color && (
-                          <span style={{
-                            width: '16px',
-                            height: '16px',
-                            borderRadius: '50%',
-                            background: colors.find(c => c.name === v.color)?.hex || '#ccc',
-                            border: '1px solid rgba(0,0,0,0.1)',
-                            flexShrink: 0
-                          }}></span>
-                        )}
-                        <span style={{ fontSize: '12px', color: 'var(--navy)', flex: 1, minWidth: 0 }}>
-                          {[v.color, v.size].filter(Boolean).join(' / ') || 'Default'}
-                        </span>
-                        <input
-                          type="number"
-                          min="0"
-                          value={v.stock}
-                          onChange={e => handleVariantStockChange(idx, e.target.value)}
-                          style={{
-                            width: '60px',
-                            padding: '6px 8px',
-                            textAlign: 'center',
-                            fontSize: '13px',
-                            border: '1px solid rgba(197,160,89,0.3)',
-                            borderRadius: '6px',
-                            background: 'var(--white)'
-                          }}
-                        />
-                      </div>
-                    ))}
+
+                  <div className="admin-variant-table-wrap">
+                    <table className="admin-variant-table">
+                      <thead>
+                        <tr>
+                          <th>Photo</th>
+                          <th>Variant</th>
+                          <th>Price (Rs.)</th>
+                          <th>Compare at</th>
+                          <th>Stock</th>
+                          <th>SKU</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {variants.map((v, idx) => (
+                          <tr key={`${v.color}-${v.size}-${idx}`}>
+                            <td>
+                              <button
+                                type="button"
+                                className="admin-variant-thumb"
+                                onClick={() => cycleVariantImage(idx)}
+                                title="Click to cycle through this product's images"
+                              >
+                                {v.image ? (
+                                  <img src={v.image} alt="" />
+                                ) : (
+                                  <span className="admin-variant-thumb-empty">+</span>
+                                )}
+                              </button>
+                            </td>
+                            <td>
+                              <div className="admin-variant-name">
+                                {v.color && (
+                                  <span
+                                    className="admin-color-dot"
+                                    style={{ background: colors.find(c => c.name === v.color)?.hex || '#ccc' }}
+                                  />
+                                )}
+                                {[v.color, v.size].filter(Boolean).join(' / ') || 'Default'}
+                              </div>
+                            </td>
+                            <td>
+                              <input
+                                type="number"
+                                min="0"
+                                placeholder={formData.price || '—'}
+                                value={v.price ?? ''}
+                                onChange={e => updateVariant(idx, 'price', e.target.value)}
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="number"
+                                min="0"
+                                placeholder="—"
+                                value={v.originalPrice ?? ''}
+                                onChange={e => updateVariant(idx, 'originalPrice', e.target.value)}
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="number"
+                                min="0"
+                                value={v.stock}
+                                onChange={e => handleVariantStockChange(idx, e.target.value)}
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="text"
+                                placeholder="—"
+                                value={v.sku || ''}
+                                onChange={e => updateVariant(idx, 'sku', e.target.value)}
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                  <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--gray)' }}>
-                    Total stock: <strong style={{ color: 'var(--navy)' }}>{variants.reduce((sum, v) => sum + (v.stock || 0), 0)}</strong>
+
+                  <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--gray)' }}>
+                    Total stock: <strong style={{ color: 'var(--navy)' }}>{variants.reduce((sum, v) => sum + (Number(v.stock) || 0), 0)}</strong>
+                    {' · '}
+                    {variants.filter(v => v.image).length}/{variants.length} have a photo
                   </div>
                 </div>
               )}

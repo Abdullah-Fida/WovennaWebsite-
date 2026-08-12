@@ -3,16 +3,30 @@ const mongoose = require('mongoose');
 const Cart = require('../models/cart.model');
 const Product = require('../models/product.model');
 
+function findVariant(product, color, size) {
+  if (!product.variants || product.variants.length === 0) return null;
+  return product.variants.find(
+    (v) => (v.color || '') === (color || '') && (v.size || '') === (size || '')
+  ) || null;
+}
+
 // Stock for the chosen variant, falling back to the product total when the
 // product has no per-variant breakdown.
 function availableStock(product, color, size) {
-  if (product.variants && product.variants.length > 0) {
-    const match = product.variants.find(
-      (v) => (v.color || '') === (color || '') && (v.size || '') === (size || '')
-    );
-    if (match) return match.stock;
-  }
+  const match = findVariant(product, color, size);
+  if (match) return match.stock;
   return product.stock;
+}
+
+// A variant may set its own price/photo; anything unset falls back to the
+// product. Resolved server-side so the browser can never dictate either.
+function resolvePricing(product, variant) {
+  const price =
+    variant && Number(variant.price) > 0 ? Number(variant.price) : Number(product.price);
+  const image =
+    (variant && variant.image) ||
+    (product.images && product.images.length ? product.images[0] : '');
+  return { price, image };
 }
 
 // Add to cart
@@ -37,10 +51,21 @@ const addToCart = async (req, res) => {
       return res.status(400).json({ message: 'This product is no longer available' });
     }
 
+    const variant = findVariant(product, color, size);
+
+    // Guard against a stale page posting a combination that no longer exists.
+    if (product.variants?.length > 0 && !variant) {
+      return res.status(400).json({
+        message: `Please choose an available option for ${product.name}`
+      });
+    }
+
     const stock = availableStock(product, color, size);
     if (stock <= 0) {
       return res.status(400).json({ message: `${product.name} is sold out` });
     }
+
+    const { price, image } = resolvePricing(product, variant);
 
     const existingItem = await Cart.findOne({
       user: userId,
@@ -60,6 +85,10 @@ const addToCart = async (req, res) => {
 
     if (existingItem) {
       existingItem.quantity = desiredQty;
+      // Re-sync in case the admin changed the price or photo since this line
+      // was added.
+      existingItem.price = price;
+      existingItem.image = image;
       await existingItem.save();
       return res.status(200).json(existingItem);
     }
@@ -68,8 +97,8 @@ const addToCart = async (req, res) => {
       user: userId,
       productId,
       name: product.name,
-      price: product.price,
-      image: product.images && product.images.length ? product.images[0] : '',
+      price,
+      image,
       color: color || '',
       size: size || '',
       quantity: qty

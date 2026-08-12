@@ -56,6 +56,51 @@ async function destroyCloudinaryImage(url) {
   }
 }
 
+function resolveVariantImage(v, images, allowed) {
+  if (v.image && allowed.has(v.image)) return v.image;
+  const idx = Number(v.imageIndex);
+  if (Number.isInteger(idx) && idx >= 0 && idx < images.length) return images[idx];
+  return '';
+}
+
+// Clean incoming variants: coerce numbers, drop blank rows, and make sure a
+// variant's image actually belongs to the product (an admin picks it from the
+// uploaded gallery, so a stale or foreign URL is discarded rather than stored).
+function normalizeVariants(raw, images = []) {
+  if (!Array.isArray(raw)) return [];
+  const allowed = new Set(images);
+  const seen = new Set();
+  const out = [];
+
+  for (const v of raw) {
+    if (!v || typeof v !== 'object') continue;
+
+    const color = String(v.color || '').trim();
+    const size = String(v.size || '').trim();
+    if (!color && !size) continue; // a variant must be identifiable
+
+    const key = `${color}::${size}`;
+    if (seen.has(key)) continue; // last duplicate wins would surprise; keep first
+    seen.add(key);
+
+    const price = Number(v.price);
+    const originalPrice = Number(v.originalPrice);
+
+    out.push({
+      color,
+      size,
+      sku: String(v.sku || '').trim(),
+      price: Number.isFinite(price) && price > 0 ? price : null,
+      originalPrice: Number.isFinite(originalPrice) && originalPrice > 0 ? originalPrice : null,
+      stock: Math.max(0, Number(v.stock) || 0),
+      // On create the gallery URLs don't exist yet, so the UI sends a position
+      // instead; on edit it sends the URL itself.
+      image: resolveVariantImage(v, images, allowed)
+    });
+  }
+  return out;
+}
+
 // Helper: safely parse JSON string fields from FormData
 function safeParseJSON(value, fallback = []) {
   if (!value) return fallback;
@@ -93,6 +138,13 @@ const createProduct = asyncHandler(async (req, res) => {
       images = await uploadImagesSequentially(req.files);
     }
 
+    const cleanVariants = normalizeVariants(variants, images);
+    // With variants, the headline stock is their sum rather than a separate
+    // number an admin has to keep in step by hand.
+    const totalStock = cleanVariants.length
+      ? cleanVariants.reduce((sum, v) => sum + v.stock, 0)
+      : Number(stock) || 0;
+
     const featuredFlag = isFeatured === 'true' || isFeatured === true;
     const soldOutFlag = showInSoldOutRow === 'true' || showInSoldOutRow === true;
 
@@ -113,11 +165,11 @@ const createProduct = asyncHandler(async (req, res) => {
       // An empty "original price" field must stay unset, not become NaN.
       originalPrice: originalPrice ? Number(originalPrice) : undefined,
       category: category || 'General',
-      stock: Number(stock) || 0,
+      stock: totalStock,
       images,
       colors,
       sizes,
-      variants,
+      variants: cleanVariants,
       material: material || '',
       weight: weight || '',
       dimensions: dimensions || '',
@@ -209,7 +261,6 @@ const updateProduct = asyncHandler(async (req, res) => {
     if (req.body.colors !== undefined) product.colors = safeParseJSON(req.body.colors, []);
     if (req.body.sizes !== undefined) product.sizes = safeParseJSON(req.body.sizes, []);
     if (req.body.tags !== undefined) product.tags = safeParseJSON(req.body.tags, []);
-    if (req.body.variants !== undefined) product.variants = safeParseJSON(req.body.variants, []);
 
     // Image management.
     //
@@ -233,6 +284,22 @@ const updateProduct = asyncHandler(async (req, res) => {
       images = images.concat(newImages);
     }
     product.images = images;
+
+    // Normalised last: a variant's photo has to be checked against the final
+    // gallery, and deleting an image must clear it from any variant using it.
+    if (req.body.variants !== undefined) {
+      product.variants = normalizeVariants(safeParseJSON(req.body.variants, []), images);
+    } else if (product.variants?.length) {
+      const kept = new Set(images);
+      product.variants.forEach((v) => {
+        if (v.image && !kept.has(v.image)) v.image = '';
+      });
+    }
+
+    // Keep the headline stock in step with the variant breakdown.
+    if (product.variants?.length) {
+      product.stock = product.variants.reduce((sum, v) => sum + (Number(v.stock) || 0), 0);
+    }
 
     const updated = await product.save();
     res.json(updated);

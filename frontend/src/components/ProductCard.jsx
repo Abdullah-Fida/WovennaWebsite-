@@ -1,62 +1,86 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import SmartImage from './ui/SmartImage';
+import { variantLabel, defaultVariant, priceRange } from '../lib/variants';
 
-const PLACEHOLDER_IMAGE = '/premium/flatlay-marble.jpg';
-
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, priority = false }) {
   const navigate = useNavigate();
   const { addItem } = useCart();
   const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState('');
 
-  const imageUrl = product.images && product.images.length > 0 ? product.images[0] : PLACEHOLDER_IMAGE;
-  const lifestyleUrl = product.images && product.images.length > 1 ? product.images[1] : null;
+  const images = product.images || [];
+  const imageUrl = images[0] || null;
+  const lifestyleUrl = images[1] || null;
 
   const isSoldOut = product.stock === 0 || product.showInSoldOutRow;
+  const { min, max } = priceRange(product);
 
-  // Products with variants need a choice made on the detail page first.
-  const needsVariantChoice =
-    (product.colors && product.colors.length > 0) || (product.sizes && product.sizes.length > 0);
-
+  // Quick-add uses the first in-stock variant so the button does what it says.
+  // Opening the product page is still how you pick a specific colour or size.
   const addToBag = async (e, thenCheckout) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (needsVariantChoice) {
-      navigate(`/product/${product._id}`);
-      return;
-    }
-
     setBusy(true);
+    setNote('');
     try {
+      const variant = defaultVariant(product);
       await addItem({
         productId: product._id,
         name: product.name,
-        price: product.price,
-        image: imageUrl,
+        price: variant?.price ?? product.price,
+        image: variant?.image || imageUrl || '',
         quantity: 1,
+        color: variant?.color || '',
+        size: variant?.size || '',
       });
-      if (thenCheckout) navigate('/checkout');
+      if (thenCheckout) {
+        navigate('/checkout');
+      } else {
+        setNote(variant && variantLabel(variant) ? `Added — ${variantLabel(variant)}` : 'Added to bag');
+        setTimeout(() => setNote(''), 2200);
+      }
     } catch (err) {
-      console.error(err);
-      navigate(`/product/${product._id}`);
+      // Out of stock or a variant that needs choosing: send them to the page
+      // where they can see exactly what's available.
+      setNote(err.message || 'Choose options');
+      setTimeout(() => navigate(`/product/${product._id}`), 700);
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <Link to={`/product/${product._id}`} className={`product-card grid-card ${isSoldOut ? 'product-card--sold-out' : ''}`}>
-      {product.stock <= 5 && product.stock > 0 && <div className="product-badge product-badge--limited">Low Stock</div>}
-      
+    <Link
+      to={`/product/${product._id}`}
+      className={`product-card grid-card ${isSoldOut ? 'product-card--sold-out' : ''}`}
+    >
+      {product.stock <= 5 && product.stock > 0 && (
+        <div className="product-badge product-badge--limited">Low Stock</div>
+      )}
+
       <div className="product-image-wrap">
-        <img
+        <SmartImage
           src={imageUrl}
           alt={product.name}
           className="primary"
-          onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMAGE; }}
+          fill
+          width={700}
+          priority={priority}
+          sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw"
         />
-        {lifestyleUrl && <img src={lifestyleUrl} alt={product.name} className="lifestyle" />}
+        {lifestyleUrl && (
+          <SmartImage
+            src={lifestyleUrl}
+            alt=""
+            className="lifestyle"
+            fill
+            width={700}
+            sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw"
+          />
+        )}
 
         {isSoldOut ? (
           <div className="product-overlay product-overlay--sold-out">
@@ -70,7 +94,7 @@ export default function ProductCard({ product }) {
                 onClick={(e) => addToBag(e, false)}
                 disabled={busy}
               >
-                {busy ? 'Adding...' : needsVariantChoice ? 'Choose Options' : 'Add to Cart'}
+                {busy ? 'Adding…' : note || 'Add to Cart'}
               </button>
               <button
                 className="overlay-btn overlay-btn--secondary"
@@ -83,22 +107,22 @@ export default function ProductCard({ product }) {
           </div>
         )}
       </div>
-      
+
       <div className="product-info">
-        <div className="product-tag-row" style={{ display: 'flex', gap: '6px', marginBottom: '10px', flexWrap: 'wrap' }}>
-          <div className="product-tag" style={{ marginBottom: 0 }}>{product.category}</div>
-          {product.tags && product.tags.map((tag, idx) => (
-            <div key={idx} className="product-tag" style={{ marginBottom: 0, color: 'var(--navy)', borderColor: 'var(--navy)' }}>{tag}</div>
+        <div className="product-tag-row">
+          <div className="product-tag">{product.category}</div>
+          {(product.tags || []).slice(0, 2).map((tag, idx) => (
+            <div key={idx} className="product-tag product-tag--plain">{tag}</div>
           ))}
         </div>
         <h3 className="product-name">{product.name}</h3>
         <div className="product-price">
-          {product.originalPrice && product.originalPrice > product.price && (
-            <span className="price-original-card" style={{ textDecoration: 'line-through', color: 'rgba(10,17,40,0.4)', marginRight: '8px', fontSize: '11px' }}>
-              Rs. {product.originalPrice.toLocaleString()}
-            </span>
+          {product.originalPrice > min && (
+            <span className="price-original-card">Rs. {product.originalPrice.toLocaleString()}</span>
           )}
-          <span className="price-current-card">Rs. {product.price.toLocaleString()}</span>
+          <span className="price-current-card">
+            {max > min ? `From Rs. ${min.toLocaleString()}` : `Rs. ${min.toLocaleString()}`}
+          </span>
         </div>
       </div>
     </Link>

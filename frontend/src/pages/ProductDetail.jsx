@@ -2,6 +2,17 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getProduct } from '../api';
 import { useCart } from '../context/CartContext';
+import SmartImage from '../components/ui/SmartImage';
+import {
+  defaultVariant,
+  findVariant,
+  hasVariants,
+  variantImage,
+  variantList,
+  variantOriginalPrice,
+  variantPrice,
+  variantStock,
+} from '../lib/variants';
 import Toast from '../components/Toast';
 import Breadcrumbs from '../components/ui/Breadcrumbs';
 import Accordion from '../components/ui/Accordion';
@@ -40,8 +51,19 @@ export default function ProductDetail() {
       try {
         const data = await getProduct(id);
         setProduct(data);
-        if (data.colors && data.colors.length > 0) setSelectedColor(data.colors[0]);
-        if (data.sizes && data.sizes.length > 0) setSelectedSize(data.sizes[0]);
+
+        // Open on a combination that can actually be bought.
+        const preferred = defaultVariant(data);
+        if (preferred) {
+          setSelectedColor(
+            (data.colors || []).find((c) => c.name === preferred.color) ||
+              (preferred.color ? { name: preferred.color, hex: '#ccc' } : null)
+          );
+          setSelectedSize(preferred.size || null);
+        } else {
+          if (data.colors?.length) setSelectedColor(data.colors[0]);
+          if (data.sizes?.length) setSelectedSize(data.sizes[0]);
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -51,27 +73,53 @@ export default function ProductDetail() {
     fetchProduct();
   }, [id]);
 
-  // Stock for the selected color/size, falling back to the product total.
-  const variantStock = (() => {
-    if (!product) return 0;
-    if (product.variants && product.variants.length > 0) {
-      const match = product.variants.find(
-        (v) => (v.color || '') === (selectedColor?.name || '') && (v.size || '') === (selectedSize || '')
-      );
-      if (match) return match.stock;
-    }
-    return product.stock;
+  const selection = { color: selectedColor?.name || '', size: selectedSize || '' };
+  const currentVariant = product ? findVariant(product, selection) : null;
+
+  const price = product ? variantPrice(product, currentVariant) : 0;
+  const wasPrice = product ? variantOriginalPrice(product, currentVariant) : 0;
+  const stock = product ? variantStock(product, currentVariant) : 0;
+
+  // Gallery: the chosen variant's photo leads, then the rest of the gallery.
+  const gallery = (() => {
+    if (!product) return [];
+    const base = product.images?.length ? product.images : FALLBACK_IMAGES.slice(0, 4);
+    const hero = currentVariant?.image;
+    if (!hero) return base;
+    return [hero, ...base.filter((u) => u !== hero)];
   })();
+
+  // Picking a variant with its own photo should show that photo straight away.
+  useEffect(() => {
+    setActiveImage(0);
+  }, [currentVariant?.image, currentVariant?.color, currentVariant?.size]);
+
+  // Which options are actually purchasable, for greying out the rest.
+  const isColorAvailable = (colorName) => {
+    if (!hasVariants(product)) return true;
+    return variantList(product).some(
+      (v) => (v.color || '') === (colorName || '') && Number(v.stock) > 0
+    );
+  };
+  const isSizeAvailable = (sizeName) => {
+    if (!hasVariants(product)) return true;
+    return variantList(product).some(
+      (v) =>
+        (v.size || '') === (sizeName || '') &&
+        (!selectedColor || (v.color || '') === (selectedColor.name || '')) &&
+        Number(v.stock) > 0
+    );
+  };
 
   const addCurrentSelection = async () => {
     await addItem({
       productId: product._id,
       name: product.name,
-      price: product.price,
-      image: product.images?.[0] || '',
+      price,
+      image: variantImage(product, currentVariant),
       quantity: qty,
-      color: selectedColor ? selectedColor.name : '',
-      size: selectedSize || ''
+      color: selection.color,
+      size: selection.size
     });
   };
 
@@ -125,26 +173,39 @@ export default function ProductDetail() {
     );
   }
 
-  const displayImages = product.images?.length > 0 ? product.images : FALLBACK_IMAGES;
+  const displayImages = gallery;
 
   return (
     <div className="product-detail-page">
       <Toast message={toastMsg} onClose={() => setToastMsg('')} />
-      
+
       <div className="product-detail-images">
         <div className="main-image">
-          <img src={displayImages[activeImage]} alt={product.name} />
+          {/* Keyed on the source so switching variant swaps cleanly instead of
+              blending the outgoing and incoming photo. */}
+          <SmartImage
+            key={displayImages[activeImage]}
+            src={displayImages[activeImage]}
+            alt={product.name}
+            fill
+            width={1200}
+            priority
+            sizes="(max-width: 900px) 100vw, 50vw"
+          />
         </div>
         {displayImages.length > 1 && (
           <div className="thumbnail-gallery">
             {displayImages.map((img, idx) => (
-              <img 
-                key={idx} 
-                src={img} 
-                alt={`${product.name} view ${idx + 1}`} 
+              <button
+                key={`${img}-${idx}`}
+                type="button"
                 className={`thumbnail ${activeImage === idx ? 'active' : ''}`}
                 onClick={() => setActiveImage(idx)}
-              />
+                aria-label={`View image ${idx + 1}`}
+                aria-current={activeImage === idx}
+              >
+                <SmartImage src={img} alt="" fill width={160} sizes="90px" />
+              </button>
             ))}
           </div>
         )}
@@ -167,10 +228,13 @@ export default function ProductDetail() {
         </div>
         <h1 className="product-detail-name">{product.name}</h1>
         <div className="product-detail-price">
-          {product.originalPrice && product.originalPrice > product.price && (
-            <span className="price-original">Rs. {product.originalPrice.toLocaleString()}</span>
+          {wasPrice > price && (
+            <span className="price-original">Rs. {wasPrice.toLocaleString()}</span>
           )}
-          <span className="price-current">Rs. {product.price.toLocaleString()}</span>
+          <span className="price-current">Rs. {price.toLocaleString()}</span>
+          {wasPrice > price && (
+            <span className="price-save">Save Rs. {(wasPrice - price).toLocaleString()}</span>
+          )}
         </div>
         <button className="size-guide-btn" onClick={() => setShowSizeGuide(true)} style={{ background: 'none', border: 'none', color: 'var(--navy)', opacity: 0.7, fontSize: '12px', letterSpacing: '2px', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', padding: '0', marginBottom: '16px', fontFamily: 'var(--font-body)' }}>
           <svg viewBox="0 0 24 24" style={{ width: '13px', height: '13px', stroke: 'var(--gold)', fill: 'none', strokeWidth: 1.5 }}><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -189,8 +253,8 @@ export default function ProductDetail() {
           <div className="qty-num">{qty}</div>
           <button
             className="qty-btn"
-            onClick={() => setQty(q => Math.min(variantStock || 1, q + 1))}
-            disabled={qty >= variantStock}
+            onClick={() => setQty(q => Math.min(stock || 1, q + 1))}
+            disabled={qty >= stock}
           >+</button>
         </div>
 
@@ -200,24 +264,30 @@ export default function ProductDetail() {
               Color: <span style={{ color: 'var(--navy)', fontWeight: 400, textTransform: 'none', letterSpacing: 'normal', fontSize: '14px', marginLeft: '6px' }}>{selectedColor?.name}</span>
             </div>
             <div className="product-swatches">
-              {product.colors.map((c, i) => (
-                <div 
-                  key={i} 
-                  className={`product-swatch-item ${selectedColor?.name === c.name ? 'selected' : ''}`}
-                  onClick={() => setSelectedColor(c)}
-                  style={{ cursor: 'pointer', transition: 'opacity 0.2s ease', opacity: selectedColor?.name === c.name ? 1 : 0.6 }}
-                >
-                  <span 
-                    className="product-swatch-circle" 
-                    style={{ 
-                      background: c.hex, 
-                      boxShadow: selectedColor?.name === c.name ? '0 0 0 2px var(--bg), 0 0 0 3.5px var(--gold)' : 'none',
-                      border: selectedColor?.name === c.name ? 'none' : '1px solid rgba(0,0,0,0.1)'
-                    }} 
-                    title={c.name}
-                  ></span>
-                </div>
-              ))}
+              {product.colors.map((c, i) => {
+                const available = isColorAvailable(c.name);
+                const isSelected = selectedColor?.name === c.name;
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`product-swatch-item ${isSelected ? 'selected' : ''} ${available ? '' : 'is-unavailable'}`}
+                    onClick={() => setSelectedColor(c)}
+                    disabled={!available}
+                    title={available ? c.name : `${c.name} — sold out`}
+                    aria-pressed={isSelected}
+                  >
+                    <span
+                      className="product-swatch-circle"
+                      style={{
+                        background: c.hex,
+                        boxShadow: isSelected ? '0 0 0 2px var(--bg), 0 0 0 3.5px var(--gold)' : 'none',
+                        border: isSelected ? 'none' : '1px solid rgba(0,0,0,0.12)'
+                      }}
+                    ></span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -228,21 +298,22 @@ export default function ProductDetail() {
               Size: <span style={{ color: 'var(--navy)', fontWeight: 400, textTransform: 'none', letterSpacing: 'normal', fontSize: '14px', marginLeft: '6px' }}>{selectedSize}</span>
             </div>
             <div className="product-size-chips">
-              {product.sizes.map((s, i) => (
-                <span 
-                  key={i} 
-                  className={`product-size-chip ${selectedSize === s ? 'selected' : ''}`}
-                  onClick={() => setSelectedSize(s)}
-                  style={{ 
-                    cursor: 'pointer', 
-                    background: selectedSize === s ? 'var(--navy)' : 'transparent',
-                    color: selectedSize === s ? 'var(--white)' : 'var(--navy)',
-                    borderColor: selectedSize === s ? 'var(--navy)' : 'rgba(197,160,89,0.3)'
-                  }}
-                >
-                  {s}
-                </span>
-              ))}
+              {product.sizes.map((s, i) => {
+                const available = isSizeAvailable(s);
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`product-size-chip ${selectedSize === s ? 'selected' : ''} ${available ? '' : 'is-unavailable'}`}
+                    onClick={() => setSelectedSize(s)}
+                    disabled={!available}
+                    title={available ? s : `${s} — sold out`}
+                    aria-pressed={selectedSize === s}
+                  >
+                    {s}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -250,29 +321,29 @@ export default function ProductDetail() {
         <button
           className="add-to-bag-btn"
           onClick={handleAddToBag}
-          disabled={variantStock === 0 || adding}
+          disabled={stock === 0 || adding}
         >
           {adding ? (
             <span className="btn-loading"><span className="btn-spinner"></span> Processing...</span>
-          ) : variantStock === 0 ? 'Sold Out' : 'Add to Bag'}
+          ) : stock === 0 ? 'Sold Out' : 'Add to Bag'}
         </button>
 
         <button
           className="buy-now-btn"
           onClick={handleBuyNow}
-          disabled={variantStock === 0 || adding}
+          disabled={stock === 0 || adding}
         >
           Buy Now
         </button>
 
-        {variantStock > 0 && variantStock <= 5 && (
-          <div className="stock-warning">Only {variantStock} left in stock</div>
+        {stock > 0 && stock <= 5 && (
+          <div className="stock-warning">Only {stock} left in stock</div>
         )}
 
         <div className="product-specs">
           <div className="spec-row">
             <span className="spec-label">Availability</span>
-            <span className="spec-value">{variantStock > 0 ? 'In Stock' : 'Sold Out'}</span>
+            <span className="spec-value">{stock > 0 ? 'In Stock' : 'Sold Out'}</span>
           </div>
           <div className="spec-row">
             <span className="spec-label">Material</span>

@@ -179,18 +179,29 @@ const createGuestOrder = asyncHandler(async (req, res) => {
     if (!product || product.isActive === false) {
       return res.status(400).json({ message: `"${item.name || 'A product'}" is no longer available` });
     }
-    if (product.stock < quantity) {
+
+    // Price, photo and stock all come from the chosen variant when there is
+    // one, so a guest cart cannot post its own figures.
+    const variant = (product.variants || []).find(
+      (v) => (v.color || '') === (item.color || '') && (v.size || '') === (item.size || '')
+    );
+    const stock = variant ? Number(variant.stock) || 0 : Number(product.stock) || 0;
+    const price = variant && Number(variant.price) > 0 ? Number(variant.price) : Number(product.price);
+    const image = (variant && variant.image) || (product.images && product.images[0]) || '';
+
+    if (stock < quantity) {
+      const label = [item.color, item.size].filter(Boolean).join(' / ');
       return res.status(400).json({
-        message: `Only ${product.stock} left in stock for ${product.name}`
+        message: `Only ${stock} left in stock for ${product.name}${label ? ` (${label})` : ''}`
       });
     }
 
-    subtotal += product.price * quantity;
+    subtotal += price * quantity;
     items.push({
       productId: product._id,
       name: product.name,
-      price: product.price,
-      image: (product.images && product.images[0]) || '',
+      price,
+      image,
       color: item.color || '',
       size: item.size || '',
       quantity

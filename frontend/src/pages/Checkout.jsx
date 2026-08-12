@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createOrder, createGuestOrder, validatePromoCode } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import SmartImage from '../components/ui/SmartImage';
 import { rememberGuestOrder } from '../guestOrders';
 import Toast from '../components/Toast';
 import PageHeader from '../components/ui/PageHeader';
@@ -325,11 +326,12 @@ export default function Checkout() {
               <div className="summary-items" style={{ marginBottom: '32px' }}>
                 {items.map((item) => (
                   <div key={lineKeyOf(item)} className="summary-item">
-                    <img
-                      src={item.image || '/premium/flatlay-marble.jpg'}
+                    <SmartImage
+                      src={item.image}
                       alt={item.name}
                       className="summary-item-img"
-                      onError={(e) => { e.currentTarget.src = '/premium/flatlay-marble.jpg'; }}
+                      width={180}
+                      sizes="90px"
                     />
                     <div>
                       <div className="summary-item-name">{item.name}</div>

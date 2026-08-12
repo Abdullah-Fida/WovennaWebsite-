@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { trackOrder } from '../api';
 import { getGuestOrders } from '../guestOrders';
+import SmartImage from '../components/ui/SmartImage';
 import PageHeader from '../components/ui/PageHeader';
 import InfoTip from '../components/ui/InfoTip';
 
@@ -169,11 +170,7 @@ export default function TrackOrder() {
                 <div className="track-items">
                   {order.items.map((item, i) => (
                     <div key={i} className="track-item">
-                      <img
-                        src={item.image || '/premium/flatlay-marble.jpg'}
-                        alt={item.name}
-                        onError={(e) => { e.currentTarget.src = '/premium/flatlay-marble.jpg'; }}
-                      />
+                      <SmartImage src={item.image} alt={item.name} width={140} sizes="58px" />
                       <div>
                         <div className="track-item-name">{item.name}</div>
                         <div className="track-item-meta">
