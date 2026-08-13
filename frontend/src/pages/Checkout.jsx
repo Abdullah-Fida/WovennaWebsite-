@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createOrder, createGuestOrder, validatePromoCode } from '../api';
+import { getReferral } from '../lib/referral';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import SmartImage from '../components/ui/SmartImage';
 import { rememberGuestOrder } from '../guestOrders';
 import Toast from '../components/Toast';
 import PageHeader from '../components/ui/PageHeader';
-import InfoTip from '../components/ui/InfoTip';
 import EmptyState from '../components/ui/EmptyState';
 
 export default function Checkout() {
@@ -112,7 +112,8 @@ export default function Checkout() {
             phone: formData.phone
           },
           paymentMethod: 'COD',
-          promoCode: promoApplied ? promoApplied.code : null
+          promoCode: promoApplied ? promoApplied.code : null,
+          referralCode: getReferral()
         });
       } else {
         // Guest checkout
@@ -135,6 +136,7 @@ export default function Checkout() {
           },
           paymentMethod: 'COD',
           promoCode: promoApplied ? promoApplied.code : null,
+          referralCode: getReferral(),
           guestName: formData.guestName.trim(),
           guestEmail: formData.guestEmail.trim()
         });
@@ -188,19 +190,12 @@ export default function Checkout() {
             <div className="checkout-form-section">
               {errorMsg && <div className="auth-error" style={{ marginBottom: '24px' }}>{errorMsg}</div>}
 
-              <div className="card card--soft card-pad" style={{ marginBottom: 24 }}>
-                <div className="help-text">
-                  Need help? Read <Link to="/shipping-returns" style={{ color: 'var(--gold)', borderBottom: '1px solid rgba(197,160,89,0.35)' }}>Shipping &amp; Returns</Link> for timelines and policies.
-                </div>
-              </div>
-
               <form onSubmit={handleSubmit}>
                 {/* Guest Contact Info */}
                 {!user && (
                   <>
                     <div className="checkout-section-title">
-                      Contact Information{' '}
-                      <InfoTip tip="Since you're checking out as a guest, we need your name and email to send order confirmation and delivery updates." ariaLabel="Guest info help" />
+                      Contact Information
                     </div>
 
                     <div className="guest-checkout-notice">
@@ -238,8 +233,7 @@ export default function Checkout() {
                 )}
 
                 <div className="checkout-section-title">
-                  Shipping Details{' '}
-                  <InfoTip tip="This address will be used for delivery. Double-check phone number so the courier can contact you." ariaLabel="Shipping help" />
+                  Shipping Details
                 </div>
 
                 <div className="checkout-form-group">
@@ -281,8 +275,7 @@ export default function Checkout() {
 
                 <div className="checkout-form-group">
                   <label>
-                    Phone{' '}
-                    <InfoTip tip="Use an active phone number so we/courier can confirm delivery." ariaLabel="Phone help" />
+                    Phone
                   </label>
                   <input
                     type="text"

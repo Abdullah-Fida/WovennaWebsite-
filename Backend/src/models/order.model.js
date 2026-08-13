@@ -115,6 +115,24 @@ const orderSchema = new mongoose.Schema(
     guestEmail: {
       type: String,
       default: null
+    },
+
+    // Influencer attribution. Both are stamped at order time so a later
+    // change to the influencer's rate never rewrites what they already earned.
+    referralCode: {
+      type: String,
+      default: null,
+      uppercase: true,
+      index: true
+    },
+    influencer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Influencer',
+      default: null
+    },
+    commissionAmount: {
+      type: Number,
+      default: 0
     }
   },
   { timestamps: true }

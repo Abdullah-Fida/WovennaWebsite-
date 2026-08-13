@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import AdminNav from '../components/admin/AdminNav';
 import { getAdminUsers, toggleUserStatus } from '../api';
 import Toast from '../components/Toast';
-import InfoTip from '../components/ui/InfoTip';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -57,24 +57,7 @@ export default function AdminUsers() {
         <h1>Manage <em>Users</em></h1>
       </div>
 
-      <div className="card card--soft card-pad" style={{ marginBottom: 26 }}>
-        <div className="help-text">
-          User management <InfoTip tip="View all registered users and toggle their active status. Inactive users cannot log in." ariaLabel="Users help" />:
-          <ul className="help-list">
-            <li><strong>Active</strong>: user can browse, add to cart, and place orders.</li>
-            <li><strong>Inactive</strong>: user account is suspended and cannot log in.</li>
-            <li><strong>Role</strong>: "admin" users have access to this dashboard.</li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="admin-nav">
-        <Link to="/admin">Overview</Link>
-        <Link to="/admin/orders">Orders</Link>
-        <Link to="/admin/products">Products</Link>
-        <Link to="/admin/users" className="active">Users</Link>
-        <Link to="/admin/promos">Promos</Link>
-      </div>
+      <AdminNav active="users" />
 
       {error ? (
         <div className="state-panel">

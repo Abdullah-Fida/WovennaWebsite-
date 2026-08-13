@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getOrderById } from '../api';
 import { useAuth } from '../context/AuthContext';
-import InfoTip from '../components/ui/InfoTip';
 
 export default function OrderSuccess() {
   const { id } = useParams();
@@ -39,20 +38,6 @@ export default function OrderSuccess() {
             to check your status any time. We’ve also emailed you a copy.
           </div>
         )}
-
-        <div className="card card--soft card-pad" style={{ margin: '0 auto 34px', maxWidth: 560 }}>
-          <div className="help-text">
-            What happens next <InfoTip tip="Typical flow: Processing → Shipped → Delivered. Track it any time from the Track Order page." ariaLabel="What happens next" />:
-            <ul className="help-list">
-              <li>We confirm delivery details (phone/address)</li>
-              <li>Your parcel is prepared and dispatched</li>
-              <li>You pay on delivery (COD)</li>
-            </ul>
-            <div className="help-text" style={{ marginTop: 10 }}>
-              For timelines and policy, read <Link to="/shipping-returns" style={{ color: 'var(--gold)', borderBottom: '1px solid rgba(197,160,89,0.35)' }}>Shipping &amp; Returns</Link>.
-            </div>
-          </div>
-        </div>
 
         <div className="success-actions">
           <Link to="/shop" className="btn-gold">Continue Shopping</Link>

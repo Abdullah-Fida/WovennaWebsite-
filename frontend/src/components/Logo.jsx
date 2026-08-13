@@ -1,21 +1,13 @@
-// Wovenaa monogram — a high-contrast serif W built from four closed wedges.
-// The white space between the left arm and the loop's rising flank forms the
-// counter. Uses currentColor so the navbar (hero/scrolled states) and footer
-// can tint it without needing separate assets.
-export default function Logo({ className }) {
+// Wovenaa monogram. Both files are generated straight from the supplied
+// master artwork (see public/brand), so this is the mark as drawn — no
+// redrawing, no tracing. Two colourways ship together and CSS decides which
+// one shows, because the navbar flips between a dark hero and a light bar
+// mid-scroll and a single tinted asset can't follow that.
+export default function Logo({ className = '' }) {
   return (
-    <svg
-      className={className}
-      viewBox="0 0 1000 700"
-      fill="currentColor"
-      xmlns="http://www.w3.org/2000/svg"
-      role="img"
-      aria-label="Wovenaa"
-    >
-      <path d="M26 30 L180 30 L368 606 L342 664 Q316 660 300 606 Z" />
-      <path d="M342 664 Q300 470 316 288 Q330 128 424 104 L438 168 Q378 190 372 306 Q366 424 396 600 Z" />
-      <path d="M424 104 Q516 84 552 268 L664 664 L596 664 L500 296 Q476 176 438 168 Z" />
-      <path d="M700 30 L978 30 L716 664 L648 664 L628 592 L830 96 Q762 92 726 74 Q702 60 700 30 Z" />
-    </svg>
+    <span className={`brand-mark ${className}`} role="img" aria-label="Wovenaa">
+      <img src="/brand/logo-black.png" alt="" className="brand-mark-dark" draggable="false" />
+      <img src="/brand/logo-white.png" alt="" className="brand-mark-light" draggable="false" />
+    </span>
   );
 }

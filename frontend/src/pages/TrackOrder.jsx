@@ -4,7 +4,6 @@ import { trackOrder } from '../api';
 import { getGuestOrders } from '../guestOrders';
 import SmartImage from '../components/ui/SmartImage';
 import PageHeader from '../components/ui/PageHeader';
-import InfoTip from '../components/ui/InfoTip';
 
 const STAGES = ['Processing', 'Shipped', 'Delivered'];
 
@@ -74,8 +73,7 @@ export default function TrackOrder() {
 
               <div className="checkout-form-group">
                 <label>
-                  Order Number <span className="track-opt">optional</span>{' '}
-                  <InfoTip tip="Looks like ORD1786296232854 — it's in your confirmation email. Leave it blank to see all orders placed with this email." ariaLabel="Order number help" />
+                  Order Number <span className="track-opt">optional</span>
                 </label>
                 <input
                   type="text"

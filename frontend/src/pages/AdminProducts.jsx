@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import AdminNav from '../components/admin/AdminNav';
 import { getAdminProducts, createProduct, updateProduct, deleteProduct } from '../api';
 import Toast from '../components/Toast';
-import InfoTip from '../components/ui/InfoTip';
+import ImageManager from '../components/admin/ImageManager';
+import { compressImages } from '../lib/compress';
 
 const AVAILABLE_SIZES = ['Small', 'Medium', 'Large', 'One Size'];
 const AVAILABLE_TAGS = ['New Arrival', 'Best Seller', 'Limited Edition', 'Sale', 'Featured'];
@@ -30,10 +32,10 @@ export default function AdminProducts() {
   const [selectedTags, setSelectedTags] = useState([]);
   const [variants, setVariants] = useState([]);
 
-  // Image manager state: URLs already saved on the product, plus newly picked
-  // files held as { file, preview } so both can be reordered/removed together.
-  const [existingImages, setExistingImages] = useState([]);
-  const [newImages, setNewImages] = useState([]);
+  // One ordered gallery holding both saved images and newly picked files, so
+  // a new photo can be dragged ahead of an old one. Position 0 is the cover.
+  const [gallery, setGallery] = useState([]);
+  const [preparing, setPreparing] = useState('');
 
   useEffect(() => {
     fetchProducts();
@@ -90,18 +92,21 @@ export default function AdminProducts() {
     });
   };
 
+  // Every image currently on the product, saved or pending, as display URLs.
+  const galleryUrls = () => gallery.map((g) => g.preview || g.url);
+
   // Cycle a variant through the gallery: none -> image 1 -> image 2 -> none.
   const cycleVariantImage = (index) => {
-    const gallery = [...existingImages, ...newImages.map(i => i.preview)];
-    if (gallery.length === 0) {
+    const urls = galleryUrls();
+    if (urls.length === 0) {
       setToastMsg('Add product images first, then assign one to each variant');
       return;
     }
     setVariants(prev => {
       const next = [...prev];
-      const at = gallery.indexOf(next[index].image);
-      const following = at + 1 >= gallery.length ? '' : gallery[at + 1];
-      next[index] = { ...next[index], image: at === -1 ? gallery[0] : following };
+      const at = urls.indexOf(next[index].image);
+      const following = at + 1 >= urls.length ? '' : urls[at + 1];
+      next[index] = { ...next[index], image: at === -1 ? urls[0] : following };
       return next;
     });
   };
@@ -132,7 +137,7 @@ export default function AdminProducts() {
       setSelectedSizes(prodSizes);
       setSelectedTags(product.tags || []);
       setVariants(product.variants || buildVariantGrid(prodColors, prodSizes, product.variants || []));
-      setExistingImages(product.images || []);
+      setGallery((product.images || []).map((url) => ({ id: url, kind: 'existing', url })));
     } else {
       setEditId(null);
       setFormData({ ...emptyForm });
@@ -140,10 +145,9 @@ export default function AdminProducts() {
       setSelectedSizes([]);
       setSelectedTags([]);
       setVariants([]);
-      setExistingImages([]);
+      setGallery([]);
     }
-    newImages.forEach((img) => URL.revokeObjectURL(img.preview));
-    setNewImages([]);
+    gallery.forEach((g) => g.preview && URL.revokeObjectURL(g.preview));
     setError('');
     setShowModal(true);
   };
@@ -153,11 +157,11 @@ export default function AdminProducts() {
   const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
   const MAX_IMAGES = 20;
 
-  const handlePickImages = (e) => {
+  const handlePickImages = async (e) => {
     const picked = Array.from(e.target.files || []);
     e.target.value = ''; // let the same file be re-picked after a removal
 
-    const room = MAX_IMAGES - (existingImages.length + newImages.length);
+    const room = MAX_IMAGES - gallery.length;
     if (room <= 0) {
       setToastMsg(`Maximum ${MAX_IMAGES} images per product`);
       return;
@@ -171,66 +175,39 @@ export default function AdminProducts() {
     const accepted = picked
       .filter((f) => f.size <= MAX_IMAGE_BYTES && f.type.startsWith('image/'))
       .slice(0, room);
+    if (!accepted.length) return;
 
-    setNewImages((prev) => [
-      ...prev,
-      ...accepted.map((file) => ({ file, preview: URL.createObjectURL(file) })),
-    ]);
+    // Shrink before upload. A phone photo goes from several MB to a few
+    // hundred KB, which is most of why saving used to crawl.
+    setPreparing(`Preparing ${accepted.length} image${accepted.length === 1 ? '' : 's'}…`);
+    try {
+      const ready = await compressImages(accepted, (done, total) =>
+        setPreparing(`Preparing image ${done} of ${total}…`)
+      );
+      setGallery((prev) => [
+        ...prev,
+        ...ready.map((file, i) => ({
+          id: `new-${Date.now()}-${i}`,
+          kind: 'new',
+          file,
+          preview: URL.createObjectURL(file),
+        })),
+      ]);
+    } finally {
+      setPreparing('');
+    }
   };
 
   // Dropping an image must also release any variant that was using it,
   // otherwise the variant would point at something no longer on the product.
-  const clearVariantImage = (url) => {
+  const handleGalleryChange = (next) => {
+    const live = new Set(next.map((g) => g.preview || g.url));
     setVariants((prev) =>
-      prev.some((v) => v.image === url)
-        ? prev.map((v) => (v.image === url ? { ...v, image: '' } : v))
+      prev.some((v) => v.image && !live.has(v.image))
+        ? prev.map((v) => (v.image && !live.has(v.image) ? { ...v, image: '' } : v))
         : prev
     );
-  };
-
-  const removeExistingImage = (index) => {
-    setExistingImages((prev) => {
-      clearVariantImage(prev[index]);
-      return prev.filter((_, i) => i !== index);
-    });
-  };
-
-  const removeNewImage = (index) => {
-    setNewImages((prev) => {
-      clearVariantImage(prev[index].preview);
-      URL.revokeObjectURL(prev[index].preview);
-      return prev.filter((_, i) => i !== index);
-    });
-  };
-
-  // Cover = first image. Promoting a newly added file moves it ahead of the
-  // saved ones, which the server honours because new files append in order.
-  const makeExistingCover = (index) => {
-    setExistingImages((prev) => {
-      const next = [...prev];
-      const [item] = next.splice(index, 1);
-      return [item, ...next];
-    });
-  };
-
-  const moveExistingImage = (index, delta) => {
-    setExistingImages((prev) => {
-      const target = index + delta;
-      if (target < 0 || target >= prev.length) return prev;
-      const next = [...prev];
-      [next[index], next[target]] = [next[target], next[index]];
-      return next;
-    });
-  };
-
-  const moveNewImage = (index, delta) => {
-    setNewImages((prev) => {
-      const target = index + delta;
-      if (target < 0 || target >= prev.length) return prev;
-      const next = [...prev];
-      [next[index], next[target]] = [next[target], next[index]];
-      return next;
-    });
+    setGallery(next);
   };
 
   const handleAddColor = () => {
@@ -306,20 +283,32 @@ export default function AdminProducts() {
     data.append('tags', JSON.stringify(selectedTags));
     // A variant may point at an image that hasn't been uploaded yet (a local
     // preview). The server can't match a blob: URL, so send the position it
-    // will occupy once the new files are appended to the gallery.
+    // will occupy in the final gallery instead.
     const variantPayload = variants.map((v) => {
-      const previewAt = newImages.findIndex((img) => img.preview === v.image);
+      const at = gallery.findIndex((g) => (g.preview || g.url) === v.image);
       const { image, ...rest } = v;
-      return previewAt === -1
-        ? { ...rest, image }
-        : { ...rest, image: '', imageIndex: existingImages.length + previewAt };
+      if (!v.image || at === -1) return { ...rest, image: '' };
+      return gallery[at].kind === 'existing'
+        ? { ...rest, image: gallery[at].url }
+        : { ...rest, image: '', imageIndex: at };
     });
     data.append('variants', JSON.stringify(variantPayload));
-    
-    // Ordered list of saved images to keep — anything omitted gets deleted.
-    data.append('existingImages', JSON.stringify(existingImages));
 
-    newImages.forEach(({ file }) => data.append('images', file));
+    // Ordered list of saved images to keep — anything omitted gets deleted.
+    data.append(
+      'existingImages',
+      JSON.stringify(gallery.filter((g) => g.kind === 'existing').map((g) => g.url))
+    );
+
+    // The arrangement the admin dragged into, mixing saved URLs with
+    // placeholders for the files appended below.
+    let newIndex = 0;
+    const imageOrder = gallery.map((g) =>
+      g.kind === 'existing' ? g.url : `new:${newIndex++}`
+    );
+    data.append('imageOrder', JSON.stringify(imageOrder));
+
+    gallery.filter((g) => g.kind === 'new').forEach((g) => data.append('images', g.file));
 
     try {
       if (editId) {
@@ -329,8 +318,8 @@ export default function AdminProducts() {
         await createProduct(data);
         setToastMsg('Product created successfully');
       }
-      newImages.forEach((img) => URL.revokeObjectURL(img.preview));
-      setNewImages([]);
+      gallery.forEach((g) => g.preview && URL.revokeObjectURL(g.preview));
+      setGallery([]);
       setShowModal(false);
       fetchProducts();
     } catch (err) {
@@ -367,27 +356,7 @@ export default function AdminProducts() {
         <button className="admin-btn admin-btn-primary" onClick={() => handleOpenModal()}>+ Add Product</button>
       </div>
 
-      <div className="card card--soft card-pad" style={{ marginBottom: 26 }}>
-        <div className="help-text">
-          How this page works <InfoTip tip="Add Product opens a modal. Upload multiple images if you have lifestyle shots—image #1 is used as primary in cards." ariaLabel="Products help" />:
-          <ul className="help-list">
-            <li><strong>Stock</strong> controls availability ("Out of Stock" if 0; "Low Stock" if ≤ 5).</li>
-            <li><strong>Variant Stock</strong>: set stock per color + size combination.</li>
-            <li><strong>Category</strong> is used in Shop filters.</li>
-            <li><strong>Colors</strong>: add color name + hex for swatches on product page.</li>
-            <li><strong>Tags</strong>: badges shown on product cards (e.g., "New Arrival").</li>
-            <li><strong>Active</strong>: inactive products are hidden from the shop.</li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="admin-nav">
-        <Link to="/admin">Overview</Link>
-        <Link to="/admin/orders">Orders</Link>
-        <Link to="/admin/products" className="active">Products</Link>
-        <Link to="/admin/users">Users</Link>
-        <Link to="/admin/promos">Promos</Link>
-      </div>
+      <AdminNav active="products" />
 
       {error && !products.length ? (
         <div className="state-panel">
@@ -751,47 +720,21 @@ export default function AdminProducts() {
                   </small>
                 </label>
 
-                {(existingImages.length > 0 || newImages.length > 0) ? (
-                  <div className="admin-image-grid">
-                    {existingImages.map((url, index) => (
-                      <div key={url} className={`admin-image-tile ${index === 0 ? 'is-cover' : ''}`}>
-                        <img src={url} alt={`Product image ${index + 1}`} />
-                        {index === 0 && <span className="admin-image-cover-badge">Cover</span>}
-                        <div className="admin-image-actions">
-                          <button type="button" onClick={() => moveExistingImage(index, -1)} disabled={index === 0} title="Move left">‹</button>
-                          <button type="button" onClick={() => makeExistingCover(index)} disabled={index === 0} title="Set as cover">★</button>
-                          <button type="button" onClick={() => moveExistingImage(index, 1)} disabled={index === existingImages.length - 1} title="Move right">›</button>
-                          <button type="button" className="danger" onClick={() => removeExistingImage(index)} title="Remove image">×</button>
-                        </div>
-                      </div>
-                    ))}
+                <ImageManager
+                  items={gallery}
+                  onChange={handleGalleryChange}
+                  max={MAX_IMAGES}
+                  busy={saving}
+                />
 
-                    {newImages.map((img, index) => (
-                      <div
-                        key={img.preview}
-                        className={`admin-image-tile is-new ${existingImages.length === 0 && index === 0 ? 'is-cover' : ''}`}
-                      >
-                        <img src={img.preview} alt={`New upload ${index + 1}`} />
-                        <span className="admin-image-new-badge">New</span>
-                        <div className="admin-image-actions">
-                          <button type="button" onClick={() => moveNewImage(index, -1)} disabled={index === 0} title="Move left">‹</button>
-                          <button type="button" onClick={() => moveNewImage(index, 1)} disabled={index === newImages.length - 1} title="Move right">›</button>
-                          <button type="button" className="danger" onClick={() => removeNewImage(index)} title="Remove image">×</button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="admin-image-empty">No images yet. Add at least one so the product shows in the shop.</div>
-                )}
-
-                <label className="admin-image-add-btn">
-                  + Add Images
+                <label className={`admin-image-add-btn ${preparing ? 'is-busy' : ''}`}>
+                  {preparing || '+ Add Images'}
                   <input
                     type="file"
                     multiple
                     accept="image/*"
                     onChange={handlePickImages}
+                    disabled={!!preparing}
                     style={{ display: 'none' }}
                   />
                 </label>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import AdminNav from '../components/admin/AdminNav';
 import { getAdminStats } from '../api';
-import InfoTip from '../components/ui/InfoTip';
 import Toast from '../components/Toast';
 
 export default function AdminDashboard() {
@@ -36,24 +36,7 @@ export default function AdminDashboard() {
         <h1>Admin <em>Dashboard</em></h1>
       </div>
 
-      <div className="card card--soft card-pad" style={{ marginBottom: 26 }}>
-        <div className="help-text">
-          Overview <InfoTip tip="Use Orders to update statuses and Products to create/edit items. Stats update from the backend." ariaLabel="Admin overview" />:
-          <ul className="help-list">
-            <li>Orders: update Processing → Shipped → Delivered</li>
-            <li>Products: add images, stock, category, price</li>
-            <li>Revenue: total of successful orders</li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="admin-nav">
-        <Link to="/admin" className="active">Overview</Link>
-        <Link to="/admin/orders">Orders</Link>
-        <Link to="/admin/products">Products</Link>
-        <Link to="/admin/users">Users</Link>
-        <Link to="/admin/promos">Promos</Link>
-      </div>
+      <AdminNav active="overview" />
 
       {error ? (
         <div className="state-panel">

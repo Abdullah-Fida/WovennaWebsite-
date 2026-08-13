@@ -110,3 +110,48 @@ export const deletePromo = (id) => apiFetch(`/admin/promos/${id}`, { method: 'DE
 // Promos (Public)
 export const validatePromoCode = (body) => apiFetch('/promos/validate', { method: 'POST', body });
 
+
+// Influencer program (public)
+export const getGalleryPosts = async () => {
+  const data = await apiFetch('/influencers/gallery');
+  return data.posts || [];
+};
+export const validateReferralCode = async (code) => {
+  const data = await apiFetch(`/influencers/referral/${encodeURIComponent(code)}`);
+  return data.referral;
+};
+
+// Influencer program (member)
+export const getMyInfluencer = () => apiFetch('/influencers/me');
+export const applyAsInfluencer = (body) => apiFetch('/influencers/apply', { method: 'POST', body });
+export const updateMyInfluencer = (body) => apiFetch('/influencers/me', { method: 'PUT', body });
+export const getMyInfluencerOrders = async () => {
+  const data = await apiFetch('/influencers/me/orders');
+  return data.orders || [];
+};
+export const getMyGalleryPosts = async () => {
+  const data = await apiFetch('/influencers/me/posts');
+  return data.posts || [];
+};
+export const createMyGalleryPost = (formData) =>
+  apiFetch('/influencers/me/posts', { method: 'POST', body: formData });
+export const deleteMyGalleryPost = (id) =>
+  apiFetch(`/influencers/me/posts/${id}`, { method: 'DELETE' });
+
+// Influencer program (admin)
+export const getAdminInfluencers = async (status = 'all') => {
+  const data = await apiFetch(`/admin/influencers?status=${status}`);
+  return data.influencers || [];
+};
+export const setInfluencerStatus = (id, body) =>
+  apiFetch(`/admin/influencers/${id}/status`, { method: 'PUT', body });
+export const recordInfluencerPayout = (id, amount) =>
+  apiFetch(`/admin/influencers/${id}/payout`, { method: 'POST', body: { amount } });
+export const getAdminGalleryPosts = async (status = 'all') => {
+  const data = await apiFetch(`/admin/gallery?status=${status}`);
+  return data.posts || [];
+};
+export const setGalleryPostStatus = (id, body) =>
+  apiFetch(`/admin/gallery/${id}`, { method: 'PUT', body });
+export const deleteAdminGalleryPost = (id) =>
+  apiFetch(`/admin/gallery/${id}`, { method: 'DELETE' });

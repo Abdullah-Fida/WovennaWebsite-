@@ -8,6 +8,14 @@ const { isAdmin } = require('../middleware/admin.middleware');
 const { createProduct, getProducts, getProduct, updateProduct, deleteProduct } = require('../controllers/admin.product.controller');
 const { getAllOrders, updateOrderStatus, getDashboardStats, getAllUsers, toggleUserStatus } = require('../controllers/admin.order.controller');
 const { createPromo, getPromos, getPromo, updatePromo, deletePromo } = require('../controllers/admin.promo.controller');
+const {
+  listInfluencers,
+  setInfluencerStatus,
+  recordPayout,
+  listGalleryPosts,
+  setGalleryPostStatus,
+  deleteGalleryPost
+} = require('../controllers/admin.influencer.controller');
 
 // multer setup - use memory storage so we can upload files to Cloudinary
 const storage = multer.memoryStorage();
@@ -73,5 +81,15 @@ router.post('/promos', protect, isAdmin, createPromo);
 router.get('/promos/:id', protect, isAdmin, getPromo);
 router.put('/promos/:id', protect, isAdmin, updatePromo);
 router.delete('/promos/:id', protect, isAdmin, deletePromo);
+
+// influencer program
+router.get('/influencers', protect, isAdmin, listInfluencers);
+router.put('/influencers/:id/status', protect, isAdmin, setInfluencerStatus);
+router.post('/influencers/:id/payout', protect, isAdmin, recordPayout);
+
+// influencer gallery submissions
+router.get('/gallery', protect, isAdmin, listGalleryPosts);
+router.put('/gallery/:id', protect, isAdmin, setGalleryPostStatus);
+router.delete('/gallery/:id', protect, isAdmin, deleteGalleryPost);
 
 module.exports = router;

@@ -40,9 +40,6 @@ export default function ShippingReturns() {
             <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 300, marginBottom: 10 }}>
               Returns / Exchanges
             </h3>
-            <p className="help-text">
-              Policy details can vary by product. Below is a clear default structure you can customize:
-            </p>
             <ul className="help-list">
               <li>Report issues within 48 hours of delivery</li>
               <li>Item must be unused and in original packaging</li>

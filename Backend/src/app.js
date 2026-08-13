@@ -77,6 +77,10 @@ app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 const promoRoutes = require('./routes/promo.routes');
 app.use('/api/promos', promoRoutes);
 
+// influencer program (public gallery + member routes)
+const influencerRoutes = require('./routes/influencer.routes');
+app.use('/api/influencers', influencerRoutes);
+
 // admin routes
 const adminRoutes = require('./routes/admin.routes');
 app.use('/api/admin', adminRoutes);

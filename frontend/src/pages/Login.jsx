@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import InfoTip from '../components/ui/InfoTip';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -33,22 +32,15 @@ export default function Login() {
         <h2>Welcome <em>Back</em></h2>
         <p className="auth-subtitle">Sign in to your account</p>
 
-        <div className="help-text" style={{ textAlign: 'center', marginBottom: 20 }}>
-          Sign in to access your cart, checkout, and order tracking.
-        </div>
-        
-        {error && <div className="auth-error" style={{ marginBottom: '24px' }}>{error}</div>}
+        {error &&<div className="auth-error" style={{ marginBottom: '24px' }}>{error}</div>}
         
         <form className="auth-form" onSubmit={handleSubmit}>
           <div>
             <label>Email Address</label>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} required />
-            <div className="help-text" style={{ marginTop: 8 }}>Use the same email you used during registration.</div>
           </div>
           <div>
-            <label>
-              Password <InfoTip tip="If you forgot your password, we can add a reset flow later. For now, register again or contact support." ariaLabel="Password help" />
-            </label>
+            <label>Password</label>
             <div className="password-input-wrap">
               <input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required />
               <button type="button" className="password-toggle-btn" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'}>
@@ -66,7 +58,6 @@ export default function Login() {
                 )}
               </button>
             </div>
-            <div className="help-text" style={{ marginTop: 8 }}>Keep your password private and don't share it with anyone.</div>
           </div>
           <button type="submit" className="auth-submit-btn" disabled={loading}>
             {loading ? 'Signing in...' : 'Sign In'}

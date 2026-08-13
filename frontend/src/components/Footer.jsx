@@ -25,6 +25,7 @@ export default function Footer() {
           <h5>Discover</h5>
           <ul>
             <li><Link to="/about">About Us</Link></li>
+            <li><Link to="/influencers">Influencer Program</Link></li>
           </ul>
         </div>
 

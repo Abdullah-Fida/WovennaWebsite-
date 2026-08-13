@@ -1,56 +1,14 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useCart } from '../context/CartContext';
+import { Link } from 'react-router-dom';
 import SmartImage from './ui/SmartImage';
-import { variantLabel, defaultVariant, priceRange } from '../lib/variants';
+import { priceRange } from '../lib/variants';
 
 export default function ProductCard({ product, priority = false }) {
-  const navigate = useNavigate();
-  const { addItem } = useCart();
-  const [busy, setBusy] = useState(false);
-  const [note, setNote] = useState('');
-
   const images = product.images || [];
   const imageUrl = images[0] || null;
   const lifestyleUrl = images[1] || null;
 
   const isSoldOut = product.stock === 0 || product.showInSoldOutRow;
   const { min, max } = priceRange(product);
-
-  // Quick-add uses the first in-stock variant so the button does what it says.
-  // Opening the product page is still how you pick a specific colour or size.
-  const addToBag = async (e, thenCheckout) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    setBusy(true);
-    setNote('');
-    try {
-      const variant = defaultVariant(product);
-      await addItem({
-        productId: product._id,
-        name: product.name,
-        price: variant?.price ?? product.price,
-        image: variant?.image || imageUrl || '',
-        quantity: 1,
-        color: variant?.color || '',
-        size: variant?.size || '',
-      });
-      if (thenCheckout) {
-        navigate('/checkout');
-      } else {
-        setNote(variant && variantLabel(variant) ? `Added — ${variantLabel(variant)}` : 'Added to bag');
-        setTimeout(() => setNote(''), 2200);
-      }
-    } catch (err) {
-      // Out of stock or a variant that needs choosing: send them to the page
-      // where they can see exactly what's available.
-      setNote(err.message || 'Choose options');
-      setTimeout(() => navigate(`/product/${product._id}`), 700);
-    } finally {
-      setBusy(false);
-    }
-  };
 
   return (
     <Link
@@ -87,23 +45,10 @@ export default function ProductCard({ product, priority = false }) {
             <span className="overlay-sold-out-text">Sold Out</span>
           </div>
         ) : (
+          /* One honest label. Colour, size and quantity all live on the
+             product page, so that is where the card sends you. */
           <div className="product-overlay">
-            <div className="overlay-btn-group">
-              <button
-                className="overlay-btn overlay-btn--primary"
-                onClick={(e) => addToBag(e, false)}
-                disabled={busy}
-              >
-                {busy ? 'Adding…' : note || 'Add to Cart'}
-              </button>
-              <button
-                className="overlay-btn overlay-btn--secondary"
-                onClick={(e) => addToBag(e, true)}
-                disabled={busy}
-              >
-                Buy Now
-              </button>
-            </div>
+            <span className="overlay-btn overlay-btn--primary">View Details</span>
           </div>
         )}
       </div>

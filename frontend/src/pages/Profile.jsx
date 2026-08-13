@@ -3,7 +3,6 @@ import { getProfile, updateProfile } from '../api';
 import { useAuth } from '../context/AuthContext';
 import Toast from '../components/Toast';
 import PageHeader from '../components/ui/PageHeader';
-import InfoTip from '../components/ui/InfoTip';
 
 export default function Profile() {
   const { user } = useAuth();
@@ -76,9 +75,9 @@ export default function Profile() {
         />
 
         <div className="card card-pad" style={{ maxWidth: 760 }}>
-          <div className="help-text" style={{ marginBottom: 18 }}>
-            Email: <strong>{user.email}</strong>{' '}
-            <InfoTip tip="Email is currently used as your account identifier. If you want, we can add a change-email flow later." ariaLabel="Email info" />
+          <div className="profile-email-row">
+            <span>Email</span>
+            <strong>{user.email}</strong>
           </div>
 
           <form onSubmit={handleSubmit}>
@@ -86,12 +85,10 @@ export default function Profile() {
               <div className="profile-field">
                 <label>Full Name</label>
                 <input type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
-                <div className="help-text" style={{ marginTop: 8 }}>This name can be used for delivery confirmation.</div>
               </div>
               <div className="profile-field">
                 <label>Phone Number</label>
                 <input type="text" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} placeholder="e.g. 03XX XXXXXXX" />
-                <div className="help-text" style={{ marginTop: 8 }}>Use an active number so courier can reach you.</div>
               </div>
               <div className="profile-field">
                 <label>Address</label>

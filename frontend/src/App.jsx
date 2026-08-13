@@ -1,5 +1,7 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { captureReferral } from './lib/referral';
 import { CartProvider } from './context/CartContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -28,12 +30,27 @@ import ShippingReturns from './pages/ShippingReturns';
 import FAQ from './pages/FAQ';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 
+// Influencer Program
+import InfluencerProgram from './pages/InfluencerProgram';
+import InfluencerDashboard from './pages/InfluencerDashboard';
+
 // Admin Pages
 import AdminDashboard from './pages/AdminDashboard';
 import AdminProducts from './pages/AdminProducts';
 import AdminOrders from './pages/AdminOrders';
 import AdminUsers from './pages/AdminUsers';
 import AdminPromos from './pages/AdminPromos';
+import AdminInfluencers from './pages/AdminInfluencers';
+import AdminGallery from './pages/AdminGallery';
+
+// Remembers an influencer's ?ref= code for the rest of the visit.
+function ReferralCatcher() {
+  const location = useLocation();
+  useEffect(() => {
+    captureReferral(location.search);
+  }, [location.search]);
+  return null;
+}
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -55,6 +72,7 @@ function App() {
       <CartProvider>
         <BrowserRouter>
           <ScrollToTop />
+          <ReferralCatcher />
           <Navbar />
           <main>
             <Routes>
@@ -82,12 +100,21 @@ function App() {
               <Route path="/orders/:id" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
+              {/* Influencer Program */}
+              <Route path="/influencers" element={<InfluencerProgram />} />
+              <Route
+                path="/influencers/dashboard"
+                element={<ProtectedRoute><InfluencerDashboard /></ProtectedRoute>}
+              />
+
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
               <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
               <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
               <Route path="/admin/promos" element={<AdminRoute><AdminPromos /></AdminRoute>} />
+              <Route path="/admin/influencers" element={<AdminRoute><AdminInfluencers /></AdminRoute>} />
+              <Route path="/admin/gallery" element={<AdminRoute><AdminGallery /></AdminRoute>} />
 
               {/* Fallback */}
               <Route path="*" element={<Navigate to="/" />} />

@@ -3,8 +3,16 @@ import { useSearchParams } from 'react-router-dom';
 import { getProducts } from '../api';
 import ProductCard from '../components/ProductCard';
 import PageHeader from '../components/ui/PageHeader';
-import InfoTip from '../components/ui/InfoTip';
 import EmptyState from '../components/ui/EmptyState';
+import { priceRange } from '../lib/variants';
+
+const SORTS = [
+  { value: 'newest', label: 'Newest first' },
+  { value: 'price-asc', label: 'Price: low to high' },
+  { value: 'price-desc', label: 'Price: high to low' },
+  { value: 'name-asc', label: 'Name: A–Z' },
+  { value: 'oldest', label: 'Oldest first' },
+];
 
 export default function Shop() {
   const [products, setProducts] = useState([]);
@@ -13,6 +21,8 @@ export default function Shop() {
   const [searchParams, setSearchParams] = useSearchParams();
   const category = searchParams.get('category') || '';
   const search = searchParams.get('q') || '';
+  // Sort lives in the URL so a filtered, sorted view can be shared or bookmarked.
+  const sort = searchParams.get('sort') || 'newest';
   const [searchInput, setSearchInput] = useState(search);
 
   useEffect(() => {
@@ -51,8 +61,30 @@ export default function Shop() {
   // Sold-out and placeholder pieces move to their own section below the
   // buyable range so the top of the page is always shoppable.
   const isSoldOut = (p) => p.stock === 0 || p.showInSoldOutRow;
-  const available = products.filter((p) => !isSoldOut(p));
-  const soldOut = products.filter(isSoldOut);
+
+  // Sorting compares the lowest live price so variant products sit where a
+  // shopper expects rather than where their base price happens to be.
+  const lowestPrice = (p) => priceRange(p).min;
+
+  const sortProducts = (list) => {
+    const out = [...list];
+    switch (sort) {
+      case 'price-asc':
+        return out.sort((a, b) => lowestPrice(a) - lowestPrice(b));
+      case 'price-desc':
+        return out.sort((a, b) => lowestPrice(b) - lowestPrice(a));
+      case 'name-asc':
+        return out.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      case 'oldest':
+        return out.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+      case 'newest':
+      default:
+        return out.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    }
+  };
+
+  const available = sortProducts(products.filter((p) => !isSoldOut(p)));
+  const soldOut = sortProducts(products.filter(isSoldOut));
 
   return (
     <div className="page">
@@ -68,8 +100,6 @@ export default function Shop() {
               The <em>Complete</em> Range
             </>
           }
-          subtitle="Use category filters and search to quickly find the right bag. Open any product to see full details and photos."
-          right={<div className="shop-count">{available.length} Available</div>}
         />
 
         <div className="shop-controls reveal visible" style={{ marginBottom: 34 }}>
@@ -92,21 +122,43 @@ export default function Shop() {
             })}
           </div>
 
-          <form className="shop-search" onSubmit={handleSearch} aria-label="Search products">
-            <input
-              type="text"
-              placeholder="Search by name, category..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-            />
-            <InfoTip tip="Example: try searching “tote” or filter by category buttons." ariaLabel="Search help" />
-            <button type="submit" style={{ background: 'none', border: 'none', cursor: 'pointer' }} aria-label="Search">
-              <svg viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          <div className="shop-controls-right">
+            <form className="shop-search" onSubmit={handleSearch} aria-label="Search products">
+              <input
+                type="text"
+                placeholder="Search by name, category..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+              />
+              <button type="submit" style={{ background: 'none', border: 'none', cursor: 'pointer' }} aria-label="Search">
+                <svg viewBox="0 0 24 24">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </button>
+            </form>
+
+            <label className="shop-sort">
+              <span className="shop-sort-label">Sort</span>
+              <select
+                value={sort}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  if (next === 'newest') searchParams.delete('sort');
+                  else searchParams.set('sort', next);
+                  setSearchParams(searchParams);
+                }}
+                aria-label="Sort products"
+              >
+                {SORTS.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="shop-sort-caret">
+                <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-            </button>
-          </form>
+            </label>
+          </div>
         </div>
 
         {loading ? (

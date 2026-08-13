@@ -5,7 +5,6 @@ import SmartImage from '../components/ui/SmartImage';
 import Toast from '../components/Toast';
 import PageHeader from '../components/ui/PageHeader';
 import EmptyState from '../components/ui/EmptyState';
-import InfoTip from '../components/ui/InfoTip';
 
 export default function Cart() {
   const { items, subtotal: total, loading, error, updateQty, removeItem, refresh, lineKeyOf } = useCart();
@@ -107,17 +106,6 @@ export default function Cart() {
           }
           subtitle="Adjust quantity, remove items, and confirm your total. When ready, proceed to checkout and enter shipping details."
         />
-
-        <div className="card card--soft card-pad" style={{ marginBottom: 26 }}>
-          <div className="help-text">
-            Total explanation <InfoTip tip="Subtotal is the sum of (price × quantity) for each item. Shipping is currently set as Free in the UI." ariaLabel="Total explanation" />:
-            <ul className="help-list">
-              <li>Subtotal = sum of all item subtotals</li>
-              <li>Shipping = Free</li>
-              <li>Total = Subtotal + Shipping</li>
-            </ul>
-          </div>
-        </div>
 
         <div className="cart-page-grid">
           <div className="cart-items-list">

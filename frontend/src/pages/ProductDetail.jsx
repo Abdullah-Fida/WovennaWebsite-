@@ -16,7 +16,6 @@ import {
 import Toast from '../components/Toast';
 import Breadcrumbs from '../components/ui/Breadcrumbs';
 import Accordion from '../components/ui/Accordion';
-import InfoTip from '../components/ui/InfoTip';
 import EmptyState from '../components/ui/EmptyState';
 
 const FALLBACK_IMAGES = [
@@ -246,7 +245,7 @@ export default function ProductDetail() {
         <div className="product-detail-divider"></div>
 
         <div className="qty-label">
-          Quantity <InfoTip tip="Choose how many pieces you want to order. You can always change quantity later in the Cart page." ariaLabel="Quantity help" />
+          Quantity
         </div>
         <div className="qty-selector">
           <button className="qty-btn" onClick={() => setQty(q => Math.max(1, q - 1))}>-</button>
@@ -361,10 +360,6 @@ export default function ProductDetail() {
           <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 300, marginBottom: 6 }}>
             Details &amp; <em style={{ color: 'var(--gold)' }}>Care</em>
           </h3>
-          <p className="help-text" style={{ marginBottom: 10 }}>
-            Everything you need to know before buying—usage notes, care steps, and shipping expectations.
-          </p>
-
           <Accordion
             defaultOpenIndex={0}
             items={[

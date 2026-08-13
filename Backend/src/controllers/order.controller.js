@@ -4,6 +4,30 @@ const Cart = require("../models/cart.model");
 const Product = require("../models/product.model");
 const Promo = require("../models/promo.model");
 const User = require("../models/user.model");
+const Influencer = require("../models/influencer.model");
+
+/**
+ * Work out who, if anyone, gets credit for this order.
+ *
+ * The code may arrive either as the promo the shopper typed or as the `ref`
+ * carried from an influencer's link — both are the same string. Commission is
+ * computed here and frozen onto the order, so changing an influencer's rate
+ * later never rewrites what they have already earned. It is paid on the
+ * subtotal, never on shipping or tax.
+ */
+async function resolveReferral(code, subtotal) {
+  const clean = String(code || '').trim().toUpperCase();
+  if (!clean) return { influencer: null, referralCode: null, commissionAmount: 0 };
+
+  const influencer = await Influencer.findOne({ code: clean, status: 'approved' });
+  if (!influencer) return { influencer: null, referralCode: null, commissionAmount: 0 };
+
+  return {
+    influencer: influencer._id,
+    referralCode: influencer.code,
+    commissionAmount: Math.round((subtotal * influencer.commissionRate) / 100),
+  };
+}
 
 // User input goes into a RegExp for case-insensitive matching, so escape it.
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -109,6 +133,7 @@ const createOrder = asyncHandler(async (req, res) => {
   }
 
   const finalAmount = subtotal + shippingCharges + taxAmount - discountAmount;
+  const referral = await resolveReferral(req.body.referralCode || promoCode, subtotal);
 
   const order = await Order.create({
     user: userId,
@@ -123,7 +148,8 @@ const createOrder = asyncHandler(async (req, res) => {
     taxAmount,
     finalAmount,
     promoCode: appliedPromoCode,
-    discountAmount
+    discountAmount,
+    ...referral
   });
 
   await Cart.deleteMany({ user: userId });
@@ -248,6 +274,7 @@ const createGuestOrder = asyncHandler(async (req, res) => {
   }
 
   const finalAmount = subtotal + shippingCharges + taxAmount - discountAmount;
+  const referral = await resolveReferral(req.body.referralCode || promoCode, subtotal);
 
   const order = await Order.create({
     orderId: `ORD${Date.now()}`,
@@ -263,7 +290,8 @@ const createGuestOrder = asyncHandler(async (req, res) => {
     promoCode: appliedPromoCode,
     discountAmount,
     guestName,
-    guestEmail
+    guestEmail,
+    ...referral
   });
 
   // Send confirmation email asynchronously

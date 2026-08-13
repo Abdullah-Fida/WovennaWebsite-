@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import PageHeader from '../components/ui/PageHeader';
-import InfoTip from '../components/ui/InfoTip';
 import { submitContactQuery } from '../api';
 
 export default function Contact() {
@@ -60,9 +59,7 @@ export default function Contact() {
             </ul>
 
             <div className="gold-line" />
-            <p className="help-text">
-              What to include <InfoTip tip="Order ID helps us find your details quickly. If it’s a product question, share the product name or screenshot." />:
-            </p>
+            <p className="help-text">What to include:</p>
             <ul className="help-list">
               <li>Order ID (last 6 characters is enough)</li>
               <li>Product name (or screenshot)</li>

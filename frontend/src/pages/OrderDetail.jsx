@@ -123,9 +123,6 @@ export default function OrderDetail() {
               <br />
               Phone: {order.shippingAddress.phone}
             </div>
-            <div className="help-text" style={{ marginTop: 14 }}>
-              Tip: If delivery details need to be updated, contact Client Care with this order ID.
-            </div>
           </div>
 
           <div className="cart-summary" style={{ position: 'static' }}>

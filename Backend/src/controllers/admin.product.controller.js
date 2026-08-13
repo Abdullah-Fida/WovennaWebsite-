@@ -13,7 +13,15 @@ cloudinary.config({
 function uploadBufferToCloudinary(buffer, folder = 'products') {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      { folder, timeout: 120000 },
+      {
+        folder,
+        timeout: 120000,
+        resource_type: 'image',
+        // Nothing on the site is displayed above ~1600px, so store a capped
+        // copy. A 12MP phone photo lands as a fraction of the original and
+        // every later delivery transform starts from something smaller.
+        transformation: [{ width: 1800, height: 1800, crop: 'limit', quality: 'auto:good' }],
+      },
       (error, result) => {
         if (error) return reject(error);
         resolve(result);
@@ -23,19 +31,37 @@ function uploadBufferToCloudinary(buffer, folder = 'products') {
   });
 }
 
-// Helper: upload images SEQUENTIALLY to avoid memory/timeout issues with many files
-async function uploadImagesSequentially(files, folder = 'products') {
-  const urls = [];
-  for (const file of files) {
-    try {
-      const result = await uploadBufferToCloudinary(file.buffer, folder);
-      urls.push(result.secure_url);
-    } catch (err) {
-      console.error(`Failed to upload image ${file.originalname}:`, err.message);
-      throw new Error(`Failed to upload image "${file.originalname}". Please try with smaller or fewer images.`);
+// Upload with bounded concurrency. Fully sequential made a five-photo save
+// take as long as five uploads back to back; unbounded parallel risks
+// exhausting memory and Cloudinary's rate limit on a big batch.
+const UPLOAD_CONCURRENCY = 4;
+
+async function uploadImages(files, folder = 'products') {
+  const urls = new Array(files.length);
+  let cursor = 0;
+
+  const worker = async () => {
+    while (cursor < files.length) {
+      const index = cursor++;
+      const file = files[index];
+      try {
+        const result = await uploadBufferToCloudinary(file.buffer, folder);
+        // Keep the admin's chosen order regardless of which finishes first.
+        urls[index] = result.secure_url;
+      } catch (err) {
+        console.error(`Failed to upload image ${file.originalname}:`, err.message);
+        throw new Error(
+          `Couldn't upload "${file.originalname}". Try again, or use a smaller image.`
+        );
+      }
     }
-  }
-  return urls;
+  };
+
+  await Promise.all(
+    Array.from({ length: Math.min(UPLOAD_CONCURRENCY, files.length) }, worker)
+  );
+
+  return urls.filter(Boolean);
 }
 
 // Derive the Cloudinary public_id from a delivery URL so removed images can be
@@ -112,6 +138,49 @@ function safeParseJSON(value, fallback = []) {
   }
 }
 
+/**
+ * Resolve the admin's arrangement of the gallery into a final ordered list.
+ *
+ * The UI lets saved images and freshly picked files be dragged into any order,
+ * so it sends `imageOrder` — a list where an entry is either an existing URL
+ * or the token `new:N` pointing at the Nth uploaded file. Without that we'd be
+ * stuck with "existing first, new appended", which silently ignores the order
+ * the admin actually chose.
+ */
+function applyImageOrder(order, keptUrls, uploadedUrls) {
+  if (!Array.isArray(order) || order.length === 0) {
+    return [...keptUrls, ...uploadedUrls];
+  }
+
+  const kept = new Set(keptUrls);
+  const usedNew = new Set();
+  const out = [];
+
+  for (const token of order) {
+    if (typeof token !== 'string') continue;
+    const match = /^new:(\d+)$/.exec(token);
+    if (match) {
+      const i = Number(match[1]);
+      if (uploadedUrls[i] && !usedNew.has(i)) {
+        usedNew.add(i);
+        out.push(uploadedUrls[i]);
+      }
+    } else if (kept.has(token) && !out.includes(token)) {
+      out.push(token);
+    }
+  }
+
+  // Anything the client forgot to mention still belongs on the product.
+  uploadedUrls.forEach((url, i) => {
+    if (url && !usedNew.has(i)) out.push(url);
+  });
+  keptUrls.forEach((url) => {
+    if (!out.includes(url)) out.push(url);
+  });
+
+  return out;
+}
+
 // Create product (supports multiple images)
 const createProduct = asyncHandler(async (req, res) => {
   try {
@@ -132,10 +201,10 @@ const createProduct = asyncHandler(async (req, res) => {
     const tags = safeParseJSON(req.body.tags, []);
     const variants = safeParseJSON(req.body.variants, []);
 
-    // Upload images sequentially to avoid timeout/memory issues
     let images = [];
     if (req.files && req.files.length) {
-      images = await uploadImagesSequentially(req.files);
+      const uploaded = await uploadImages(req.files);
+      images = applyImageOrder(safeParseJSON(req.body.imageOrder, []), [], uploaded);
     }
 
     const cleanVariants = normalizeVariants(variants, images);
@@ -280,8 +349,11 @@ const updateProduct = asyncHandler(async (req, res) => {
     }
 
     if (req.files && req.files.length) {
-      const newImages = await uploadImagesSequentially(req.files);
-      images = images.concat(newImages);
+      const uploaded = await uploadImages(req.files);
+      images = applyImageOrder(safeParseJSON(req.body.imageOrder, []), images, uploaded);
+    } else if (req.body.imageOrder !== undefined) {
+      // Reorder-only save: no new files, but the arrangement changed.
+      images = applyImageOrder(safeParseJSON(req.body.imageOrder, []), images, []);
     }
     product.images = images;
 

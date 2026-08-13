@@ -40,15 +40,12 @@ export default function About() {
 
           <div className="card card--soft card-pad">
             <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 300, marginBottom: 10 }}>
-              Quick guide
+              Made to be kept
             </h3>
-            <p className="help-text">
-              New here? Start with <strong>Shop</strong> to explore categories, then open any product for full details, materials, and care instructions.
-            </p>
             <ul className="help-list">
-              <li>Shop → filter by category, search, and open product details.</li>
-              <li>Product page → read details + “Materials &amp; Care”.</li>
-              <li>Checkout → fill shipping information and pay Cash on Delivery.</li>
+              <li>Every piece is finished by hand and checked before it leaves us.</li>
+              <li>Materials are chosen to age well rather than to photograph well.</li>
+              <li>Cash on Delivery across Pakistan, with free shipping on every order.</li>
             </ul>
           </div>
         </div>
@@ -57,10 +54,6 @@ export default function About() {
           <h2 className="section-title" style={{ fontSize: 24, marginBottom: 8 }}>
             Common <em>Questions</em>
           </h2>
-          <p className="help-text" style={{ marginBottom: 6 }}>
-            If you still need help, check the full FAQ and Shipping pages for more details.
-          </p>
-
           <Accordion
             defaultOpenIndex={0}
             items={[

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import AdminNav from '../components/admin/AdminNav';
 import { getAdminPromos, createPromo, updatePromo, deletePromo, getAdminProducts } from '../api';
 import Toast from '../components/Toast';
 
@@ -153,13 +154,7 @@ export default function AdminPromos() {
         </button>
       </div>
 
-      <div className="admin-nav">
-        <Link to="/admin">Overview</Link>
-        <Link to="/admin/orders">Orders</Link>
-        <Link to="/admin/products">Products</Link>
-        <Link to="/admin/users">Users</Link>
-        <Link to="/admin/promos" className="active">Promos</Link>
-      </div>
+      <AdminNav active="promos" />
 
       {success && <div className="promo-success-msg">{success}</div>}
 
