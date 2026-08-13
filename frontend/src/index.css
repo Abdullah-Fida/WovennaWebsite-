@@ -4250,6 +4250,11 @@ footer {
 }
 
 .thumbnail {
+  /* Establishes the containing block for the thumbnail's image, which is
+     absolutely positioned. Without this the images resolved against the
+     product gallery instead and every thumbnail painted at full size on top
+     of the main photo — the whole set superimposed as one blurry composite. */
+  position: relative;
   width: 74px;
   height: 74px;
   flex-shrink: 0;
