@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import SmartImage from './ui/SmartImage';
+import Stars from './ui/Stars';
 import { priceRange } from '../lib/variants';
 
 export default function ProductCard({ product, priority = false }) {
@@ -66,6 +67,12 @@ export default function ProductCard({ product, priority = false }) {
           ))}
         </div>
         <h3 className="product-name">{product.name}</h3>
+        {product.ratingCount > 0 && (
+          <div className="product-card-rating">
+            <Stars value={product.ratingAverage} size="sm" />
+            <span>({product.ratingCount})</span>
+          </div>
+        )}
         <div className="product-price">
           {product.originalPrice > min && (
             <span className="price-original-card">Rs. {product.originalPrice.toLocaleString()}</span>

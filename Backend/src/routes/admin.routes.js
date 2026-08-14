@@ -26,7 +26,8 @@ const {
   createReview,
   updateReview,
   deleteReview,
-  reorderReviews
+  reorderReviews,
+  resyncRatings
 } = require('../controllers/review.controller');
 const { reorderProducts } = require('../controllers/admin.product.controller');
 
@@ -125,5 +126,6 @@ router.post('/reviews', protect, isAdmin, createReview);
 router.put('/reviews/reorder', protect, isAdmin, reorderReviews);
 router.put('/reviews/:id', protect, isAdmin, updateReview);
 router.delete('/reviews/:id', protect, isAdmin, deleteReview);
+router.post('/reviews/resync-ratings', protect, isAdmin, resyncRatings);
 
 module.exports = router;

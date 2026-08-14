@@ -44,7 +44,13 @@ const productSchema = new mongoose.Schema({
   // by dragging the list, so merchandising is decided here rather than by a
   // dropdown the shopper has to find. Lower shows first; ties fall back to
   // newest.
-  sortOrder: { type: Number, default: 0, index: true }
+  sortOrder: { type: Number, default: 0, index: true },
+
+  // Kept in step by the review controller whenever a published review is
+  // added, edited, moved to another product or removed. Denormalised so a
+  // product grid can show stars without a second request per card.
+  ratingAverage: { type: Number, default: 0 },
+  ratingCount: { type: Number, default: 0 }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);

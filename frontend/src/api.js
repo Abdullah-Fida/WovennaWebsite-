@@ -162,6 +162,15 @@ export const getReviews = async () => {
   return data.reviews || [];
 };
 
+// One product's reviews, with the average and star breakdown alongside.
+export const getProductReviews = async (productId) => {
+  const data = await apiFetch(`/reviews?product=${encodeURIComponent(productId)}`);
+  return {
+    reviews: data.reviews || [],
+    summary: data.summary || { count: 0, average: 0, distribution: {} },
+  };
+};
+
 // Reviews (admin)
 export const getAdminReviews = async () => {
   const data = await apiFetch('/admin/reviews');

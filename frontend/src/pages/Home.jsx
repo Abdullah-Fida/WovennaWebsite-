@@ -5,6 +5,7 @@ import ProductCard from '../components/ProductCard';
 import SmartImage from '../components/ui/SmartImage';
 import Lightbox from '../components/ui/Lightbox';
 import BrandIntro from '../components/BrandIntro';
+import Stars from '../components/ui/Stars';
 
 // The homepage shows a short, curated edit rather than the whole catalogue —
 // the full range lives on the Shop page.
@@ -224,16 +225,17 @@ export default function Home() {
           <div className="testimonial-grid reveal">
             {reviews.map((r) => (
               <figure key={r._id} className="testimonial">
-                <div className="testimonial-stars" aria-label={`${r.rating} out of 5`}>
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <span key={i} className={i < r.rating ? 'is-on' : ''}>★</span>
-                  ))}
-                </div>
+                <Stars value={r.rating} size="sm" />
                 {r.title && <h3 className="testimonial-title">{r.title}</h3>}
                 <blockquote className="testimonial-body">{r.body}</blockquote>
                 <figcaption className="testimonial-author">
-                  {r.name}
-                  {r.location && <span>{r.location}</span>}
+                  <span className="testimonial-avatar" aria-hidden="true">
+                    {r.name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase()}
+                  </span>
+                  <span className="testimonial-who">
+                    <strong>{r.name}</strong>
+                    {r.location && <span>{r.location}</span>}
+                  </span>
                   {r.product?.name && <em>{r.product.name}</em>}
                 </figcaption>
               </figure>

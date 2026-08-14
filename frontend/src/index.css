@@ -7031,3 +7031,645 @@ html {
   flex-wrap: wrap;
   align-items: center;
 }
+
+/* ============================================================
+   STARS
+   A grey row of five with a gold row clipped over it, so a 4.3
+   average shows a partly filled fifth star instead of rounding.
+   ============================================================ */
+.stars {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+  line-height: 1;
+  letter-spacing: 2px;
+  font-family: Arial, sans-serif; /* consistent glyph width for the overlay */
+}
+
+.stars-track { color: rgba(10, 17, 40, 0.16); }
+
+.stars-fill {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  color: var(--gold);
+}
+
+.stars--sm { font-size: 12px; }
+.stars--md { font-size: 15px; }
+.stars--lg { font-size: 22px; letter-spacing: 3px; }
+
+/* ============================================================
+   PRODUCT CARD + DETAIL RATING
+   ============================================================ */
+.product-card-rating {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 6px;
+}
+
+.product-card-rating span {
+  font-size: 11.5px;
+  color: var(--gray);
+  letter-spacing: 0.5px;
+}
+
+.product-rating-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 18px;
+  text-decoration: none;
+  color: var(--gray);
+  font-size: 12.5px;
+  letter-spacing: 0.4px;
+  transition: color 0.25s ease;
+}
+
+.product-rating-link:hover { color: var(--navy); }
+
+/* ============================================================
+   PRODUCT PAGE — REVIEWS
+   ============================================================ */
+.product-reviews {
+  grid-column: 1 / -1;
+  padding: clamp(56px, 7vw, 96px) clamp(20px, 5vw, 72px);
+  border-top: 1px solid rgba(10, 17, 40, 0.08);
+  background: var(--bg);
+}
+
+.product-reviews-head {
+  text-align: center;
+  margin-bottom: clamp(32px, 4vw, 52px);
+}
+
+.product-reviews-layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) 1fr;
+  gap: clamp(28px, 4vw, 56px);
+  align-items: start;
+  max-width: var(--container);
+  margin: 0 auto;
+}
+
+.review-summary {
+  text-align: center;
+  padding: 30px 26px;
+  border: 1px solid rgba(197, 160, 89, 0.28);
+  background: var(--white);
+  position: sticky;
+  top: 110px;
+}
+
+.review-summary-score {
+  font-family: var(--font-display);
+  font-size: 54px;
+  font-weight: 200;
+  line-height: 1;
+  color: var(--navy);
+  margin-bottom: 10px;
+}
+
+.review-summary-count {
+  font-size: 12px;
+  color: var(--gray);
+  margin-top: 10px;
+  letter-spacing: 0.4px;
+}
+
+.review-bars {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(10, 17, 40, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.review-bar {
+  display: grid;
+  grid-template-columns: 26px 1fr 22px;
+  align-items: center;
+  gap: 10px;
+}
+
+.review-bar-label { font-size: 11px; color: var(--gray); text-align: right; }
+
+.review-bar-track {
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(10, 17, 40, 0.08);
+  overflow: hidden;
+}
+
+.review-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--gold);
+  border-radius: 3px;
+  transition: width 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.review-bar-count { font-size: 11px; color: var(--gray); text-align: left; }
+
+.review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.review-card {
+  padding: 26px 28px;
+  border: 1px solid rgba(10, 17, 40, 0.09);
+  background: var(--white);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.review-card:hover {
+  border-color: rgba(197, 160, 89, 0.45);
+  box-shadow: var(--shadow-sm);
+}
+
+.review-card-head {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 14px;
+}
+
+.review-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--navy);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  letter-spacing: 0.6px;
+  flex-shrink: 0;
+}
+
+.review-who { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+.review-name {
+  font-size: 14px;
+  color: var(--navy);
+  letter-spacing: 0.3px;
+}
+
+.review-sub { font-size: 11.5px; color: var(--gray); }
+
+.review-card-stars { margin-left: auto; flex-shrink: 0; }
+
+.review-card-title {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 400;
+  color: var(--navy);
+  margin-bottom: 8px;
+  line-height: 1.35;
+}
+
+.review-card-body {
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1.85;
+  color: var(--gray);
+}
+
+.review-more { align-self: flex-start; margin-top: 6px; }
+
+@media (max-width: 860px) {
+  .product-reviews-layout { grid-template-columns: 1fr; }
+  .review-summary { position: static; }
+}
+
+/* ============================================================
+   HOMEPAGE TESTIMONIALS
+   ============================================================ */
+#testimonials { padding: clamp(60px, 9vw, 120px) clamp(20px, 5vw, 72px); }
+
+.testimonial-header { text-align: center; margin-bottom: clamp(32px, 4vw, 54px); }
+
+.testimonial-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: clamp(16px, 2.5vw, 26px);
+  max-width: var(--container);
+  margin: 0 auto;
+}
+
+.testimonial {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 32px 30px;
+  background: var(--white);
+  border: 1px solid rgba(10, 17, 40, 0.08);
+  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.45s ease, border-color 0.45s ease;
+  margin: 0;
+}
+
+.testimonial:hover {
+  transform: translateY(-4px);
+  border-color: rgba(197, 160, 89, 0.45);
+  box-shadow: var(--shadow-md);
+}
+
+.testimonial-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--navy);
+  line-height: 1.35;
+}
+
+.testimonial-body {
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1.9;
+  color: var(--gray);
+  margin: 0;
+  flex: 1;
+  /* The opening quotation mark hangs into the margin so the text still
+     aligns with the heading above it. */
+  position: relative;
+}
+
+.testimonial-body::before {
+  content: '“';
+  position: absolute;
+  left: -14px;
+  top: -6px;
+  font-family: var(--font-display);
+  font-size: 30px;
+  color: rgba(197, 160, 89, 0.4);
+  line-height: 1;
+}
+
+.testimonial-author {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(10, 17, 40, 0.08);
+  flex-wrap: wrap;
+}
+
+.testimonial-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--cream);
+  border: 1px solid rgba(197, 160, 89, 0.4);
+  color: var(--navy);
+  /* Body font, not the display serif — a lone "H" in Cormorant reads as "II"
+     at this size. */
+  font-family: var(--font-body);
+  font-size: 11.5px;
+  letter-spacing: 0.6px;
+  flex-shrink: 0;
+}
+
+.testimonial-who { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.testimonial-who strong { font-size: 13.5px; font-weight: 400; color: var(--navy); }
+.testimonial-who span { font-size: 11.5px; color: var(--gray); }
+
+.testimonial-author em {
+  margin-left: auto;
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: #9A7B3C;
+  border: 1px solid rgba(197, 160, 89, 0.45);
+  padding: 4px 9px;
+}
+
+/* ============================================================
+   ADMIN — REVIEWS
+   ============================================================ */
+.review-stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+  margin: 26px 0 4px;
+}
+
+.review-stat-row .stat-card { display: flex; flex-direction: column; gap: 6px; }
+
+.admin-toolbar-right {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.admin-select {
+  padding: 12px 14px;
+  border: 1px solid rgba(197, 160, 89, 0.3);
+  background: var(--white);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--navy);
+  outline: none;
+  cursor: pointer;
+  max-width: 220px;
+}
+
+.admin-select:focus { border-color: var(--gold); }
+
+.admin-review-list { display: flex; flex-direction: column; gap: 10px; }
+
+.admin-review {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 22px;
+  background: var(--white);
+  border: 1px solid rgba(10, 17, 40, 0.09);
+  transition: border-color 0.25s ease;
+}
+
+.admin-review:hover { border-color: rgba(197, 160, 89, 0.45); }
+
+/* Hidden rows stay legible — dimming them to near-invisible made it hard to
+   find the one you wanted to publish. */
+.admin-review.is-hidden {
+  background: rgba(10, 17, 40, 0.02);
+  border-style: dashed;
+}
+
+.admin-review-main { flex: 1; min-width: 0; }
+
+.admin-review-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.admin-review-state {
+  font-size: 9.5px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  color: #1a7f4b;
+  border: 1px solid rgba(26, 127, 75, 0.35);
+  background: rgba(26, 127, 75, 0.07);
+}
+
+.admin-review-state.is-off {
+  color: var(--gray);
+  border-color: rgba(10, 17, 40, 0.2);
+  background: transparent;
+}
+
+.admin-review-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  color: var(--navy);
+  margin-bottom: 5px;
+}
+
+.admin-review-body {
+  font-size: 13.5px;
+  font-weight: 300;
+  line-height: 1.75;
+  color: var(--gray);
+  margin-bottom: 10px;
+}
+
+.admin-review-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  color: var(--gray);
+}
+
+.admin-review-meta strong { color: var(--navy); font-weight: 400; font-size: 12.5px; }
+
+.admin-review-meta em {
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  color: #9A7B3C;
+  border: 1px solid rgba(197, 160, 89, 0.45);
+  padding: 3px 8px;
+}
+
+.admin-review-meta em.is-muted {
+  color: var(--gray);
+  border-color: rgba(10, 17, 40, 0.16);
+}
+
+.admin-review-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-rating-picker {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.admin-rating-picker button {
+  background: none;
+  border: none;
+  font-size: 26px;
+  line-height: 1;
+  color: rgba(10, 17, 40, 0.18);
+  cursor: pointer;
+  padding: 0 2px;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.admin-rating-picker button:hover { transform: scale(1.12); }
+.admin-rating-picker button.is-on { color: var(--gold); }
+
+.admin-rating-value {
+  margin-left: 10px;
+  font-size: 12.5px;
+  color: var(--gray);
+}
+
+.admin-char-count {
+  float: right;
+  font-size: 11px;
+  color: var(--gray);
+  font-weight: 300;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.admin-field-note {
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--gray);
+  margin-top: 7px;
+}
+
+@media (max-width: 700px) {
+  .admin-review { flex-direction: column; gap: 14px; }
+  .admin-review-actions { justify-content: flex-start; }
+  .admin-toolbar-right { width: 100%; }
+  .admin-select, .admin-toolbar-right .admin-search { flex: 1; max-width: none; }
+}
+
+/* ============================================================
+   ADMIN — DRAGGABLE LISTS
+   Used by the reviews list and the lookbook. The grip and the
+   keyboard arrows sit inside the row rather than floating beside
+   it, which is how they rendered with no styles at all.
+   ============================================================ */
+.sortable-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sortable-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 30px;
+  align-items: stretch;
+  gap: 10px;
+  cursor: grab;
+  touch-action: pan-y;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.sortable-row.is-dragging {
+  cursor: grabbing;
+  transform: scale(1.01);
+  box-shadow: 0 14px 34px rgba(10, 17, 40, 0.16);
+  z-index: 3;
+}
+
+/* The one place a touch drag may begin, so a long list can still be scrolled. */
+.sortable-grip {
+  display: grid;
+  place-items: center;
+  color: rgba(10, 17, 40, 0.28);
+  border: 1px solid rgba(10, 17, 40, 0.08);
+  border-radius: 3px;
+  background: var(--white);
+  cursor: grab;
+  touch-action: none;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.sortable-row:hover .sortable-grip {
+  color: var(--gold);
+  border-color: rgba(197, 160, 89, 0.4);
+}
+
+.sortable-content { min-width: 0; }
+
+.sortable-nudge {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+}
+
+.sortable-nudge button {
+  width: 30px;
+  height: 26px;
+  border: 1px solid rgba(10, 17, 40, 0.12);
+  background: var(--white);
+  color: var(--gray);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: var(--transition-fast);
+}
+
+.sortable-nudge button:hover:not(:disabled) {
+  border-color: var(--gold);
+  color: var(--navy);
+}
+
+.sortable-nudge button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* The row's own card fills the middle column edge to edge. */
+.sortable-content > * { height: 100%; }
+
+@media (max-width: 700px) {
+  .sortable-row { grid-template-columns: 24px 1fr; }
+  .sortable-nudge { display: none; }
+}
+
+/* ============================================================
+   ADMIN — MODAL HEADER / ACTIONS / TOGGLE
+   The reviews dialog introduced these; without styles the header
+   and the buttons ran together at the top of an unpadded block.
+   ============================================================ */
+.admin-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 26px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(10, 17, 40, 0.08);
+}
+
+.admin-modal-header h2 {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 3vw, 28px);
+  font-weight: 300;
+  color: var(--navy);
+  line-height: 1.2;
+}
+
+.admin-modal-header h2 em { font-style: italic; color: var(--gold); }
+
+/* The shared close button expects an svg; this dialog uses a character, so
+   give it a matching line height rather than letting it sit off-centre. */
+.admin-modal-close {
+  font-size: 26px;
+  line-height: 1;
+  color: var(--gray);
+  transition: color 0.2s ease;
+}
+
+.admin-modal-close:hover { color: var(--navy); }
+
+.admin-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(10, 17, 40, 0.08);
+  flex-wrap: wrap;
+}
+
+.admin-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  cursor: pointer;
+  font-size: 13.5px;
+  color: var(--navy);
+}
+
+@media (max-width: 560px) {
+  .admin-modal-actions button { flex: 1; }
+}

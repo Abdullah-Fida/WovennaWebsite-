@@ -16,6 +16,8 @@ import {
 import Toast from '../components/Toast';
 import Breadcrumbs from '../components/ui/Breadcrumbs';
 import Accordion from '../components/ui/Accordion';
+import Stars from '../components/ui/Stars';
+import ProductReviews from '../components/ProductReviews';
 import EmptyState from '../components/ui/EmptyState';
 
 const FALLBACK_IMAGES = [
@@ -226,6 +228,16 @@ export default function ProductDetail() {
           ))}
         </div>
         <h1 className="product-detail-name">{product.name}</h1>
+
+        {product.ratingCount > 0 && (
+          <a href="#reviews" className="product-rating-link">
+            <Stars value={product.ratingAverage} size="sm" />
+            <span>
+              {product.ratingAverage.toFixed(1)} · {product.ratingCount} review
+              {product.ratingCount === 1 ? '' : 's'}
+            </span>
+          </a>
+        )}
         <div className="product-detail-price">
           {wasPrice > price && (
             <span className="price-original">Rs. {wasPrice.toLocaleString()}</span>
@@ -382,6 +394,8 @@ export default function ProductDetail() {
           />
         </div>
       </div>
+
+      <ProductReviews productId={product._id} />
 
       {showSizeGuide && (
         <div className="size-guide-overlay open" onClick={() => setShowSizeGuide(false)}>
