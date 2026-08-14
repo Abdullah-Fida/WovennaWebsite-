@@ -26,8 +26,10 @@ router.get('/', asyncHandler(async (req, res) => {
     filter['images.0'] = { $exists: true };
   }
 
-  const query = Product.find(filter).sort({ createdAt: -1 });
-  
+  // Merchandising order is decided in the admin panel, not by the shopper.
+  // Ties (everything still at the default 0) fall back to newest first.
+  const query = Product.find(filter).sort({ sortOrder: 1, createdAt: -1 });
+
   if (limit) {
     query.limit(parseInt(limit));
   }

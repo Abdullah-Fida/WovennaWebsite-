@@ -1,26 +1,32 @@
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { getProducts, getGalleryPosts } from '../api';
+import { getProducts, getGalleryPosts, getReviews } from '../api';
 import ProductCard from '../components/ProductCard';
 import SmartImage from '../components/ui/SmartImage';
 import Lightbox from '../components/ui/Lightbox';
 import BrandIntro from '../components/BrandIntro';
+import EmptyState from '../components/ui/EmptyState';
 
-// The house lookbook. Approved influencer posts are appended to these, so the
-// gallery grows without a deploy.
-const HOUSE_LOOKBOOK = [
-  { src: '/Images/image-6.jpeg', caption: 'Straw Crossbody' },
-  { src: '/Images/image-11.jpeg', caption: 'The Top Handle' },
-  { src: '/Images/image-8.jpeg', caption: 'Straw Tote' },
-  { src: '/Images/image-12.jpeg', caption: 'Tailored & Woven' },
-  { src: '/Images/image-5.jpeg', caption: 'Packed for Summer' },
-  { src: '/Images/image-3.jpeg', caption: 'Woven Tote' },
-];
+const CATEGORIES = ['All', 'Tote', 'Crossbody'];
 
 export default function Home() {
   const [products, setProducts] = useState([]);
-  const [lookbook, setLookbook] = useState(HOUSE_LOOKBOOK);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [productError, setProductError] = useState('');
+
+  // Category lives in the URL so footer links like /shop?category=Tote — and
+  // anything already bookmarked — still land on the right filter.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const category = searchParams.get('category') || 'All';
+  const setCategory = (next) => {
+    if (next === 'All') searchParams.delete('category');
+    else searchParams.set('category', next);
+    setSearchParams(searchParams, { replace: true });
+  };
+
+  const [lookbook, setLookbook] = useState([]);
   const [lightboxIndex, setLightboxIndex] = useState(null);
+  const [reviews, setReviews] = useState([]);
 
   useEffect(() => {
     // Reveal-on-scroll. Sections start at opacity 0, so anything that never
@@ -39,9 +45,7 @@ export default function Home() {
     );
 
     const observeAll = () =>
-      document
-        .querySelectorAll('.reveal:not(.visible)')
-        .forEach((el) => io.observe(el));
+      document.querySelectorAll('.reveal:not(.visible)').forEach((el) => io.observe(el));
 
     observeAll();
 
@@ -57,26 +61,29 @@ export default function Home() {
       });
     }, 600);
 
-    getProducts('isFeatured=true&limit=3')
-      .then((data) => setProducts(data.slice(0, 3)))
-      .catch(console.error);
+    // The full collection lives here now; there is no separate shop page.
+    // Order comes from the server, which follows the admin's arrangement.
+    getProducts()
+      .then(setProducts)
+      .catch((err) => setProductError(err.message || 'Could not load the collection'))
+      .finally(() => setLoadingProducts(false));
 
-    // Community posts sit after the house shots. A failure here is silent —
-    // the curated lookbook still renders.
+    // Lookbook and testimonials are both admin-managed, so a failure here
+    // just means the section stays hidden rather than showing stale copy.
     getGalleryPosts()
-      .then((posts) => {
-        if (!posts.length) return;
-        setLookbook([
-          ...HOUSE_LOOKBOOK,
-          ...posts.map((p) => ({
+      .then((posts) =>
+        setLookbook(
+          posts.map((p) => ({
             src: p.image,
             caption: p.caption || '',
-            credit: p.influencerName ? `@${p.influencerName}` : '',
+            credit: p.source === 'influencer' && p.influencerName ? `@${p.influencerName}` : '',
             productId: p.product?._id || p.product || null,
-          })),
-        ]);
-      })
+          }))
+        )
+      )
       .catch(() => {});
+
+    getReviews().then(setReviews).catch(() => {});
 
     return () => {
       io.disconnect();
@@ -85,21 +92,24 @@ export default function Home() {
     };
   }, []);
 
+  const isSoldOut = (p) => p.stock === 0 || p.showInSoldOutRow;
+  const visible = category === 'All' ? products : products.filter((p) => p.category === category);
+  const available = visible.filter((p) => !isSoldOut(p));
+  const soldOut = visible.filter(isSoldOut);
+
   return (
     <>
       <BrandIntro />
 
-      {/* HERO — image-1 */}
+      {/* HERO — the photograph, nothing else. */}
       <section id="hero">
         <div className="hero-bg">
-          <img src="/Images/FULL-ROOM.webp" alt="Wovenaa woven bags" />
-        </div>
-        <div className="hero-overlay"></div>
-        <div className="hero-content">
-          <span className="hero-eyebrow">Est. 2026 · THE TIMELESS WEAVE</span>
-          <h1 className="hero-title">Some Things Were Never<br /><em>Meant to Be Replaced</em></h1>
-          <p className="hero-subtitle">Woven for the woman who buys once, and keeps forever.</p>
-          <Link to="/shop" className="btn-ghost">Explore Collection</Link>
+          <img
+            src="/Images/FULL-ROOM.webp"
+            alt="Wovenaa woven bags"
+            fetchpriority="high"
+            decoding="async"
+          />
         </div>
         <div className="hero-scroll">
           <span>Scroll</span>
@@ -107,58 +117,87 @@ export default function Home() {
         </div>
       </section>
 
-      {/* PRODUCT CARDS — 2 rows: 3 main + 3 dummy sold out */}
+      {/* THE COLLECTION — the whole shop, immediately after the hero. */}
       <section id="collection">
         <div className="collection-header reveal">
           <div>
-            <span className="section-label">OUR PRODUCTS</span>
-            <h2 className="section-title" style={{ marginBottom: 0 }}>The <em>Wovenaa</em> Edit</h2>
+            <span className="section-label">Our Products</span>
+            <h2 className="section-title" style={{ marginBottom: 0 }}>
+              The <em>Wovenaa</em> Edit
+            </h2>
           </div>
-          <Link to="/shop" className="btn-ghost" style={{ color: 'var(--navy)', borderColor: 'var(--navy)' }}>View All</Link>
-        </div>
-        
-        {/* Upper Row — 3 main products */}
-        <div className="collection-grid collection-grid--3col reveal">
-          {products.map(product => (
-            <ProductCard key={product._id} product={product} />
-          ))}
-        </div>
 
-
-      </section>
-
-      {/* HERITAGE — image-2 */}
-      <section id="heritage">
-        <div className="heritage-grid">
-          <div className="heritage-image-side reveal">
-            <img src="/Images/image-2.jpeg" alt="The ancient weave craft" />
-            <div className="heritage-img-caption">THE ANCIENT WEAVE · EST. 2000 BC</div>
+          <div className="collection-filters">
+            {CATEGORIES.map((c) => (
+              <button
+                key={c}
+                type="button"
+                className={`shop-cat-btn ${category === c ? 'active' : ''}`}
+                onClick={() => setCategory(c)}
+              >
+                {c}
+              </button>
+            ))}
           </div>
-          <div className="heritage-text-side reveal">
-            <span className="section-label">ANCIENT CRAFT, MODERN STRENGTH</span>
-            <h2 className="section-title">Before fast fashion existed,<br /><em>this bag already did.</em></h2>
-            <div className="heritage-quote">
-              "In 2000 BC, Ancient Egyptians wove reeds and grass into bags that carried their world.
-              Four thousand years later, the weave is still here.
-              Some things simply refuse to be replaced."
+        </div>
+
+        {loadingProducts ? (
+          <div className="page-loader"><div className="spinner"></div></div>
+        ) : productError ? (
+          <EmptyState
+            title="Can’t load the collection right now"
+            description={productError}
+            actions={<button className="btn-gold" onClick={() => window.location.reload()}>Try Again</button>}
+          />
+        ) : visible.length === 0 ? (
+          <EmptyState
+            title="Nothing in this category yet"
+            description="Try another category to see the rest of the collection."
+            actions={
+              <button
+                className="btn-ghost"
+                style={{ color: 'var(--navy)', borderColor: 'rgba(10,17,40,0.3)' }}
+                onClick={() => setCategory('All')}
+              >
+                Show All
+              </button>
+            }
+          />
+        ) : (
+          <>
+            <div className="collection-grid reveal">
+              {available.map((product, i) => (
+                <ProductCard key={product._id} product={product} priority={i < 3} />
+              ))}
             </div>
-            <p className="section-body">
-              The world moves fast. Trends arrive Tuesday and disappear by Friday.
-              Wovenaa was built as a quiet answer to all of that — a bag that carries a lineage older than any brand,
-              any logo, or any season.
-            </p>
-            <Link to="/shop" className="btn-gold">Shop Now</Link>
-          </div>
-        </div>
+
+            {soldOut.length > 0 && (
+              <div className="collection-soldout">
+                <h3 className="collection-soldout-title">Sold <em>Out</em></h3>
+                <div className="collection-grid reveal">
+                  {soldOut.map((product) => (
+                    <ProductCard key={product._id} product={product} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </section>
 
-      {/* MATERIALS / THE ELEMENTS — Straw Crossbody */}
+      {/* THE ELEMENTS */}
       <section id="materials">
         <span className="section-label reveal">The Elements</span>
-        <h2 className="section-title reveal">Uncompromising <em>Quality</em></h2>
+        <h2 className="section-title reveal">Uncompromised <em>Quality</em></h2>
         <div className="materials-layout reveal">
           <div className="hotspot-container">
-            <img src="/Images/image-2.jpeg" alt="Straw Crossbody detail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <SmartImage
+              src="/Images/image-2.jpeg"
+              alt="Woven bag detail"
+              fill
+              width={900}
+              sizes="(max-width: 900px) 100vw, 45vw"
+            />
           </div>
           <div className="materials-info">
             <div className="material-item">
@@ -180,50 +219,49 @@ export default function Home() {
         </div>
       </section>
 
-      {/* LOOKBOOK — a real gallery: one tap opens the full-screen viewer. */}
-      <section id="lookbook">
-        <div className="lookbook-header reveal">
-          <span className="section-label">Lookbook</span>
-          <h2 className="section-title">Crafted with <em>Soul</em></h2>
-          <p className="section-body" style={{ maxWidth: 620, margin: '0 auto' }}>
-            Styled for modern life. Tap any image to view it full screen.
-          </p>
-        </div>
+      {/* LOOKBOOK — every image is managed from the admin panel. */}
+      {lookbook.length > 0 && (
+        <section id="lookbook">
+          <div className="lookbook-header reveal">
+            <span className="section-label">Lookbook</span>
+            <h2 className="section-title">Crafted with <em>Soul</em></h2>
+          </div>
 
-        <div className="reveal lookbook-gallery">
-          {lookbook.map((shot, i) => (
-            <button
-              type="button"
-              key={`${shot.src}-${i}`}
-              className="lookbook-tile"
-              onClick={() => setLightboxIndex(i)}
-              onContextMenu={(e) => e.preventDefault()}
-              aria-label={`View ${shot.caption || 'lookbook image'} full screen`}
-            >
-              <SmartImage
-                src={shot.src}
-                alt={shot.caption || ''}
-                fill
-                width={700}
-                sizes="(max-width: 640px) 50vw, (max-width: 1100px) 33vw, 25vw"
-              />
-              <span className="lookbook-tile-shield" aria-hidden="true" />
-              {(shot.caption || shot.credit) && (
-                <span className="lookbook-tile-caption">
-                  {shot.caption}
-                  {shot.credit && <em>{shot.credit}</em>}
+          <div className="reveal lookbook-gallery">
+            {lookbook.map((shot, i) => (
+              <button
+                type="button"
+                key={`${shot.src}-${i}`}
+                className="lookbook-tile"
+                onClick={() => setLightboxIndex(i)}
+                onContextMenu={(e) => e.preventDefault()}
+                aria-label={shot.caption || `Lookbook image ${i + 1}`}
+              >
+                <SmartImage
+                  src={shot.src}
+                  alt={shot.caption || ''}
+                  fill
+                  width={700}
+                  sizes="(max-width: 640px) 50vw, (max-width: 1100px) 33vw, 25vw"
+                />
+                <span className="lookbook-tile-shield" aria-hidden="true" />
+                {(shot.caption || shot.credit) && (
+                  <span className="lookbook-tile-caption">
+                    {shot.caption}
+                    {shot.credit && <em>{shot.credit}</em>}
+                  </span>
+                )}
+                <span className="lookbook-tile-zoom" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="M20 20l-4.2-4.2M11 8v6M8 11h6" strokeLinecap="round" />
+                  </svg>
                 </span>
-              )}
-              <span className="lookbook-tile-zoom" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
-                  <circle cx="11" cy="11" r="7" />
-                  <path d="M20 20l-4.2-4.2M11 8v6M8 11h6" strokeLinecap="round" />
-                </svg>
-              </span>
-            </button>
-          ))}
-        </div>
-      </section>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       <Lightbox
         items={lookbook}
@@ -232,7 +270,36 @@ export default function Home() {
         onIndex={setLightboxIndex}
       />
 
-      {/* CONCIERGE / CLIENT CARE */}
+      {/* REVIEWS — added, ordered and removed from the admin panel. */}
+      {reviews.length > 0 && (
+        <section id="testimonials">
+          <div className="testimonial-header reveal">
+            <span className="section-label">Kind Words</span>
+            <h2 className="section-title">What our <em>customers</em> say</h2>
+          </div>
+
+          <div className="testimonial-grid reveal">
+            {reviews.map((r) => (
+              <figure key={r._id} className="testimonial">
+                <div className="testimonial-stars" aria-label={`${r.rating} out of 5`}>
+                  {Array.from({ length: 5 }, (_, i) => (
+                    <span key={i} className={i < r.rating ? 'is-on' : ''}>★</span>
+                  ))}
+                </div>
+                {r.title && <h3 className="testimonial-title">{r.title}</h3>}
+                <blockquote className="testimonial-body">{r.body}</blockquote>
+                <figcaption className="testimonial-author">
+                  {r.name}
+                  {r.location && <span>{r.location}</span>}
+                  {r.product?.name && <em>{r.product.name}</em>}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* CLIENT CARE */}
       <section id="concierge">
         <div className="concierge-inner reveal">
           <div className="concierge-icon" aria-hidden="true">
@@ -242,13 +309,8 @@ export default function Home() {
           </div>
           <span className="section-label">Client Care</span>
           <h2 className="section-title">We help you choose the <em>right</em> bag</h2>
-          <p className="section-body" style={{ maxWidth: 620, margin: '0 auto' }}>
-            Need sizing advice, care guidance, or shipping details? We've added detailed pages (Materials, Care Guide, Shipping &amp; Returns, FAQ)
-            so every part of the experience is clearly explained.
-          </p>
 
           <div className="concierge-ctas">
-            <Link to="/shop" className="btn-gold">Shop Now</Link>
             <Link to="/contact" className="whatsapp-btn">Contact Client Care</Link>
             <Link to="/faq" className="btn-ghost" style={{ color: 'var(--navy)', borderColor: 'var(--navy)' }}>Read FAQ</Link>
           </div>

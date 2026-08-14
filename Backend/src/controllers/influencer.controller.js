@@ -6,6 +6,7 @@ const GalleryPost = require('../models/galleryPost.model');
 const Order = require('../models/order.model');
 const Promo = require('../models/promo.model');
 const User = require('../models/user.model');
+const { getSetting } = require('../models/setting.model');
 
 const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -25,20 +26,57 @@ function uploadBuffer(buffer, folder = 'gallery') {
 }
 
 /**
- * Has this person actually bought and received something?
+ * Work out whether someone may apply, and if not, exactly why.
  *
- * Program rule: an applicant must have at least one Delivered order. Orders
- * placed while signed out are matched on the email address, so buying as a
- * guest and later registering with the same address still counts.
+ * Orders placed while signed out are matched on the email address, so buying
+ * as a guest and registering later with the same address still counts —
+ * otherwise a real customer looks like a stranger to the programme.
+ *
+ * The bar itself is an admin setting rather than a constant, because
+ * 'delivered' depends on someone remembering to move the order along; a shop
+ * that hasn't been marking orders Delivered would otherwise have a programme
+ * nobody can ever enter.
  */
-async function findQualifyingOrder(user) {
-  return Order.findOne({
-    orderStatus: 'Delivered',
+async function checkEligibility(user) {
+  const rule = await getSetting('influencerEligibility');
+
+  const ownership = {
     $or: [
       { user: user._id },
       { guestEmail: new RegExp(`^${escapeRegex(user.email)}$`, 'i') },
     ],
-  }).sort({ createdAt: -1 });
+  };
+
+  if (rule === 'open') {
+    return { eligible: true, rule, order: null, reason: '' };
+  }
+
+  const delivered = await Order.findOne({ ...ownership, orderStatus: 'Delivered' })
+    .sort({ createdAt: -1 });
+
+  if (delivered) return { eligible: true, rule, order: delivered, reason: '' };
+
+  // No delivered order. Say what they *do* have, so the page can explain the
+  // wait instead of just refusing.
+  const latest = await Order.findOne(ownership).sort({ createdAt: -1 });
+
+  if (rule === 'any-order') {
+    return latest
+      ? { eligible: true, rule, order: latest, reason: '' }
+      : {
+          eligible: false,
+          rule,
+          order: null,
+          reason: 'no-order',
+        };
+  }
+
+  return {
+    eligible: false,
+    rule,
+    order: latest,
+    reason: latest ? 'awaiting-delivery' : 'no-order',
+  };
 }
 
 // Derive a readable code from their name, with a numeric suffix on collision.
@@ -114,13 +152,19 @@ const getMyInfluencer = asyncHandler(async (req, res) => {
   const influencer = await Influencer.findOne({ user: req.user._id });
 
   if (!influencer) {
-    const qualifying = await findQualifyingOrder(req.user);
+    const check = await checkEligibility(req.user);
     return res.json({
       success: true,
       influencer: null,
-      eligible: Boolean(qualifying),
-      qualifyingOrder: qualifying
-        ? { orderId: qualifying.orderId, deliveredAt: qualifying.updatedAt }
+      eligible: check.eligible,
+      rule: check.rule,
+      reason: check.reason,
+      qualifyingOrder: check.order
+        ? {
+            orderId: check.order.orderId,
+            orderStatus: check.order.orderStatus,
+            placedAt: check.order.createdAt,
+          }
         : null,
     });
   }
@@ -135,13 +179,16 @@ const applyAsInfluencer = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: 'You have already applied to the program' });
   }
 
-  const qualifying = await findQualifyingOrder(req.user);
-  if (!qualifying) {
+  const check = await checkEligibility(req.user);
+  if (!check.eligible) {
     return res.status(400).json({
       message:
-        'The program is open to customers who have received an order. Once your order is marked Delivered you can apply.',
+        check.reason === 'awaiting-delivery'
+          ? `Your order ${check.order?.orderId || ''} is still ${check.order?.orderStatus || 'on its way'}. You can apply once it is marked Delivered.`.trim()
+          : 'The programme is open to customers who have ordered from us. Place an order and you can apply from here.',
     });
   }
+  const qualifying = check.order;
 
   const { handle, instagram, tiktok, followers, pitch, phone } = req.body;
 
@@ -155,7 +202,7 @@ const applyAsInfluencer = asyncHandler(async (req, res) => {
     tiktok: String(tiktok || '').trim(),
     followers: Math.max(0, Number(followers) || 0),
     pitch: String(pitch || '').slice(0, 1000),
-    qualifyingOrder: qualifying._id,
+    qualifyingOrder: qualifying ? qualifying._id : null,
   });
 
   res.status(201).json({
@@ -252,8 +299,8 @@ const deleteMyPost = asyncHandler(async (req, res) => {
 const getPublicGallery = asyncHandler(async (req, res) => {
   const posts = await GalleryPost.find({ status: 'approved' })
     .sort({ sortOrder: 1, createdAt: -1 })
-    .limit(30)
-    .select('image caption influencerName product')
+    .limit(40)
+    .select('image caption influencerName product source')
     .populate('product', 'name');
 
   res.json({ success: true, posts });
@@ -291,4 +338,5 @@ module.exports = {
   generateCode,
   earningsFor,
   publicShape,
+  uploadBuffer,
 };

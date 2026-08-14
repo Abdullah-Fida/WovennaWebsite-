@@ -263,8 +263,27 @@ const createProduct = asyncHandler(async (req, res) => {
 });
 
 const getProducts = asyncHandler(async (req, res) => {
-  const products = await Product.find().sort({ createdAt: -1 });
+  // Same order the storefront uses, so what an admin drags is what shoppers see.
+  const products = await Product.find().sort({ sortOrder: 1, createdAt: -1 });
   res.json(products);
+});
+
+// Persist a whole drag-reordered list in one write. This is how shop ordering
+// is controlled — the storefront has no sort control of its own.
+const reorderProducts = asyncHandler(async (req, res) => {
+  const ids = Array.isArray(req.body.ids) ? req.body.ids : [];
+  if (!ids.length) {
+    res.status(400);
+    throw new Error('No order given');
+  }
+
+  await Product.bulkWrite(
+    ids.map((id, index) => ({
+      updateOne: { filter: { _id: id }, update: { sortOrder: index } },
+    }))
+  );
+
+  res.json({ success: true, count: ids.length });
 });
 
 const getProduct = asyncHandler(async (req, res) => {
@@ -397,4 +416,4 @@ const deleteProduct = asyncHandler(async (req, res) => {
   res.json({ message: 'Product deleted' });
 });
 
-module.exports = { createProduct, getProducts, getProduct, updateProduct, deleteProduct };
+module.exports = { createProduct, getProducts, getProduct, updateProduct, deleteProduct, reorderProducts };

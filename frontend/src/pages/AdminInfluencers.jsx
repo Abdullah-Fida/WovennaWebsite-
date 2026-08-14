@@ -3,12 +3,35 @@ import {
   getAdminInfluencers,
   setInfluencerStatus,
   recordInfluencerPayout,
+  getProgramSettings,
+  updateProgramSettings,
 } from '../api';
 import AdminNav from '../components/admin/AdminNav';
 import Toast from '../components/Toast';
 
 const FILTERS = ['pending', 'approved', 'rejected', 'suspended', 'all'];
 const money = (n) => `Rs. ${Math.round(n || 0).toLocaleString()}`;
+
+// Who is allowed to apply. 'delivered' depends on someone marking orders
+// Delivered, so if that isn't happening the programme silently admits nobody —
+// hence the looser options.
+const ELIGIBILITY = [
+  {
+    value: 'delivered',
+    label: 'Delivered order',
+    hint: 'They must have an order you have marked Delivered.',
+  },
+  {
+    value: 'any-order',
+    label: 'Any order',
+    hint: 'Anyone who has placed an order, whatever its status.',
+  },
+  {
+    value: 'open',
+    label: 'Anyone signed in',
+    hint: 'Any customer with an account can apply.',
+  },
+];
 
 export default function AdminInfluencers() {
   const [influencers, setInfluencers] = useState([]);
@@ -20,6 +43,7 @@ export default function AdminInfluencers() {
   const [busyId, setBusyId] = useState('');
   // Per-row edits, so changing one applicant's terms never touches another's.
   const [drafts, setDrafts] = useState({});
+  const [eligibility, setEligibility] = useState('delivered');
 
   const load = async (status = filter) => {
     setLoading(true);
@@ -37,6 +61,24 @@ export default function AdminInfluencers() {
     load(filter);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
+
+  useEffect(() => {
+    getProgramSettings()
+      .then((s) => setEligibility(s.influencerEligibility || 'delivered'))
+      .catch(() => {});
+  }, []);
+
+  const changeEligibility = async (value) => {
+    const previous = eligibility;
+    setEligibility(value);
+    try {
+      await updateProgramSettings({ influencerEligibility: value });
+      setToastMsg('Entry rule updated');
+    } catch (err) {
+      setEligibility(previous);
+      setToastMsg(err.message || 'Could not update the rule');
+    }
+  };
 
   const draftFor = (inf) =>
     drafts[inf._id] || {
@@ -98,6 +140,29 @@ export default function AdminInfluencers() {
       </div>
 
       <AdminNav active="influencers" />
+
+      <section className="admin-setting card card--soft card-pad">
+        <div className="admin-setting-head">
+          <h3>Who can apply</h3>
+          <p>
+            Applicants see this rule on the programme page. If orders aren’t being marked
+            Delivered, nobody can get in — loosen it here rather than leaving people stuck.
+          </p>
+        </div>
+        <div className="admin-setting-options">
+          {ELIGIBILITY.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              className={`admin-setting-option ${eligibility === opt.value ? 'is-active' : ''}`}
+              onClick={() => changeEligibility(opt.value)}
+            >
+              <span className="admin-setting-label">{opt.label}</span>
+              <span className="admin-setting-hint">{opt.hint}</span>
+            </button>
+          ))}
+        </div>
+      </section>
 
       <div className="admin-toolbar">
         <div className="admin-filter-row">

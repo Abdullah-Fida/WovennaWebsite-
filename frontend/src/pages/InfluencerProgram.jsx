@@ -135,22 +135,43 @@ export default function InfluencerProgram() {
             </div>
           ) : !eligible ? (
             <div className="influencer-gate">
-              <h3>One order away</h3>
-              <p>
-                The Circle is open to customers who have received an order. As soon as an order
-                on this email is marked Delivered, this page will let you apply.
-              </p>
-              <div className="influencer-gate-actions">
-                <Link to="/shop" className="btn-gold">Shop the Collection</Link>
-                <Link to="/track-order" className="btn-ghost" style={{ color: 'var(--navy)', borderColor: 'rgba(10,17,40,0.3)' }}>
-                  Track an Order
-                </Link>
-              </div>
+              {state?.reason === 'awaiting-delivery' ? (
+                <>
+                  <h3>Almost there</h3>
+                  <p>
+                    Your order <strong>{state.qualifyingOrder?.orderId}</strong> is marked{' '}
+                    <strong>{state.qualifyingOrder?.orderStatus}</strong>. The Circle opens as soon
+                    as it is marked Delivered — we’ll do that once it reaches you.
+                  </p>
+                  <div className="influencer-gate-actions">
+                    <Link to="/track-order" className="btn-gold">Track Your Order</Link>
+                    <Link to="/contact" className="btn-ghost" style={{ color: 'var(--navy)', borderColor: 'rgba(10,17,40,0.3)' }}>
+                      Already received it?
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h3>One order away</h3>
+                  <p>
+                    The Circle is for customers who own a Wovenaa piece. Order anything, and this
+                    page will let you apply.
+                  </p>
+                  <div className="influencer-gate-actions">
+                    <Link to="/#collection" className="btn-gold">Shop the Collection</Link>
+                    <Link to="/track-order" className="btn-ghost" style={{ color: 'var(--navy)', borderColor: 'rgba(10,17,40,0.3)' }}>
+                      Track an Order
+                    </Link>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
             <form onSubmit={submit} className="influencer-form">
               <div className="influencer-eligible">
-                Eligible — order {state.qualifyingOrder?.orderId} was delivered.
+                {state.qualifyingOrder?.orderId
+                  ? `Eligible — order ${state.qualifyingOrder.orderId} qualifies you.`
+                  : 'Eligible — you can apply now.'}
               </div>
 
               <h3>Apply to the Circle</h3>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import AdminNav from '../components/admin/AdminNav';
-import { getAdminProducts, createProduct, updateProduct, deleteProduct } from '../api';
+import { getAdminProducts, createProduct, updateProduct, deleteProduct, reorderProducts } from '../api';
 import Toast from '../components/Toast';
 import ImageManager from '../components/admin/ImageManager';
 import { compressImages } from '../lib/compress';
@@ -36,6 +36,7 @@ export default function AdminProducts() {
   // a new photo can be dragged ahead of an old one. Position 0 is the cover.
   const [gallery, setGallery] = useState([]);
   const [preparing, setPreparing] = useState('');
+  const [reordering, setReordering] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -332,6 +333,27 @@ export default function AdminProducts() {
     }
   };
 
+  // Shop order is set here, not by the shopper — the storefront has no sort
+  // control, so this list is exactly what customers see, top to bottom.
+  const moveProduct = async (index, delta) => {
+    const target = index + delta;
+    if (target < 0 || target >= products.length) return;
+
+    const previous = products;
+    const next = [...products];
+    [next[index], next[target]] = [next[target], next[index]];
+    setProducts(next);
+    setReordering(true);
+    try {
+      await reorderProducts(next.map((p) => p._id));
+    } catch (err) {
+      setProducts(previous);
+      setToastMsg(err.message || 'Could not save the new order');
+    } finally {
+      setReordering(false);
+    }
+  };
+
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
@@ -369,6 +391,7 @@ export default function AdminProducts() {
           <table className="admin-table">
             <thead>
               <tr>
+                <th>Order</th>
                 <th>Image</th>
                 <th>Name</th>
                 <th>Category</th>
@@ -381,8 +404,29 @@ export default function AdminProducts() {
               </tr>
             </thead>
             <tbody>
-              {products.length > 0 ? products.map(p => (
+              {products.length > 0 ? products.map((p, index) => (
                 <tr key={p._id} style={{ opacity: p.isActive === false ? 0.5 : 1 }}>
+                  <td>
+                    <div className="admin-order-nudge">
+                      <button
+                        type="button"
+                        aria-label={`Move ${p.name} earlier`}
+                        disabled={index === 0 || reordering}
+                        onClick={() => moveProduct(index, -1)}
+                      >
+                        ↑
+                      </button>
+                      <span>{index + 1}</span>
+                      <button
+                        type="button"
+                        aria-label={`Move ${p.name} later`}
+                        disabled={index === products.length - 1 || reordering}
+                        onClick={() => moveProduct(index, 1)}
+                      >
+                        ↓
+                      </button>
+                    </div>
+                  </td>
                   <td>
                     <img src={p.images?.[0] || '/premium/flatlay-marble.jpg'} alt={p.name} />
                     {p.images && p.images.length > 1 && (

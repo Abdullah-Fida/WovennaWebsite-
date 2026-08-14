@@ -9,10 +9,20 @@ const mongoose = require('mongoose');
  */
 const galleryPostSchema = new mongoose.Schema(
   {
+    // Where the image came from. House images are uploaded by an admin and go
+    // live immediately; influencer submissions wait for review.
+    source: {
+      type: String,
+      enum: ['house', 'influencer'],
+      default: 'influencer',
+      index: true,
+    },
+
+    // Null for house images, which have no contributor.
     influencer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Influencer',
-      required: true,
+      default: null,
       index: true,
     },
     // Denormalised so the public gallery needs no populate to credit them.

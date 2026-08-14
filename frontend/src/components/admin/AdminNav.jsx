@@ -9,7 +9,8 @@ const TABS = [
   { key: 'users', to: '/admin/users', label: 'Users' },
   { key: 'promos', to: '/admin/promos', label: 'Promos' },
   { key: 'influencers', to: '/admin/influencers', label: 'Influencers' },
-  { key: 'gallery', to: '/admin/gallery', label: 'Gallery' },
+  { key: 'gallery', to: '/admin/gallery', label: 'Lookbook' },
+  { key: 'reviews', to: '/admin/reviews', label: 'Reviews' },
 ];
 
 export default function AdminNav({ active }) {

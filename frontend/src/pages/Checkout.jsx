@@ -170,7 +170,6 @@ export default function Checkout() {
               Complete your <em>order</em>
             </>
           }
-          subtitle="Add shipping details carefully (especially phone number) so delivery is smooth. Payment is Cash on Delivery."
         />
 
         {loadError ? (
@@ -190,7 +189,10 @@ export default function Checkout() {
             <div className="checkout-form-section">
               {errorMsg && <div className="auth-error" style={{ marginBottom: '24px' }}>{errorMsg}</div>}
 
-              <form onSubmit={handleSubmit}>
+              {/* Named so the Place Order button can live under the total in
+                  the summary column, where shoppers expect it, and still
+                  submit this form. */}
+              <form id="checkout-form" onSubmit={handleSubmit}>
                 {/* Guest Contact Info */}
                 {!user && (
                   <>
@@ -245,9 +247,6 @@ export default function Checkout() {
                     required
                     placeholder="House no, street, area"
                   />
-                  <div className="help-text" style={{ marginTop: 8 }}>
-                    Include house number + area/landmark for easier delivery.
-                  </div>
                 </div>
 
                 <div className="checkout-form-row">
@@ -301,15 +300,6 @@ export default function Checkout() {
                   </div>
                 </div>
 
-                <button type="submit" className="place-order-btn" disabled={processing}>
-                  {processing ? (
-                    <span className="btn-loading">
-                      <span className="btn-spinner"></span> Processing...
-                    </span>
-                  ) : (
-                    'Place Order'
-                  )}
-                </button>
               </form>
             </div>
 
@@ -395,6 +385,21 @@ export default function Checkout() {
                 <span className="summary-total-label">Total</span>
                 <span className="summary-total-amount">Rs. {finalTotal.toLocaleString()}</span>
               </div>
+
+              <button
+                type="submit"
+                form="checkout-form"
+                className="place-order-btn"
+                disabled={processing}
+              >
+                {processing ? (
+                  <span className="btn-loading">
+                    <span className="btn-spinner"></span> Processing...
+                  </span>
+                ) : (
+                  `Place Order · Rs. ${finalTotal.toLocaleString()}`
+                )}
+              </button>
             </div>
           </div>
         )}

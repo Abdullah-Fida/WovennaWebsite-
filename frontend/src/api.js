@@ -155,3 +155,39 @@ export const setGalleryPostStatus = (id, body) =>
   apiFetch(`/admin/gallery/${id}`, { method: 'PUT', body });
 export const deleteAdminGalleryPost = (id) =>
   apiFetch(`/admin/gallery/${id}`, { method: 'DELETE' });
+
+// Reviews / testimonials (public)
+export const getReviews = async () => {
+  const data = await apiFetch('/reviews');
+  return data.reviews || [];
+};
+
+// Reviews (admin)
+export const getAdminReviews = async () => {
+  const data = await apiFetch('/admin/reviews');
+  return data.reviews || [];
+};
+export const createReview = (body) => apiFetch('/admin/reviews', { method: 'POST', body });
+export const updateReview = (id, body) => apiFetch(`/admin/reviews/${id}`, { method: 'PUT', body });
+export const deleteReview = (id) => apiFetch(`/admin/reviews/${id}`, { method: 'DELETE' });
+export const reorderReviews = (ids) => apiFetch('/admin/reviews/reorder', { method: 'PUT', body: { ids } });
+
+// Lookbook gallery (admin)
+export const createGalleryPost = (formData) =>
+  apiFetch('/admin/gallery', { method: 'POST', body: formData });
+export const reorderGalleryPosts = (ids) =>
+  apiFetch('/admin/gallery/reorder', { method: 'PUT', body: { ids } });
+export const importProductImagesToGallery = () =>
+  apiFetch('/admin/gallery/import-products', { method: 'POST' });
+
+// Product display order (admin)
+export const reorderProducts = (ids) =>
+  apiFetch('/admin/products/reorder', { method: 'PUT', body: { ids } });
+
+// Influencer programme settings (admin)
+export const getProgramSettings = async () => {
+  const data = await apiFetch('/admin/settings/program');
+  return data.settings || {};
+};
+export const updateProgramSettings = (body) =>
+  apiFetch('/admin/settings/program', { method: 'PUT', body });

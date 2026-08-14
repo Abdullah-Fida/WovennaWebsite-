@@ -4,7 +4,9 @@ const Influencer = require('../models/influencer.model');
 const GalleryPost = require('../models/galleryPost.model');
 const Order = require('../models/order.model');
 const Promo = require('../models/promo.model');
-const { generateCode, earningsFor } = require('./influencer.controller');
+const Product = require('../models/product.model');
+const { generateCode, earningsFor, uploadBuffer } = require('./influencer.controller');
+const { getSetting, setSetting } = require('../models/setting.model');
 
 // Approved influencer codes never expire on their own; an admin suspends them
 // instead. Ten years is effectively "until revoked".
@@ -163,31 +165,121 @@ const recordPayout = asyncHandler(async (req, res) => {
 const listGalleryPosts = asyncHandler(async (req, res) => {
   const filter = {};
   if (req.query.status && req.query.status !== 'all') filter.status = req.query.status;
+  if (req.query.source && req.query.source !== 'all') filter.source = req.query.source;
 
   const posts = await GalleryPost.find(filter)
-    .sort({ status: 1, createdAt: -1 })
+    .sort({ sortOrder: 1, createdAt: -1 })
     .populate('influencer', 'name handle code status')
     .populate('product', 'name');
 
   res.json({ success: true, posts });
 });
 
-const setGalleryPostStatus = asyncHandler(async (req, res) => {
-  const { status, rejectionReason, sortOrder, caption } = req.body;
-  if (!['pending', 'approved', 'rejected'].includes(status)) {
-    return res.status(400).json({ message: 'Invalid status' });
+// Admin adds an image to the lookbook directly. House images skip review —
+// an admin approving their own upload would be pointless.
+const createGalleryPost = asyncHandler(async (req, res) => {
+  if (!req.file) return res.status(400).json({ message: 'Please choose an image' });
+
+  const uploaded = await uploadBuffer(req.file.buffer, 'gallery');
+
+  const last = await GalleryPost.findOne().sort({ sortOrder: -1 }).select('sortOrder');
+
+  const post = await GalleryPost.create({
+    source: 'house',
+    influencer: null,
+    influencerName: '',
+    image: uploaded.secure_url,
+    caption: String(req.body.caption || '').slice(0, 140),
+    product: req.body.product || null,
+    status: 'approved',
+    sortOrder: last ? last.sortOrder + 1 : 0,
+  });
+
+  res.status(201).json({ success: true, post });
+});
+
+/**
+ * Fill the lookbook from the catalogue.
+ *
+ * The gallery is meant to show our own products, and every product photo
+ * deserves to be in there. Re-uploading each one by hand would be tedious and
+ * would duplicate images already on Cloudinary, so this points at the existing
+ * URLs instead. Images already in the lookbook are skipped, which makes the
+ * button safe to press again after adding a product.
+ */
+const importProductImages = asyncHandler(async (req, res) => {
+  const products = await Product.find({ isActive: { $ne: false } })
+    .sort({ sortOrder: 1, createdAt: -1 })
+    .select('name images');
+
+  const existing = new Set((await GalleryPost.find().select('image')).map((p) => p.image));
+  const last = await GalleryPost.findOne().sort({ sortOrder: -1 }).select('sortOrder');
+  let order = last ? last.sortOrder + 1 : 0;
+
+  // One photo per product — its cover shot. Pulling in every image turned the
+  // lookbook into a thirty-tile contact sheet; the point is that each product
+  // appears once, and anything beyond that is a deliberate choice made here.
+  const additions = [];
+  for (const product of products) {
+    const cover = (product.images || [])[0];
+    if (!cover || existing.has(cover)) continue;
+    existing.add(cover);
+    additions.push({
+      source: 'house',
+      influencer: null,
+      influencerName: '',
+      image: cover,
+      caption: product.name,
+      product: product._id,
+      status: 'approved',
+      sortOrder: order++,
+    });
   }
+
+  if (additions.length) await GalleryPost.insertMany(additions);
+
+  res.json({
+    success: true,
+    added: additions.length,
+    message: additions.length
+      ? `Added ${additions.length} product${additions.length === 1 ? '' : 's'} to the lookbook`
+      : 'Every product is already in the lookbook',
+  });
+});
+
+const setGalleryPostStatus = asyncHandler(async (req, res) => {
+  const { status, rejectionReason, sortOrder, caption, product } = req.body;
 
   const post = await GalleryPost.findById(req.params.id);
   if (!post) return res.status(404).json({ message: 'Post not found' });
 
-  post.status = status;
+  if (status !== undefined) {
+    if (!['pending', 'approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+    post.status = status;
+  }
+
   if (rejectionReason !== undefined) post.rejectionReason = String(rejectionReason).slice(0, 300);
   if (sortOrder !== undefined) post.sortOrder = Number(sortOrder) || 0;
   if (caption !== undefined) post.caption = String(caption).slice(0, 140);
+  if (product !== undefined) post.product = product || null;
 
   await post.save();
   res.json({ success: true, post });
+});
+
+const reorderGalleryPosts = asyncHandler(async (req, res) => {
+  const ids = Array.isArray(req.body.ids) ? req.body.ids : [];
+  if (!ids.length) return res.status(400).json({ message: 'No order given' });
+
+  await GalleryPost.bulkWrite(
+    ids.map((id, index) => ({
+      updateOne: { filter: { _id: id }, update: { sortOrder: index } },
+    }))
+  );
+
+  res.json({ success: true });
 });
 
 const deleteGalleryPost = asyncHandler(async (req, res) => {
@@ -197,11 +289,34 @@ const deleteGalleryPost = asyncHandler(async (req, res) => {
   res.json({ success: true, message: 'Post deleted' });
 });
 
+// ---------------------------------------------------------------- settings
+
+const getProgramSettings = asyncHandler(async (req, res) => {
+  res.json({
+    success: true,
+    settings: { influencerEligibility: await getSetting('influencerEligibility') },
+  });
+});
+
+const updateProgramSettings = asyncHandler(async (req, res) => {
+  const { influencerEligibility } = req.body;
+  if (!['delivered', 'any-order', 'open'].includes(influencerEligibility)) {
+    return res.status(400).json({ message: 'Unknown eligibility rule' });
+  }
+  await setSetting('influencerEligibility', influencerEligibility);
+  res.json({ success: true, settings: { influencerEligibility } });
+});
+
 module.exports = {
   listInfluencers,
   setInfluencerStatus,
   recordPayout,
   listGalleryPosts,
+  createGalleryPost,
+  importProductImages,
   setGalleryPostStatus,
+  reorderGalleryPosts,
   deleteGalleryPost,
+  getProgramSettings,
+  updateProgramSettings,
 };

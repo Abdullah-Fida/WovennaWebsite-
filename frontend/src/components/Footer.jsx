@@ -15,7 +15,7 @@ export default function Footer() {
         <div className="footer-col">
           <h5>Shop</h5>
           <ul>
-            <li><Link to="/shop">All Bags</Link></li>
+            <li><Link to="/#collection">All Bags</Link></li>
             <li><Link to="/shop?category=Tote">Tote Bags</Link></li>
             <li><Link to="/shop?category=Crossbody">Crossbody</Link></li>
           </ul>

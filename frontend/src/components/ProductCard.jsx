@@ -19,6 +19,9 @@ export default function ProductCard({ product, priority = false }) {
         <div className="product-badge product-badge--limited">Low Stock</div>
       )}
 
+      {/* Contain, not cover: a cropped card hides the handles and cuts the
+          sides off a wide bag, which is exactly what a shopper is trying to
+          judge. The frame is padded so the letterboxing reads as deliberate. */}
       <div className="product-image-wrap">
         <SmartImage
           src={imageUrl}
@@ -27,6 +30,7 @@ export default function ProductCard({ product, priority = false }) {
           fill
           width={700}
           priority={priority}
+          objectFit="contain"
           sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw"
         />
         {lifestyleUrl && (
@@ -36,6 +40,7 @@ export default function ProductCard({ product, priority = false }) {
             className="lifestyle"
             fill
             width={700}
+            objectFit="contain"
             sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw"
           />
         )}

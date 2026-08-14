@@ -38,7 +38,13 @@ const productSchema = new mongoose.Schema({
   tags: [{ type: String }],
   isFeatured: { type: Boolean, default: false },
   showInSoldOutRow: { type: Boolean, default: false },
-  isActive: { type: Boolean, default: true }
+  isActive: { type: Boolean, default: true },
+
+  // The order products appear in on the storefront. Set from the admin panel
+  // by dragging the list, so merchandising is decided here rather than by a
+  // dropdown the shopper has to find. Lower shows first; ties fall back to
+  // newest.
+  sortOrder: { type: Number, default: 0, index: true }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);

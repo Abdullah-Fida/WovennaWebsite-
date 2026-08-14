@@ -9,7 +9,6 @@ import ScrollToTop from './components/ScrollToTop';
 
 // Pages
 import Home from './pages/Home';
-import Shop from './pages/Shop';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
@@ -42,6 +41,18 @@ import AdminUsers from './pages/AdminUsers';
 import AdminPromos from './pages/AdminPromos';
 import AdminInfluencers from './pages/AdminInfluencers';
 import AdminGallery from './pages/AdminGallery';
+import AdminReviews from './pages/AdminReviews';
+
+/**
+ * The collection now lives on the homepage, but /shop is linked from the
+ * navbar, the footer, old emails and every influencer referral link. Rather
+ * than break those, send them to the collection section and keep the query
+ * string so ?ref= still lands.
+ */
+function ShopRedirect() {
+  const { search } = useLocation();
+  return <Navigate to={`/${search}#collection`} replace />;
+}
 
 // Remembers an influencer's ?ref= code for the rest of the visit.
 function ReferralCatcher() {
@@ -77,7 +88,7 @@ function App() {
           <main>
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/shop" element={<Shop />} />
+              <Route path="/shop" element={<ShopRedirect />} />
               <Route path="/product/:id" element={<ProductDetail />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
@@ -115,6 +126,7 @@ function App() {
               <Route path="/admin/promos" element={<AdminRoute><AdminPromos /></AdminRoute>} />
               <Route path="/admin/influencers" element={<AdminRoute><AdminInfluencers /></AdminRoute>} />
               <Route path="/admin/gallery" element={<AdminRoute><AdminGallery /></AdminRoute>} />
+              <Route path="/admin/reviews" element={<AdminRoute><AdminReviews /></AdminRoute>} />
 
               {/* Fallback */}
               <Route path="*" element={<Navigate to="/" />} />

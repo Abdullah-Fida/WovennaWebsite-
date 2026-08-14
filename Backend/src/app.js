@@ -81,6 +81,10 @@ app.use('/api/promos', promoRoutes);
 const influencerRoutes = require('./routes/influencer.routes');
 app.use('/api/influencers', influencerRoutes);
 
+// reviews / testimonials (public)
+const reviewRoutes = require('./routes/review.routes');
+app.use('/api/reviews', reviewRoutes);
+
 // admin routes
 const adminRoutes = require('./routes/admin.routes');
 app.use('/api/admin', adminRoutes);

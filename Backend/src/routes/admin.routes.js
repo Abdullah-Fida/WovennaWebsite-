@@ -13,9 +13,22 @@ const {
   setInfluencerStatus,
   recordPayout,
   listGalleryPosts,
+  createGalleryPost,
   setGalleryPostStatus,
-  deleteGalleryPost
+  reorderGalleryPosts,
+  importProductImages,
+  deleteGalleryPost,
+  getProgramSettings,
+  updateProgramSettings
 } = require('../controllers/admin.influencer.controller');
+const {
+  listReviews,
+  createReview,
+  updateReview,
+  deleteReview,
+  reorderReviews
+} = require('../controllers/review.controller');
+const { reorderProducts } = require('../controllers/admin.product.controller');
 
 // multer setup - use memory storage so we can upload files to Cloudinary
 const storage = multer.memoryStorage();
@@ -68,6 +81,8 @@ router.put('/users/:id/toggle-status', protect, isAdmin, toggleUserStatus);
 router.get('/products', protect, isAdmin, getProducts);
 router.post('/products', protect, isAdmin, handleMulterUpload('images', 20), createProduct);
 router.get('/products/:id', protect, isAdmin, getProduct);
+// Registered before /products/:id so "reorder" isn't read as an id.
+router.put('/products/reorder', protect, isAdmin, reorderProducts);
 router.put('/products/:id', protect, isAdmin, handleMulterUpload('images', 20), updateProduct);
 router.delete('/products/:id', protect, isAdmin, deleteProduct);
 
@@ -87,9 +102,28 @@ router.get('/influencers', protect, isAdmin, listInfluencers);
 router.put('/influencers/:id/status', protect, isAdmin, setInfluencerStatus);
 router.post('/influencers/:id/payout', protect, isAdmin, recordPayout);
 
-// influencer gallery submissions
+// programme settings (who may apply)
+router.get('/settings/program', protect, isAdmin, getProgramSettings);
+router.put('/settings/program', protect, isAdmin, updateProgramSettings);
+
+// lookbook gallery — house uploads plus influencer submissions
 router.get('/gallery', protect, isAdmin, listGalleryPosts);
+router.post('/gallery', protect, isAdmin, handleMulterUpload('image', 1), (req, res, next) => {
+  // handleMulterUpload uses .array(); normalise to the single file the
+  // gallery controller expects.
+  if (!req.file && req.files && req.files.length) [req.file] = req.files;
+  next();
+}, createGalleryPost);
+router.put('/gallery/reorder', protect, isAdmin, reorderGalleryPosts);
+router.post('/gallery/import-products', protect, isAdmin, importProductImages);
 router.put('/gallery/:id', protect, isAdmin, setGalleryPostStatus);
 router.delete('/gallery/:id', protect, isAdmin, deleteGalleryPost);
+
+// reviews / testimonials
+router.get('/reviews', protect, isAdmin, listReviews);
+router.post('/reviews', protect, isAdmin, createReview);
+router.put('/reviews/reorder', protect, isAdmin, reorderReviews);
+router.put('/reviews/:id', protect, isAdmin, updateReview);
+router.delete('/reviews/:id', protect, isAdmin, deleteReview);
 
 module.exports = router;

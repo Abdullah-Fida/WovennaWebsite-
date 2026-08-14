@@ -1547,7 +1547,10 @@ section {
 }
 
 .product-image-wrap .smart-img > img {
-  object-fit: cover;
+  /* Contain, not cover: the whole bag has to be visible in the card, with
+     nothing trimmed off the sides. The frame's cream ground fills whatever
+     the photo's aspect ratio leaves over. */
+  object-fit: contain;
 }
 
 .product-image-wrap .smart-img.primary { opacity: 1; }
@@ -2140,10 +2143,6 @@ footer {
   width: 100%;
 }
 
-.shop-grid .product-image-wrap {
-  /* height comes from the 4/5 ratio; setting it here would override the
-     card width and leave a gap beside the photo */
-}
 
 .shop-empty {
   text-align: center;
@@ -3018,7 +3017,6 @@ footer {
   flex-wrap: wrap;
 }
 
-.order-meta-item {}
 
 .order-meta-label {
   font-size: 11px;
@@ -3869,8 +3867,6 @@ footer {
     width: 270px;
   }
 
-  .product-image-wrap {
-  }
 
   /* Concierge */
   .concierge-ctas {
@@ -3934,9 +3930,6 @@ footer {
     grid-template-columns: 1fr 1fr;
   }
 
-  .shop-grid .product-image-wrap {
-    /* ratio-driven; see the base rule */
-  }
 
   .shop-grid .product-name {
     font-size: 16px;
@@ -4044,8 +4037,6 @@ footer {
     width: 240px;
   }
 
-  .product-image-wrap {
-  }
 
   .product-name {
     font-size: 19px;
@@ -4055,9 +4046,6 @@ footer {
     grid-template-columns: 1fr;
   }
 
-  .shop-grid .product-image-wrap {
-    /* ratio-driven; see the base rule */
-  }
 
   .cart-item {
     gap: 12px;
@@ -7035,4 +7023,11 @@ html {
 
 .privacy-section {
   padding: 0 0 40px;
+}
+
+.admin-gallery-add-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
 }
