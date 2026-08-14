@@ -41,7 +41,7 @@ export default function Navbar() {
 
         <ul className="nav-links">
           <li><Link to="/">Home</Link></li>
-          <li><Link to="/#collection">Shop</Link></li>
+          <li><Link to="/shop">Shop</Link></li>
           <li><Link to="/about">About Us</Link></li>
           <li><Link to="/contact">Contact</Link></li>
           {/* Guests have no "My Orders", so surface tracking in the main nav. */}
@@ -92,7 +92,7 @@ export default function Navbar() {
       <div className={`mobile-menu ${menuOpen ? 'open' : ''}`}>
         <button className="mobile-menu-close" onClick={() => setMenuOpen(false)}>×</button>
         <Link to="/" className="mobile-menu-link">Home</Link>
-        <Link to="/#collection" className="mobile-menu-link">Shop Collection</Link>
+        <Link to="/shop" className="mobile-menu-link">Shop Collection</Link>
         <Link to="/about" className="mobile-menu-link">About Us</Link>
         <Link to="/shipping-returns" className="mobile-menu-link">Shipping</Link>
         <Link to="/contact" className="mobile-menu-link">Contact</Link>

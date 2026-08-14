@@ -1,29 +1,17 @@
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { getProducts, getGalleryPosts, getReviews } from '../api';
 import ProductCard from '../components/ProductCard';
 import SmartImage from '../components/ui/SmartImage';
 import Lightbox from '../components/ui/Lightbox';
 import BrandIntro from '../components/BrandIntro';
-import EmptyState from '../components/ui/EmptyState';
 
-const CATEGORIES = ['All', 'Tote', 'Crossbody'];
+// The homepage shows a short, curated edit rather than the whole catalogue —
+// the full range lives on the Shop page.
+const EDIT_SIZE = 3;
 
 export default function Home() {
   const [products, setProducts] = useState([]);
-  const [loadingProducts, setLoadingProducts] = useState(true);
-  const [productError, setProductError] = useState('');
-
-  // Category lives in the URL so footer links like /shop?category=Tote — and
-  // anything already bookmarked — still land on the right filter.
-  const [searchParams, setSearchParams] = useSearchParams();
-  const category = searchParams.get('category') || 'All';
-  const setCategory = (next) => {
-    if (next === 'All') searchParams.delete('category');
-    else searchParams.set('category', next);
-    setSearchParams(searchParams, { replace: true });
-  };
-
   const [lookbook, setLookbook] = useState([]);
   const [lightboxIndex, setLightboxIndex] = useState(null);
   const [reviews, setReviews] = useState([]);
@@ -61,12 +49,15 @@ export default function Home() {
       });
     }, 600);
 
-    // The full collection lives here now; there is no separate shop page.
-    // Order comes from the server, which follows the admin's arrangement.
-    getProducts()
-      .then(setProducts)
-      .catch((err) => setProductError(err.message || 'Could not load the collection'))
-      .finally(() => setLoadingProducts(false));
+    // Featured first, in the order set in the admin panel. If nothing has been
+    // marked featured yet, fall back to the top of the collection so the
+    // homepage is never empty.
+    getProducts(`isFeatured=true&limit=${EDIT_SIZE}`)
+      .then((featured) =>
+        featured.length ? featured : getProducts(`limit=${EDIT_SIZE}`)
+      )
+      .then((list) => setProducts(list.slice(0, EDIT_SIZE)))
+      .catch(console.error);
 
     // Lookbook and testimonials are both admin-managed, so a failure here
     // just means the section stays hidden rather than showing stale copy.
@@ -92,11 +83,6 @@ export default function Home() {
     };
   }, []);
 
-  const isSoldOut = (p) => p.stock === 0 || p.showInSoldOutRow;
-  const visible = category === 'All' ? products : products.filter((p) => p.category === category);
-  const available = visible.filter((p) => !isSoldOut(p));
-  const soldOut = visible.filter(isSoldOut);
-
   return (
     <>
       <BrandIntro />
@@ -117,7 +103,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* THE COLLECTION — the whole shop, immediately after the hero. */}
+      {/* THE EDIT — a short curated row; the full range lives on /shop. */}
       <section id="collection">
         <div className="collection-header reveal">
           <div>
@@ -126,63 +112,20 @@ export default function Home() {
               The <em>Wovenaa</em> Edit
             </h2>
           </div>
-
-          <div className="collection-filters">
-            {CATEGORIES.map((c) => (
-              <button
-                key={c}
-                type="button"
-                className={`shop-cat-btn ${category === c ? 'active' : ''}`}
-                onClick={() => setCategory(c)}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
+          <Link
+            to="/shop"
+            className="btn-ghost"
+            style={{ color: 'var(--navy)', borderColor: 'var(--navy)' }}
+          >
+            View All
+          </Link>
         </div>
 
-        {loadingProducts ? (
-          <div className="page-loader"><div className="spinner"></div></div>
-        ) : productError ? (
-          <EmptyState
-            title="Can’t load the collection right now"
-            description={productError}
-            actions={<button className="btn-gold" onClick={() => window.location.reload()}>Try Again</button>}
-          />
-        ) : visible.length === 0 ? (
-          <EmptyState
-            title="Nothing in this category yet"
-            description="Try another category to see the rest of the collection."
-            actions={
-              <button
-                className="btn-ghost"
-                style={{ color: 'var(--navy)', borderColor: 'rgba(10,17,40,0.3)' }}
-                onClick={() => setCategory('All')}
-              >
-                Show All
-              </button>
-            }
-          />
-        ) : (
-          <>
-            <div className="collection-grid reveal">
-              {available.map((product, i) => (
-                <ProductCard key={product._id} product={product} priority={i < 3} />
-              ))}
-            </div>
-
-            {soldOut.length > 0 && (
-              <div className="collection-soldout">
-                <h3 className="collection-soldout-title">Sold <em>Out</em></h3>
-                <div className="collection-grid reveal">
-                  {soldOut.map((product) => (
-                    <ProductCard key={product._id} product={product} />
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
-        )}
+        <div className="collection-grid collection-grid--3col reveal">
+          {products.map((product, i) => (
+            <ProductCard key={product._id} product={product} priority={i < 3} />
+          ))}
+        </div>
       </section>
 
       {/* THE ELEMENTS */}

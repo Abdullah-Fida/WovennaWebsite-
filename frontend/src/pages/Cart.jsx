@@ -58,7 +58,7 @@ export default function Cart() {
           {error ? (
             <EmptyState
               title="Can't load your cart right now"
-              description={`${error}. This often happens when the backend is offline. You can still browse the informational pages and try again later.`}
+              description="We couldn’t reach your bag just now. Please try again in a moment."
               actions={
                 <>
                   <button className="btn-gold" onClick={fetchCart}>

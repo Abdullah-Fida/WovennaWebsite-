@@ -197,13 +197,9 @@ export default function TrackOrder() {
               </div>
             ) : (
               <div className="card card--soft card-pad track-placeholder">
-                <p className="help-text" style={{ marginBottom: 12 }}>
-                  Your order details will appear here once we find it.
-                </p>
                 <p className="help-text">
-                  Can’t find your order number? Check the confirmation email we sent, or{' '}
-                  <Link to="/contact" style={{ color: 'var(--gold)' }}>contact us</Link> and
-                  we’ll look it up for you.
+                  No order number? <Link to="/contact" style={{ color: 'var(--gold)' }}>Contact us</Link>{' '}
+                  and we’ll look it up for you.
                 </p>
               </div>
             )}

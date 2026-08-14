@@ -31,9 +31,6 @@ export default function ShippingReturns() {
               <li>Delivery: depends on city/area (commonly 2–5 working days)</li>
             </ul>
             <div className="gold-line" />
-            <p className="help-text">
-              Tip: Always provide a reachable phone number at checkout to avoid delays.
-            </p>
           </div>
 
           <div className="card card-pad">

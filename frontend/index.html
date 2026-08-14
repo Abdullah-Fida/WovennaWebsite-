@@ -14,9 +14,12 @@
   <meta property="og:description" content="Woven bags carrying 4,000 years of craft. Built for permanence, not just seasons." />
   <meta property="og:type" content="website" />
   <meta name="theme-color" content="#0A1128" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,200;0,300;0,400;1,200;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet" />
+  <!-- Fonts are served from this origin, so no third-party handshake stands
+       between the visitor and the first painted word. The two faces above the
+       fold are preloaded; the rest arrive with the stylesheet. -->
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/CormorantGaramond-300-latin.woff2" crossorigin />
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/Jost-300-latin.woff2" crossorigin />
+  <link rel="stylesheet" href="/fonts/fonts.css" />
 </head>
 <body>
   <div id="root"></div>

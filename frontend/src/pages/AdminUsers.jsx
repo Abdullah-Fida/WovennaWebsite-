@@ -43,8 +43,6 @@ export default function AdminUsers() {
     }
   };
 
-  if (loading) return <div className="page-loader"><div className="spinner"></div></div>;
-
   const totalCustomers = users.filter(u => u.role === 'customer').length;
   const totalAdmins = users.filter(u => u.role === 'admin').length;
   const activeUsers = users.filter(u => u.isActive !== false).length;
@@ -59,7 +57,11 @@ export default function AdminUsers() {
 
       <AdminNav active="users" />
 
-      {error ? (
+      {/* The header and tabs stay put while data loads, so moving between
+          admin sections never blanks the whole screen. */}
+      {loading ? (
+        <div className="page-loader"><div className="spinner"></div></div>
+      ) : error ? (
         <div className="state-panel">
           <h3>Could not load users</h3>
           <p>{error}</p>

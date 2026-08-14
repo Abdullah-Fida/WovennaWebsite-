@@ -158,7 +158,7 @@ export default function InfluencerProgram() {
                     page will let you apply.
                   </p>
                   <div className="influencer-gate-actions">
-                    <Link to="/#collection" className="btn-gold">Shop the Collection</Link>
+                    <Link to="/shop" className="btn-gold">Shop the Collection</Link>
                     <Link to="/track-order" className="btn-ghost" style={{ color: 'var(--navy)', borderColor: 'rgba(10,17,40,0.3)' }}>
                       Track an Order
                     </Link>

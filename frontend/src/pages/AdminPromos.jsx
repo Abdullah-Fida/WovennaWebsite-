@@ -142,8 +142,6 @@ export default function AdminPromos() {
 
   const isExpired = (date) => new Date(date) < new Date();
 
-  if (loading) return <div className="page-loader"><div className="spinner"></div></div>;
-
   return (
     <div className="admin-page">
       <Toast message={toastMsg} onClose={() => setToastMsg('')} />
@@ -158,7 +156,11 @@ export default function AdminPromos() {
 
       {success && <div className="promo-success-msg">{success}</div>}
 
-      {promos.length === 0 ? (
+      {/* The header and tabs stay put while data loads, so moving between
+          admin sections never blanks the whole screen. */}
+      {loading ? (
+        <div className="page-loader"><div className="spinner"></div></div>
+      ) : promos.length === 0 ? (
         <div className="state-panel">
           <h3>No promo codes yet</h3>
           <p>Create your first promo code to offer discounts to your customers.</p>

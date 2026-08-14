@@ -367,8 +367,6 @@ export default function AdminProducts() {
     }
   };
 
-  if (loading) return <div className="page-loader"><div className="spinner"></div></div>;
-
   return (
     <div className="admin-page">
       <Toast message={toastMsg} onClose={() => setToastMsg('')} />
@@ -380,7 +378,11 @@ export default function AdminProducts() {
 
       <AdminNav active="products" />
 
-      {error && !products.length ? (
+      {/* The header and tabs stay put while data loads, so moving between
+          admin sections never blanks the whole screen. */}
+      {loading ? (
+        <div className="page-loader"><div className="spinner"></div></div>
+      ) : error && !products.length ? (
         <div className="state-panel">
           <h3>Could not load products</h3>
           <p>{error}</p>

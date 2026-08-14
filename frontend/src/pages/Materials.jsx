@@ -29,7 +29,7 @@ export default function Materials() {
             </p>
             <div className="gold-line" />
             <p className="help-text">
-              Tip: keep away from high heat. For light cleaning, use a damp cloth and wipe dry immediately.
+              Keeps its finish away from high heat. A damp cloth, wiped dry, is all it asks for.
             </p>
           </div>
 
@@ -42,7 +42,7 @@ export default function Materials() {
             </p>
             <div className="gold-line" />
             <p className="help-text">
-              Tip: avoid soaking. If it gets dusty, use a soft brush and clean along the weave direction.
+              Never soaked. Dust lifts away with a soft brush worked along the weave.
             </p>
           </div>
         </div>

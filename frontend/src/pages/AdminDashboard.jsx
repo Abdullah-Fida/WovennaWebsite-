@@ -26,8 +26,6 @@ export default function AdminDashboard() {
     fetchStats();
   }, []);
 
-  if (loading) return <div className="page-loader"><div className="spinner"></div></div>;
-
   return (
     <div className="admin-page">
       <Toast message={toastMsg} onClose={() => setToastMsg('')} />
@@ -38,7 +36,11 @@ export default function AdminDashboard() {
 
       <AdminNav active="overview" />
 
-      {error ? (
+      {/* The header and tabs stay put while data loads, so moving between
+          admin sections never blanks the whole screen. */}
+      {loading ? (
+        <div className="page-loader"><div className="spinner"></div></div>
+      ) : error ? (
         <div className="state-panel">
           <h3>Could not load dashboard</h3>
           <p>{error}</p>

@@ -102,9 +102,6 @@ export default function Contact() {
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
                   placeholder="Tell us what you need help with..."
                 />
-                <div className="help-text" style={{ marginTop: 10 }}>
-                  Tip: If this is about an order, add your order ID and phone number.
-                </div>
               </div>
 
               <button type="submit" className="auth-submit-btn" disabled={loading}>

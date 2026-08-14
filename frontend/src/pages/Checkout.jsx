@@ -175,7 +175,7 @@ export default function Checkout() {
         {loadError ? (
           <EmptyState
             title="Checkout is unavailable right now"
-            description={`${loadError}. If the backend is offline, you won't be able to place an order. You can still browse the collection and try again later.`}
+            description="We couldn’t load your order just now. Please try again in a moment."
             actions={
               <>
                 <Link to="/cart" className="btn-gold">
